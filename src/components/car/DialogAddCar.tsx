@@ -1,6 +1,5 @@
 
 import React from "react";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
@@ -13,35 +12,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
 import { useCarCollections } from "@/hooks/useCarCollections";
-
-const formSchema = z.object({
-  make: z.string().min(1, "Make is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.string().regex(/^\d{4}$/, "Year must be a 4-digit number"),
-  vin: z.string().min(1, "VIN is required"),
-  exteriorColor: z.string().optional(),
-  interiorColor: z.string().optional(),
-  transmission: z.string().optional(),
-  condition: z.string().optional(),
-  mileage: z.coerce.number().nonnegative("Mileage must be a positive number"),
-  notes: z.string().optional(),
-  collectionId: z.string().min(1, "Collection is required"),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+import { carFormSchema, CarFormValues } from "./carFormSchema";
+import {
+  BasicInfoFields,
+  IdentificationFields,
+  ColorFields,
+  DetailsFields,
+  MiscFields
+} from "./CarFormFields";
 
 interface DialogAddCarProps {
   open: boolean;
@@ -56,8 +37,8 @@ export const DialogAddCar = ({
 }: DialogAddCarProps) => {
   const { collections, addCar } = useCarCollections();
   
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<CarFormValues>({
+    resolver: zodResolver(carFormSchema),
     defaultValues: {
       make: "",
       model: "",
@@ -73,7 +54,7 @@ export const DialogAddCar = ({
     },
   });
   
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = (data: CarFormValues) => {
     try {
       addCar({
         id: crypto.randomUUID(),
@@ -121,208 +102,11 @@ export const DialogAddCar = ({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="make"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Make</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Toyota" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="model"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Supra" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Year</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. 2021" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="vin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>VIN</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Vehicle Identification Number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="exteriorColor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Exterior Color</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Red" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="interiorColor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Interior Color</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Black" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="transmission"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Transmission</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select transmission" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Automatic">Automatic</SelectItem>
-                        <SelectItem value="Manual">Manual</SelectItem>
-                        <SelectItem value="CVT">CVT</SelectItem>
-                        <SelectItem value="Semi-automatic">Semi-automatic</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="condition"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Condition</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select condition" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="New">New</SelectItem>
-                        <SelectItem value="Like New">Like New</SelectItem>
-                        <SelectItem value="Excellent">Excellent</SelectItem>
-                        <SelectItem value="Good">Good</SelectItem>
-                        <SelectItem value="Fair">Fair</SelectItem>
-                        <SelectItem value="Poor">Poor</SelectItem>
-                        <SelectItem value="Project">Project</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="mileage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mileage</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="collectionId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Collection</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select collection" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {collections.map(collection => (
-                          <SelectItem key={collection.id} value={collection.id}>
-                            {collection.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Additional information about the vehicle" 
-                      className="resize-none" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <BasicInfoFields form={form} />
+            <IdentificationFields form={form} />
+            <ColorFields form={form} />
+            <DetailsFields form={form} />
+            <MiscFields form={form} collections={collections} />
             
             <DialogFooter>
               <Button 
