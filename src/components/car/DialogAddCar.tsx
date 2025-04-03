@@ -25,6 +25,7 @@ import {
 } from "./CarFormFields";
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
 import { ImageUploadField } from "./ImageUploadField";
+import { DocumentUploadField } from "./DocumentUploadField";
 
 interface DialogAddCarProps {
   open: boolean;
@@ -58,6 +59,7 @@ export const DialogAddCar = ({
       numberOfKeys: 0,
       owner: "",
       images: [],
+      documents: [],
     },
   });
   
@@ -83,6 +85,7 @@ export const DialogAddCar = ({
         licensePlate: data.licensePlate,
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
+        documents: data.documents || [],
       });
       
       toast({
@@ -118,6 +121,7 @@ export const DialogAddCar = ({
             <ColorFields form={form} />
             <DetailsFields form={form} />
             <ImageUploadField form={form} />
+            <DocumentUploadField form={form} />
             <AdditionalInfoFields form={form} />
             <MiscFields form={form} collections={collections} />
             

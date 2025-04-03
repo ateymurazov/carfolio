@@ -16,7 +16,7 @@ export interface Car {
   status: string;
   acquisitionDate: string;
   lastServiceDate?: string;
-  documents?: string[];
+  documents?: { name: string; url: string; }[];
   registration?: string;
   licensePlate?: string;
   numberOfKeys?: number;

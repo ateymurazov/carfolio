@@ -19,6 +19,10 @@ export const carFormSchema = z.object({
   owner: z.string().optional(),
   status: z.string().optional(),
   images: z.array(z.string()).optional(),
+  documents: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+  })).optional(),
 });
 
 export type CarFormValues = z.infer<typeof carFormSchema>;
