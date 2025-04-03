@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,17 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
 import { toast } from "@/components/ui/use-toast";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Car } from "@/types/car";
@@ -70,9 +59,9 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
   
   const onSubmit = (data: FormValues) => {
     try {
-      // Ensure documents have both required fields before adding to the car
       const validDocuments = (data.documents || []).filter(
-        doc => doc.name && doc.url
+        doc => doc.name && doc.name.trim() !== "" && 
+               doc.url && doc.url.trim() !== ""
       ) as { name: string; url: string }[];
       
       updateCar(car.id, {
@@ -394,4 +383,3 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
     </Dialog>
   );
 };
-
