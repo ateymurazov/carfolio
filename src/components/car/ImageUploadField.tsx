@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
-import { ImagePlus, Trash2, Image } from "lucide-react";
+import { ImagePlus, Trash2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 
 interface ImageUploadFieldProps {
@@ -10,7 +10,14 @@ interface ImageUploadFieldProps {
 }
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
+  // Initialize previewUrls based on form values
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  
+  // Sync previewUrls with form.images when the component mounts
+  useEffect(() => {
+    const currentImages = form.getValues("images") || [];
+    setPreviewUrls(currentImages);
+  }, [form]);
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -28,12 +35,16 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
           newImageUrls.push(imageUrl);
           
           // Update preview URLs
-          setPreviewUrls(prev => [...prev, imageUrl]);
-          
-          // Update form value
-          form.setValue("images", [...currentImages, ...newImageUrls], {
-            shouldValidate: true,
-            shouldDirty: true,
+          setPreviewUrls(prev => {
+            const updated = [...prev, imageUrl];
+            
+            // Update form value with ALL images
+            form.setValue("images", [...currentImages, imageUrl], {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
+            
+            return updated;
           });
         }
       };
@@ -77,6 +88,11 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                         src={url} 
                         alt={`Car image ${index + 1}`}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log(`Image error for index ${index}, url length: ${url.length}`);
+                          // Fallback to placeholder if image fails to load
+                          e.currentTarget.src = "/placeholder.svg";
+                        }}
                       />
                     </div>
                     <Button

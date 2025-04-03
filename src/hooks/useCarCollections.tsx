@@ -48,6 +48,7 @@ const initialCars: Car[] = [
     status: "Available",
     acquisitionDate: "2022-06-15",
     lastServiceDate: "2023-08-20",
+    value: 120000,
   },
   {
     id: "car2",
@@ -173,21 +174,39 @@ const CarCollectionsContext = createContext<CarCollectionsContextType | undefine
 
 export const CarCollectionsProvider = ({ children }: { children: ReactNode }) => {
   const [cars, setCars] = useState<Car[]>(() => {
-    const savedCars = localStorage.getItem('cars');
-    return savedCars ? JSON.parse(savedCars) : initialCars;
+    try {
+      const savedCars = localStorage.getItem('cars');
+      return savedCars ? JSON.parse(savedCars) : initialCars;
+    } catch (error) {
+      console.error("Error loading cars from localStorage:", error);
+      return initialCars;
+    }
   });
   
   const [collections, setCollections] = useState<Collection[]>(() => {
-    const savedCollections = localStorage.getItem('collections');
-    return savedCollections ? JSON.parse(savedCollections) : initialCollections;
+    try {
+      const savedCollections = localStorage.getItem('collections');
+      return savedCollections ? JSON.parse(savedCollections) : initialCollections;
+    } catch (error) {
+      console.error("Error loading collections from localStorage:", error);
+      return initialCollections;
+    }
   });
   
   useEffect(() => {
-    localStorage.setItem('cars', JSON.stringify(cars));
+    try {
+      localStorage.setItem('cars', JSON.stringify(cars));
+    } catch (error) {
+      console.error("Error saving cars to localStorage:", error);
+    }
   }, [cars]);
   
   useEffect(() => {
-    localStorage.setItem('collections', JSON.stringify(collections));
+    try {
+      localStorage.setItem('collections', JSON.stringify(collections));
+    } catch (error) {
+      console.error("Error saving collections to localStorage:", error);
+    }
   }, [collections]);
   
   const getCarById = (id: string) => {
@@ -207,6 +226,7 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
   };
   
   const updateCar = (id: string, car: Car) => {
+    console.log("Updating car:", id, car);
     setCars(prev => prev.map(c => c.id === id ? car : c));
   };
   
