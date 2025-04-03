@@ -178,7 +178,18 @@ export function useCarStorage(): CarStorageState & {
     // Check if we have stored version
     const storedVersion = localStorage.getItem('storageVersion');
     
-    // If version doesn't match, use initial data (can be used for migrations later)
+    // Check for existing car data first
+    const existingCars = localStorage.getItem('cars');
+    if (existingCars) {
+      try {
+        // If we have car data, use it regardless of version
+        return JSON.parse(existingCars);
+      } catch (e) {
+        console.error("Failed to parse stored cars, using initial data", e);
+      }
+    }
+    
+    // If no existing data or parse failed, check version
     if (storedVersion !== STORAGE_VERSION) {
       localStorage.setItem('storageVersion', STORAGE_VERSION);
       return initialCars;
@@ -189,25 +200,46 @@ export function useCarStorage(): CarStorageState & {
   
   const [collections, setCollections] = useState<Collection[]>(() => {
     const storedVersion = localStorage.getItem('storageVersion');
+    
+    // Check for existing collections data first
+    const existingCollections = localStorage.getItem('collections');
+    if (existingCollections) {
+      try {
+        // If we have collections data, use it regardless of version
+        return JSON.parse(existingCollections);
+      } catch (e) {
+        console.error("Failed to parse stored collections, using initial data", e);
+      }
+    }
+    
     if (storedVersion !== STORAGE_VERSION) {
       return initialCollections;
     }
+    
     return getFromLocalStorage<Collection[]>('collections', initialCollections);
   });
   
   // Save cars to localStorage whenever they change
   useEffect(() => {
+    if (!cars) return; // Don't save if cars is null/undefined
+    
     const success = saveToLocalStorage('cars', cars);
     if (success) {
       console.log(`Successfully saved ${cars.length} cars to localStorage`);
+    } else {
+      console.error("Failed to save cars to localStorage");
     }
   }, [cars]);
   
   // Save collections to localStorage whenever they change
   useEffect(() => {
+    if (!collections) return; // Don't save if collections is null/undefined
+    
     const success = saveToLocalStorage('collections', collections);
     if (success) {
       console.log(`Successfully saved ${collections.length} collections to localStorage`);
+    } else {
+      console.error("Failed to save collections to localStorage");
     }
   }, [collections]);
   

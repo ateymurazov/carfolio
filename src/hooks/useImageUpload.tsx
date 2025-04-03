@@ -14,7 +14,10 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   // Sync previewUrls with form images when component mounts
   useEffect(() => {
     const currentImages = form.getValues(fieldName) || [];
-    setPreviewUrls(currentImages);
+    if (Array.isArray(currentImages) && currentImages.length > 0) {
+      setPreviewUrls(currentImages);
+      console.log(`Initialized ${fieldName} with ${currentImages.length} images`);
+    }
   }, [form, fieldName]);
   
   /**
@@ -26,6 +29,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     const currentImages = form.getValues(fieldName) || [];
     const processedFiles: string[] = [];
+    const totalFiles = files.length;
     
     // Process each file and create URL
     Array.from(files).forEach(file => {
@@ -35,8 +39,8 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
           const imageUrl = e.target.result.toString();
           processedFiles.push(imageUrl);
           
-          // Update preview URLs and form value atomically to avoid race conditions
-          if (processedFiles.length === files.length) {
+          // Update preview URLs and form value atomically when all files are processed
+          if (processedFiles.length === totalFiles) {
             const allImages = [...currentImages, ...processedFiles];
             
             // Update the form with all images
@@ -61,6 +65,11 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
    */
   const removeImage = (index: number) => {
     const currentImages = form.getValues(fieldName) || [];
+    if (!Array.isArray(currentImages)) {
+      console.error(`${fieldName} is not an array`, currentImages);
+      return;
+    }
+    
     const updatedImages = [...currentImages];
     updatedImages.splice(index, 1);
     

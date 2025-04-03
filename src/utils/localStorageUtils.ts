@@ -12,7 +12,9 @@
 export function getFromLocalStorage<T>(key: string, fallback: T): T {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    // Only use fallback if item is null/undefined, not if it's an empty array/object
+    if (item === null || item === undefined) return fallback;
+    return JSON.parse(item);
   } catch (error) {
     console.error(`Error reading ${key} from localStorage:`, error);
     return fallback;
@@ -27,6 +29,12 @@ export function getFromLocalStorage<T>(key: string, fallback: T): T {
  */
 export function saveToLocalStorage<T>(key: string, data: T): boolean {
   try {
+    // Don't save null or undefined values
+    if (data === null || data === undefined) {
+      console.warn(`Attempted to save null/undefined to ${key}, skipping`);
+      return false;
+    }
+
     // Use a temporary variable to ensure we can stringify before setting
     const serialized = JSON.stringify(data);
     localStorage.setItem(key, serialized);
