@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -85,7 +84,7 @@ export const DialogAddCar = ({
         interiorColor: data.interiorColor || "Not specified",
         transmission: data.transmission || "Not specified",
         condition: data.condition || "Not specified",
-        mileage: data.mileage,
+        mileage: Number(data.mileage),
         notes: data.notes || "",
         collectionId: data.collectionId,
         images: [],
