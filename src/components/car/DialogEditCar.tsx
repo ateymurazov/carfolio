@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -58,6 +59,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       licensePlate: car.licensePlate || "",
       numberOfKeys: car.numberOfKeys || 0,
       owner: car.owner || "",
+      status: car.status || "Available",
     },
   });
   
@@ -76,7 +78,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         mileage: data.mileage,
         notes: data.notes || "",
         collectionId: data.collectionId,
-        status: car.status || "Available",
+        status: data.status || "Available",
         registration: data.registration,
         licensePlate: data.licensePlate,
         numberOfKeys: data.numberOfKeys,
@@ -86,6 +88,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       toast({
         title: "Car updated",
         description: `${data.year} ${data.make} ${data.model} has been updated.`,
+        variant: "success",
       });
       
       onOpenChange(false);
