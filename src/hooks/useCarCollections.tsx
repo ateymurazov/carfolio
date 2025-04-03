@@ -64,8 +64,8 @@ const initialCars: Car[] = [
     notes: "Split window Corvette Stingray, requires minor restoration.",
     collectionId: "c1",
     images: [
-      "https://images.unsplash.com/photo-1626000690811-4b9a2b800ec6?q=80&w=1000",
-      "https://images.unsplash.com/photo-1611016186353-9af58c69a533?q=80&w=1000",
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070",
+      "https://images.unsplash.com/photo-1554744512-d6c603f27c54?q=80&w=1000",
     ],
     status: "In Service",
     acquisitionDate: "2021-11-03",
@@ -147,8 +147,8 @@ const initialCars: Car[] = [
     notes: "Grand touring coupe with W12 engine and luxurious interior.",
     collectionId: "c3",
     images: [
-      "https://images.unsplash.com/photo-1549062573-edc78a53ffa6?q=80&w=1000",
-      "https://images.unsplash.com/photo-1553440569-bcc63803a83d?q=80&w=1000",
+      "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=1000",
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2022-05-10",

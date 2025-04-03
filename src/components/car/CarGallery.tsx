@@ -11,11 +11,14 @@ interface CarGalleryProps {
 
 export const CarGallery = ({ car }: CarGalleryProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   
-  // Use placeholder if no images are available
-  const images = (car.images && car.images.length > 0) 
-    ? car.images 
-    : ["/placeholder.svg"];
+  // Use placeholder if no images are available or if all images have errors
+  const validImages = car.images && car.images.length > 0
+    ? car.images.filter((_, index) => !imageErrors[index])
+    : [];
+    
+  const images = validImages.length > 0 ? validImages : ["/placeholder.svg"];
   
   const handlePrevious = () => {
     setCurrentImageIndex((prev) => 
@@ -29,6 +32,18 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     );
   };
   
+  const handleImageError = (index: number) => {
+    setImageErrors(prev => ({
+      ...prev,
+      [index]: true
+    }));
+    
+    // Reset to first image or placeholder if current image fails
+    if (index === currentImageIndex && images.length > 1) {
+      setCurrentImageIndex(0);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-secondary">
@@ -36,6 +51,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
           src={images[currentImageIndex]} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-contain"
+          onError={() => handleImageError(currentImageIndex)}
         />
         
         {images.length > 1 && (
@@ -97,6 +113,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                 src={image} 
                 alt={`Thumbnail ${index + 1}`} 
                 className="h-full w-full object-cover rounded"
+                onError={() => handleImageError(index)}
               />
             </button>
           ))}

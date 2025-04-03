@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
@@ -11,11 +11,12 @@ interface CarCardProps {
 
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
+  const [imageError, setImageError] = useState(false);
   
-  // Placeholder car image if not provided
-  const carImage = car.images && car.images.length > 0 
-    ? car.images[0] 
-    : "/placeholder.svg";
+  // Placeholder car image if not provided or if there's an error
+  const carImage = imageError || !(car.images && car.images.length > 0)
+    ? "/placeholder.svg"
+    : car.images[0];
   
   return (
     <div 
@@ -27,6 +28,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
+          onError={() => setImageError(true)}
         />
       </div>
       <div className="car-card-content">
