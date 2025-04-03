@@ -42,7 +42,7 @@ const initialCars: Car[] = [
     notes: "Fully restored classic Mustang with original parts.",
     collectionId: "c1",
     images: [
-      "https://images.unsplash.com/photo-1567784177951-6fa58317e16b?q=80&w=1000",
+      "https://images.unsplash.com/photo-1616422285623-c31015bac0c0?q=80&w=1000",
       "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000",
     ],
     status: "Available",
@@ -63,8 +63,8 @@ const initialCars: Car[] = [
     notes: "Split window Corvette Stingray, requires minor restoration.",
     collectionId: "c1",
     images: [
-      "https://images.unsplash.com/photo-1596730063938-6eb92b8df895?q=80&w=1000",
-      "https://images.unsplash.com/photo-1597007030739-6d2e7172bed5?q=80&w=1000",
+      "https://images.unsplash.com/photo-1549460194-2f4d1add9d31?q=80&w=1000",
+      "/placeholder.svg",
     ],
     status: "In Service",
     acquisitionDate: "2021-11-03",
@@ -146,8 +146,8 @@ const initialCars: Car[] = [
     notes: "Grand touring coupe with W12 engine and luxurious interior.",
     collectionId: "c3",
     images: [
-      "https://images.unsplash.com/photo-1622653959098-a撇",
-      "https://images.unsplash.com/photo-1622653959098-a0d5654a2a76?q=80&w=1000",
+      "/placeholder.svg",
+      "/placeholder.svg",
     ],
     status: "Available",
     acquisitionDate: "2022-05-10",
