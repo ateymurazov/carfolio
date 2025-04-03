@@ -22,6 +22,11 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
     ? "/placeholder.svg"
     : car.images[0];
   
+  const handleImageError = () => {
+    console.log(`Image error for featured car: ${car.id}`);
+    setImageError(true);
+  };
+  
   return (
     <div className="flex flex-col space-y-4">
       <div className="relative aspect-video overflow-hidden rounded-lg bg-secondary">
@@ -29,7 +34,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
-          onError={() => setImageError(true)}
+          onError={handleImageError}
         />
         <Badge className="absolute top-2 right-2">
           {car.status || "Available"}

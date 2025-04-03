@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
@@ -43,7 +42,7 @@ const initialCars: Car[] = [
     notes: "Fully restored classic Mustang with original parts.",
     collectionId: "c1",
     images: [
-      "https://images.unsplash.com/photo-1567784177951-6fa58317e16b?q=80&w=1000",
+      "https://images.unsplash.com/photo-1581337204873-1a32d3070aaa?q=80&w=1000",
       "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000",
     ],
     status: "Available",
@@ -64,8 +63,8 @@ const initialCars: Car[] = [
     notes: "Split window Corvette Stingray, requires minor restoration.",
     collectionId: "c1",
     images: [
-      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070",
-      "https://images.unsplash.com/photo-1554744512-d6c603f27c54?q=80&w=1000",
+      "https://images.unsplash.com/photo-1596730063938-6eb92b8df895?q=80&w=1000",
+      "https://images.unsplash.com/photo-1597007030739-6d2e7172bed5?q=80&w=1000",
     ],
     status: "In Service",
     acquisitionDate: "2021-11-03",
@@ -107,7 +106,7 @@ const initialCars: Car[] = [
     collectionId: "c2",
     images: [
       "https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=1000",
-      "https://images.unsplash.com/photo-1592198084033-aade902d1aae?q=80&w=1000",
+      "https://images.unsplash.com/photo-1614200187524-dc4b892acf16?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2022-09-12",
@@ -147,8 +146,8 @@ const initialCars: Car[] = [
     notes: "Grand touring coupe with W12 engine and luxurious interior.",
     collectionId: "c3",
     images: [
-      "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=1000",
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1000",
+      "https://images.unsplash.com/photo-1622653959098-a撇",
+      "https://images.unsplash.com/photo-1622653959098-a0d5654a2a76?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2022-05-10",
@@ -183,7 +182,6 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     return savedCollections ? JSON.parse(savedCollections) : initialCollections;
   });
   
-  // Save to localStorage whenever data changes
   useEffect(() => {
     localStorage.setItem('cars', JSON.stringify(cars));
   }, [cars]);

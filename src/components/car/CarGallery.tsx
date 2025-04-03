@@ -33,6 +33,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   };
   
   const handleImageError = (index: number) => {
+    console.log(`Image error in gallery: index ${index}`);
     setImageErrors(prev => ({
       ...prev,
       [index]: true

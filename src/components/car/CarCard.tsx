@@ -18,20 +18,25 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     ? "/placeholder.svg"
     : car.images[0];
   
+  const handleImageError = () => {
+    console.log(`Image error for car: ${car.id}`);
+    setImageError(true);
+  };
+  
   return (
     <div 
-      className={cn("car-card animation-hover cursor-pointer", className)}
+      className={cn("car-card animation-hover cursor-pointer rounded-lg border shadow hover:shadow-md transition-all overflow-hidden", className)}
       onClick={() => navigate(`/cars/${car.id}`)}
     >
-      <div className="car-card-image">
+      <div className="car-card-image aspect-[16/9] bg-secondary relative">
         <img 
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
-          onError={() => setImageError(true)}
+          onError={handleImageError}
         />
       </div>
-      <div className="car-card-content">
+      <div className="car-card-content p-4">
         <h3 className="text-lg font-semibold">
           {car.year} {car.make} {car.model}
         </h3>
