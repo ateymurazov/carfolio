@@ -88,7 +88,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       toast({
         title: "Car updated",
         description: `${data.year} ${data.make} ${data.model} has been updated.`,
-        variant: "success",
+        variant: "default", // Changed from "success" to "default"
       });
       
       onOpenChange(false);
