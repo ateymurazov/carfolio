@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -36,7 +37,7 @@ const formSchema = z.object({
   interiorColor: z.string().optional(),
   transmission: z.string().optional(),
   condition: z.string().optional(),
-  mileage: z.string().transform((val) => parseInt(val || "0")),
+  mileage: z.coerce.number().nonnegative("Mileage must be a positive number"),
   notes: z.string().optional(),
   collectionId: z.string().min(1, "Collection is required"),
   status: z.string().optional(),
@@ -64,7 +65,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       interiorColor: car.interiorColor,
       transmission: car.transmission,
       condition: car.condition,
-      mileage: car.mileage.toString(),
+      mileage: car.mileage,
       notes: car.notes,
       collectionId: car.collectionId,
       status: car.status,
@@ -83,7 +84,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         interiorColor: data.interiorColor || "Not specified",
         transmission: data.transmission || "Not specified",
         condition: data.condition || "Not specified",
-        mileage: Number(data.mileage),
+        mileage: data.mileage,
         notes: data.notes || "",
         collectionId: data.collectionId,
         status: data.status || "Available",

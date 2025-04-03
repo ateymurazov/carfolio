@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -35,7 +36,7 @@ const formSchema = z.object({
   interiorColor: z.string().optional(),
   transmission: z.string().optional(),
   condition: z.string().optional(),
-  mileage: z.string().transform((val) => Number(val || "0")),
+  mileage: z.coerce.number().nonnegative("Mileage must be a positive number"),
   notes: z.string().optional(),
   collectionId: z.string().min(1, "Collection is required"),
 });
@@ -66,7 +67,7 @@ export const DialogAddCar = ({
       interiorColor: "",
       transmission: "",
       condition: "",
-      mileage: "0",
+      mileage: 0,
       notes: "",
       collectionId: defaultCollectionId || (collections.length > 0 ? collections[0].id : ""),
     },
@@ -84,7 +85,7 @@ export const DialogAddCar = ({
         interiorColor: data.interiorColor || "Not specified",
         transmission: data.transmission || "Not specified",
         condition: data.condition || "Not specified",
-        mileage: Number(data.mileage),
+        mileage: data.mileage,
         notes: data.notes || "",
         collectionId: data.collectionId,
         images: [],
