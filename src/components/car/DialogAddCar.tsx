@@ -65,6 +65,11 @@ export const DialogAddCar = ({
   
   const onSubmit = (data: CarFormValues) => {
     try {
+      // Ensure documents have both required fields before adding to the car
+      const validDocuments = (data.documents || []).filter(
+        doc => doc.name && doc.url
+      ) as { name: string; url: string }[];
+
       addCar({
         id: crypto.randomUUID(),
         make: data.make,
@@ -85,7 +90,7 @@ export const DialogAddCar = ({
         licensePlate: data.licensePlate,
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
-        documents: data.documents || [],
+        documents: validDocuments,
       });
       
       toast({

@@ -29,7 +29,7 @@ export const DocumentUploadField = ({ form }: DocumentUploadFieldProps) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
-          // Create a document object with name and URL
+          // Create a document object with required name and URL
           const doc: Document = {
             name: file.name,
             url: e.target.result.toString()
@@ -37,8 +37,8 @@ export const DocumentUploadField = ({ form }: DocumentUploadFieldProps) => {
           
           newDocs.push(doc);
           
-          // Update form value
-          form.setValue("documents", [...currentDocs, ...newDocs], {
+          // Update form value with properly typed documents
+          form.setValue("documents", [...currentDocs, ...newDocs] as Document[], {
             shouldValidate: true,
             shouldDirty: true,
           });
@@ -53,8 +53,8 @@ export const DocumentUploadField = ({ form }: DocumentUploadFieldProps) => {
     const updatedDocs = [...currentDocs];
     updatedDocs.splice(index, 1);
     
-    // Update form value
-    form.setValue("documents", updatedDocs, {
+    // Update form value with properly typed documents
+    form.setValue("documents", updatedDocs as Document[], {
       shouldValidate: true,
       shouldDirty: true,
     });
