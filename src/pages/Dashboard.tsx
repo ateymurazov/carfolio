@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Car, Users, PackageOpen } from "lucide-react";
@@ -11,10 +10,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { collections, cars } = useCarCollections();
   
-  // Calculate estimated total value (this is a very simple estimation)
+  // Calculate estimated total value (using provided values if available)
   const totalValueEstimate = cars.reduce((total, car) => {
-    // This is a very basic estimation. In a real app, you'd want more sophisticated valuation
-    // For now, we'll use a simple multiplier based on the car's age and some assumptions
+    // If car has a manually specified value, use that
+    if (car.value !== undefined) {
+      return total + car.value;
+    }
+    
+    // Otherwise, estimate based on age and condition
     const baseValue = 50000; // Starting base value
     const currentYear = new Date().getFullYear();
     const carAge = currentYear - parseInt(car.year);
@@ -128,4 +131,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

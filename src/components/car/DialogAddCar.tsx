@@ -58,6 +58,7 @@ export const DialogAddCar = ({
       licensePlate: "",
       numberOfKeys: 0,
       owner: "",
+      value: 0,
       images: [],
       documents: [],
     },
@@ -90,6 +91,7 @@ export const DialogAddCar = ({
         licensePlate: data.licensePlate,
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
+        value: data.value,
         documents: validDocuments,
       });
       

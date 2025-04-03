@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -61,6 +60,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       numberOfKeys: car.numberOfKeys || 0,
       owner: car.owner || "",
       status: car.status || "Available",
+      value: car.value || 0,
       images: car.images || [],
     },
   });
@@ -85,6 +85,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         licensePlate: data.licensePlate,
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
+        value: data.value,
         images: data.images || [],
       });
       
@@ -277,6 +278,22 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
               
               <FormField
                 control={form.control}
+                name="value"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Value ($)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g. 50000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
@@ -299,36 +316,36 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="collectionId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Collection</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select collection" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {collections.map(collection => (
+                          <SelectItem key={collection.id} value={collection.id}>
+                            {collection.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             
             <ImageUploadField form={form} />
             
             <AdditionalInfoFields form={form} />
-            
-            <FormField
-              control={form.control}
-              name="collectionId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Collection</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select collection" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {collections.map(collection => (
-                        <SelectItem key={collection.id} value={collection.id}>
-                          {collection.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             
             <FormField
               control={form.control}

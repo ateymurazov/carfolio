@@ -21,4 +21,5 @@ export interface Car {
   licensePlate?: string;
   numberOfKeys?: number;
   owner?: string;
+  value?: number;
 }

@@ -19,6 +19,7 @@ export const carFormSchema = z.object({
   owner: z.string().optional(),
   status: z.string().optional(),
   images: z.array(z.string()).optional(),
+  value: z.coerce.number().nonnegative().optional(),
   documents: z.array(
     z.object({
       name: z.string(),

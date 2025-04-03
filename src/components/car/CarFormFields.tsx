@@ -198,29 +198,43 @@ export const MiscFields = ({ form, collections }: CarFormFieldsProps) => {
         
         <FormField
           control={form.control}
-          name="collectionId"
+          name="value"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Collection</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select collection" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {collections.map(collection => (
-                    <SelectItem key={collection.id} value={collection.id}>
-                      {collection.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormLabel>Value ($)</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="e.g. 50000" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
+      
+      <FormField
+        control={form.control}
+        name="collectionId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Collection</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select collection" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {collections.map(collection => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       
       <FormField
         control={form.control}
