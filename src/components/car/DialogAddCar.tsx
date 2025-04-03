@@ -24,6 +24,7 @@ import {
   MiscFields
 } from "./CarFormFields";
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
+import { ImageUploadField } from "./ImageUploadField";
 
 interface DialogAddCarProps {
   open: boolean;
@@ -56,6 +57,7 @@ export const DialogAddCar = ({
       licensePlate: "",
       numberOfKeys: 0,
       owner: "",
+      images: [],
     },
   });
   
@@ -74,7 +76,7 @@ export const DialogAddCar = ({
         mileage: data.mileage,
         notes: data.notes || "",
         collectionId: data.collectionId,
-        images: [],
+        images: data.images || [],
         status: "Available",
         acquisitionDate: new Date().toISOString().split('T')[0],
         registration: data.registration,
@@ -115,6 +117,7 @@ export const DialogAddCar = ({
             <IdentificationFields form={form} />
             <ColorFields form={form} />
             <DetailsFields form={form} />
+            <ImageUploadField form={form} />
             <AdditionalInfoFields form={form} />
             <MiscFields form={form} collections={collections} />
             

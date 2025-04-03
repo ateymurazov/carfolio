@@ -18,6 +18,7 @@ export const carFormSchema = z.object({
   numberOfKeys: z.coerce.number().nonnegative().optional(),
   owner: z.string().optional(),
   status: z.string().optional(),
+  images: z.array(z.string()).optional(),
 });
 
 export type CarFormValues = z.infer<typeof carFormSchema>;

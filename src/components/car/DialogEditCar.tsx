@@ -29,6 +29,7 @@ import { useCarCollections } from "@/hooks/useCarCollections";
 import { Car } from "@/types/car";
 import { carFormSchema } from "./carFormSchema";
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
+import { ImageUploadField } from "./ImageUploadField";
 
 type FormValues = z.infer<typeof carFormSchema>;
 
@@ -60,6 +61,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       numberOfKeys: car.numberOfKeys || 0,
       owner: car.owner || "",
       status: car.status || "Available",
+      images: car.images || [],
     },
   });
   
@@ -83,12 +85,13 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         licensePlate: data.licensePlate,
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
+        images: data.images || [],
       });
       
       toast({
         title: "Car updated",
         description: `${data.year} ${data.make} ${data.model} has been updated.`,
-        variant: "default", // Changed from "success" to "default"
+        variant: "default",
       });
       
       onOpenChange(false);
@@ -297,6 +300,8 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
                 )}
               />
             </div>
+            
+            <ImageUploadField form={form} />
             
             <AdditionalInfoFields form={form} />
             
