@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Car, Cars, Users } from "lucide-react";
+import { BarChart, Car, Users, PackageOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { CollectionGrid } from "@/components/collection/CollectionGrid";
@@ -24,7 +23,7 @@ const Dashboard = () => {
       title: "Collections",
       value: collections.length,
       description: "Organized car collections",
-      icon: <Cars className="h-6 w-6 text-accent-amber" />,
+      icon: <PackageOpen className="h-6 w-6 text-accent-amber" />,
       change: "No change"
     },
     {

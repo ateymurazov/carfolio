@@ -36,7 +36,7 @@ const formSchema = z.object({
   interiorColor: z.string().optional(),
   transmission: z.string().optional(),
   condition: z.string().optional(),
-  mileage: z.string().transform((val) => parseInt(val || "0")),
+  mileage: z.string().transform((val) => Number(val || "0")),
   notes: z.string().optional(),
   collectionId: z.string().min(1, "Collection is required"),
 });
