@@ -70,6 +70,11 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
   
   const onSubmit = (data: FormValues) => {
     try {
+      // Ensure documents have both required fields before adding to the car
+      const validDocuments = (data.documents || []).filter(
+        doc => doc.name && doc.url
+      ) as { name: string; url: string }[];
+      
       updateCar(car.id, {
         ...car,
         make: data.make,
@@ -90,7 +95,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         owner: data.owner,
         value: data.value,
         images: data.images || [],
-        documents: data.documents || [],
+        documents: validDocuments,
       });
       
       toast({
