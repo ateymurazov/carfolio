@@ -1,75 +1,17 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
 import { ImagePlus, Trash2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface ImageUploadFieldProps {
   form: UseFormReturn<any>;
 }
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
-  // Initialize previewUrls based on form values
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  
-  // Sync previewUrls with form.images when the component mounts
-  useEffect(() => {
-    const currentImages = form.getValues("images") || [];
-    setPreviewUrls(currentImages);
-  }, [form]);
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    const currentImages = form.getValues("images") || [];
-    const newImageUrls: string[] = [];
-    
-    // Process each file and create URL
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          const imageUrl = e.target.result.toString();
-          newImageUrls.push(imageUrl);
-          
-          // Update preview URLs
-          setPreviewUrls(prev => {
-            const updated = [...prev, imageUrl];
-            
-            // Update form value with ALL images
-            form.setValue("images", [...currentImages, imageUrl], {
-              shouldValidate: true,
-              shouldDirty: true,
-            });
-            
-            return updated;
-          });
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-  
-  const removeImage = (index: number) => {
-    const currentImages = form.getValues("images") || [];
-    const updatedImages = [...currentImages];
-    updatedImages.splice(index, 1);
-    
-    // Update form value
-    form.setValue("images", updatedImages, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-    
-    // Update preview URLs
-    setPreviewUrls(prev => {
-      const updated = [...prev];
-      updated.splice(index, 1);
-      return updated;
-    });
-  };
+  const { handleImageChange, removeImage } = useImageUpload(form, "images");
   
   return (
     <FormField
