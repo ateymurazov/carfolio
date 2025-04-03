@@ -4,6 +4,16 @@
  */
 
 /**
+ * Type guard to check if value is eligible for JSON serialization
+ */
+function isSerializable(value: any): boolean {
+  return value !== undefined && 
+         value !== null && 
+         typeof value !== 'function' && 
+         typeof value !== 'symbol';
+}
+
+/**
  * Safely retrieves data from localStorage
  * @param key The localStorage key
  * @param fallback Default value if retrieval fails
@@ -20,7 +30,7 @@ export function getFromLocalStorage<T>(key: string, fallback: T): T {
       return fallback;
     }
     
-    const parsed = JSON.parse(item);
+    const parsed = JSON.parse(item) as T;
     console.log(`Successfully retrieved data for '${key}'`);
     return parsed;
   } catch (error) {
