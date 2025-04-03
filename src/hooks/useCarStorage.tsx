@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
@@ -169,22 +170,45 @@ export function useCarStorage(): CarStorageState & {
   updateCars: (cars: Car[]) => void;
   updateCollections: (collections: Collection[]) => void;
 } {
-  const [cars, setCars] = useState<Car[]>(() => 
-    getFromLocalStorage<Car[]>('cars', initialCars)
-  );
+  // Use a version key to detect fresh installs or updates
+  const STORAGE_VERSION = "car-app-v1";
   
-  const [collections, setCollections] = useState<Collection[]>(() => 
-    getFromLocalStorage<Collection[]>('collections', initialCollections)
-  );
+  // Initialize state with data from localStorage or initial data
+  const [cars, setCars] = useState<Car[]>(() => {
+    // Check if we have stored version
+    const storedVersion = localStorage.getItem('storageVersion');
+    
+    // If version doesn't match, use initial data (can be used for migrations later)
+    if (storedVersion !== STORAGE_VERSION) {
+      localStorage.setItem('storageVersion', STORAGE_VERSION);
+      return initialCars;
+    }
+    
+    return getFromLocalStorage<Car[]>('cars', initialCars);
+  });
+  
+  const [collections, setCollections] = useState<Collection[]>(() => {
+    const storedVersion = localStorage.getItem('storageVersion');
+    if (storedVersion !== STORAGE_VERSION) {
+      return initialCollections;
+    }
+    return getFromLocalStorage<Collection[]>('collections', initialCollections);
+  });
   
   // Save cars to localStorage whenever they change
   useEffect(() => {
-    saveToLocalStorage('cars', cars);
+    const success = saveToLocalStorage('cars', cars);
+    if (success) {
+      console.log(`Successfully saved ${cars.length} cars to localStorage`);
+    }
   }, [cars]);
   
   // Save collections to localStorage whenever they change
   useEffect(() => {
-    saveToLocalStorage('collections', collections);
+    const success = saveToLocalStorage('collections', collections);
+    if (success) {
+      console.log(`Successfully saved ${collections.length} collections to localStorage`);
+    }
   }, [collections]);
   
   return {

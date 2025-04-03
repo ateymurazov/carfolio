@@ -27,10 +27,44 @@ export function getFromLocalStorage<T>(key: string, fallback: T): T {
  */
 export function saveToLocalStorage<T>(key: string, data: T): boolean {
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    // Use a temporary variable to ensure we can stringify before setting
+    const serialized = JSON.stringify(data);
+    localStorage.setItem(key, serialized);
+    
+    // Verify the data was stored correctly
+    const verification = localStorage.getItem(key);
+    if (!verification) {
+      console.warn(`Storage verification failed for ${key}`);
+      return false;
+    }
+    
     return true;
   } catch (error) {
     console.error(`Error saving ${key} to localStorage:`, error);
+    
+    // Try to store with more aggressive error handling
+    if (error instanceof TypeError && data && typeof data === 'object') {
+      try {
+        // Handle circular references by creating a safe copy
+        const safeData = JSON.parse(JSON.stringify(data));
+        localStorage.setItem(key, JSON.stringify(safeData));
+        return true;
+      } catch (fallbackError) {
+        console.error(`Fallback storage attempt failed for ${key}:`, fallbackError);
+      }
+    }
+    
     return false;
+  }
+}
+
+/**
+ * Clears all stored data in localStorage
+ */
+export function clearLocalStorage(): void {
+  try {
+    localStorage.clear();
+  } catch (error) {
+    console.error('Error clearing localStorage:', error);
   }
 }

@@ -25,6 +25,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     if (!files || files.length === 0) return;
     
     const currentImages = form.getValues(fieldName) || [];
+    const processedFiles: string[] = [];
     
     // Process each file and create URL
     Array.from(files).forEach(file => {
@@ -32,19 +33,23 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       reader.onload = (e) => {
         if (e.target?.result) {
           const imageUrl = e.target.result.toString();
+          processedFiles.push(imageUrl);
           
-          // Update preview URLs and form value
-          setPreviewUrls(prev => {
-            const updated = [...prev, imageUrl];
+          // Update preview URLs and form value atomically to avoid race conditions
+          if (processedFiles.length === files.length) {
+            const allImages = [...currentImages, ...processedFiles];
             
-            // Update form value with ALL images
-            form.setValue(fieldName, [...currentImages, imageUrl], {
+            // Update the form with all images
+            form.setValue(fieldName, allImages, {
               shouldValidate: true,
               shouldDirty: true,
             });
             
-            return updated;
-          });
+            // Update preview separately
+            setPreviewUrls(allImages);
+            
+            console.log(`Updated ${fieldName} with ${allImages.length} images`);
+          }
         }
       };
       reader.readAsDataURL(file);
@@ -66,11 +71,9 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     });
     
     // Update preview URLs
-    setPreviewUrls(prev => {
-      const updated = [...prev];
-      updated.splice(index, 1);
-      return updated;
-    });
+    setPreviewUrls(updatedImages);
+    
+    console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
   };
 
   return {
