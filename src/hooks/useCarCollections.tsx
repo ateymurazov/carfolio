@@ -12,10 +12,10 @@ interface CarCollectionsContextType {
   getCollectionById: (id: string) => Collection | undefined;
   getCarsByCollectionId: (collectionId: string) => Car[];
   addCar: (car: Car) => void;
-  updateCar: (id: string, car: Car) => void;
+  updateCar: (idOrCars: string | Car[], car?: Car) => void;
   deleteCar: (id: string) => void;
   addCollection: (collection: Collection) => void;
-  updateCollection: (id: string, collection: Collection) => void;
+  updateCollection: (idOrCollections: string | Collection[], collection?: Collection) => void;
   deleteCollection: (id: string) => void;
 }
 
@@ -39,9 +39,18 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     updateCars([...cars, car]);
   };
   
-  const updateCar = (id: string, car: Car) => {
-    console.log("Updating car:", id, car);
-    updateCars(cars.map(c => c.id === id ? car : c));
+  const updateCar = (idOrCars: string | Car[], carUpdate?: Car) => {
+    // Bulk update case
+    if (Array.isArray(idOrCars)) {
+      updateCars(idOrCars);
+      return;
+    }
+    
+    // Single car update case
+    if (idOrCars && carUpdate) {
+      console.log("Updating car:", idOrCars, carUpdate);
+      updateCars(cars.map(c => c.id === idOrCars ? carUpdate : c));
+    }
   };
   
   const deleteCar = (id: string) => {
@@ -57,8 +66,17 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     updateCollections([...collections, collection]);
   };
   
-  const updateCollection = (id: string, collection: Collection) => {
-    updateCollections(collections.map(c => c.id === id ? collection : c));
+  const updateCollection = (idOrCollections: string | Collection[], collectionUpdate?: Collection) => {
+    // Bulk update case
+    if (Array.isArray(idOrCollections)) {
+      updateCollections(idOrCollections);
+      return;
+    }
+    
+    // Single collection update case
+    if (idOrCollections && collectionUpdate) {
+      updateCollections(collections.map(c => c.id === idOrCollections ? collectionUpdate : c));
+    }
   };
   
   const deleteCollection = (id: string) => {
