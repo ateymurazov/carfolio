@@ -42,7 +42,7 @@ const initialCars: Car[] = [
     notes: "Fully restored classic Mustang with original parts.",
     collectionId: "c1",
     images: [
-      "https://images.unsplash.com/photo-1610652492231-0febd5c2f240?q=80&w=1000",
+      "https://images.unsplash.com/photo-1593808737766-d49c17c342c6?q=80&w=1000",
       "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000",
     ],
     status: "Available",
