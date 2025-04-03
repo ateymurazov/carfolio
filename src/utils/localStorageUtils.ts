@@ -11,10 +11,18 @@
  */
 export function getFromLocalStorage<T>(key: string, fallback: T): T {
   try {
+    console.log(`Attempting to retrieve '${key}' from localStorage`);
     const item = localStorage.getItem(key);
+    
     // Only use fallback if item is null/undefined, not if it's an empty array/object
-    if (item === null || item === undefined) return fallback;
-    return JSON.parse(item);
+    if (item === null || item === undefined) {
+      console.log(`No data found for '${key}', using fallback`);
+      return fallback;
+    }
+    
+    const parsed = JSON.parse(item);
+    console.log(`Successfully retrieved data for '${key}'`);
+    return parsed;
   } catch (error) {
     console.error(`Error reading ${key} from localStorage:`, error);
     return fallback;
@@ -72,7 +80,53 @@ export function saveToLocalStorage<T>(key: string, data: T): boolean {
 export function clearLocalStorage(): void {
   try {
     localStorage.clear();
+    console.log('localStorage has been cleared');
   } catch (error) {
     console.error('Error clearing localStorage:', error);
+  }
+}
+
+/**
+ * Retrieves all keys stored in localStorage
+ */
+export function getLocalStorageKeys(): string[] {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) keys.push(key);
+    }
+    return keys;
+  } catch (error) {
+    console.error('Error getting localStorage keys:', error);
+    return [];
+  }
+}
+
+/**
+ * Inspects the contents of localStorage and returns a summary
+ */
+export function inspectLocalStorage(): Record<string, any> {
+  try {
+    const contents: Record<string, any> = {};
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        try {
+          const value = localStorage.getItem(key);
+          if (value) {
+            contents[key] = JSON.parse(value);
+          }
+        } catch (e) {
+          contents[key] = "[Error parsing value]";
+        }
+      }
+    }
+    
+    return contents;
+  } catch (error) {
+    console.error('Error inspecting localStorage:', error);
+    return {};
   }
 }

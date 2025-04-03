@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
@@ -175,54 +174,48 @@ export function useCarStorage(): CarStorageState & {
   
   // Initialize state with data from localStorage or initial data
   const [cars, setCars] = useState<Car[]>(() => {
-    // Check if we have stored version
-    const storedVersion = localStorage.getItem('storageVersion');
-    
+    console.log("Initializing cars from localStorage");
     // Check for existing car data first
-    const existingCars = localStorage.getItem('cars');
-    if (existingCars) {
-      try {
-        // If we have car data, use it regardless of version
-        return JSON.parse(existingCars);
-      } catch (e) {
-        console.error("Failed to parse stored cars, using initial data", e);
+    try {
+      const existingCars = localStorage.getItem('cars');
+      if (existingCars) {
+        const parsedCars = JSON.parse(existingCars);
+        console.log(`Found ${parsedCars.length} cars in localStorage`);
+        return parsedCars;
       }
+    } catch (e) {
+      console.error("Failed to parse stored cars, using initial data", e);
     }
     
-    // If no existing data or parse failed, check version
-    if (storedVersion !== STORAGE_VERSION) {
-      localStorage.setItem('storageVersion', STORAGE_VERSION);
-      return initialCars;
-    }
-    
-    return getFromLocalStorage<Car[]>('cars', initialCars);
+    // If no existing data or parse failed, use initial data
+    console.log("No existing cars found, using initial data");
+    return initialCars;
   });
   
   const [collections, setCollections] = useState<Collection[]>(() => {
-    const storedVersion = localStorage.getItem('storageVersion');
-    
+    console.log("Initializing collections from localStorage");
     // Check for existing collections data first
-    const existingCollections = localStorage.getItem('collections');
-    if (existingCollections) {
-      try {
-        // If we have collections data, use it regardless of version
-        return JSON.parse(existingCollections);
-      } catch (e) {
-        console.error("Failed to parse stored collections, using initial data", e);
+    try {
+      const existingCollections = localStorage.getItem('collections');
+      if (existingCollections) {
+        const parsedCollections = JSON.parse(existingCollections);
+        console.log(`Found ${parsedCollections.length} collections in localStorage`);
+        return parsedCollections;
       }
+    } catch (e) {
+      console.error("Failed to parse stored collections, using initial data", e);
     }
     
-    if (storedVersion !== STORAGE_VERSION) {
-      return initialCollections;
-    }
-    
-    return getFromLocalStorage<Collection[]>('collections', initialCollections);
+    // If no existing data or parse failed, use initial data
+    console.log("No existing collections found, using initial data");
+    return initialCollections;
   });
   
   // Save cars to localStorage whenever they change
   useEffect(() => {
     if (!cars) return; // Don't save if cars is null/undefined
     
+    console.log(`Saving ${cars.length} cars to localStorage`);
     const success = saveToLocalStorage('cars', cars);
     if (success) {
       console.log(`Successfully saved ${cars.length} cars to localStorage`);
@@ -235,6 +228,7 @@ export function useCarStorage(): CarStorageState & {
   useEffect(() => {
     if (!collections) return; // Don't save if collections is null/undefined
     
+    console.log(`Saving ${collections.length} collections to localStorage`);
     const success = saveToLocalStorage('collections', collections);
     if (success) {
       console.log(`Successfully saved ${collections.length} collections to localStorage`);
