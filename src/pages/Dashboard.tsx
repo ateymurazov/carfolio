@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Car, Users, PackageOpen } from "lucide-react";
@@ -9,6 +10,26 @@ import { FeaturedCar } from "@/components/car/FeaturedCar";
 const Dashboard = () => {
   const navigate = useNavigate();
   const { collections, cars } = useCarCollections();
+  
+  // Calculate estimated total value (this is a very simple estimation)
+  const totalValueEstimate = cars.reduce((total, car) => {
+    // This is a very basic estimation. In a real app, you'd want more sophisticated valuation
+    // For now, we'll use a simple multiplier based on the car's age and some assumptions
+    const baseValue = 50000; // Starting base value
+    const currentYear = new Date().getFullYear();
+    const carAge = currentYear - parseInt(car.year);
+    
+    // Rough estimate: newer cars and classic cars might be worth more
+    const ageMultiplier = car.condition === "Excellent" 
+      ? 1.5 
+      : car.condition === "Good" 
+        ? 1.2 
+        : 1;
+    
+    const estimatedValue = baseValue * Math.max(0.5, 1.5 - (carAge / 20)) * ageMultiplier;
+    
+    return total + estimatedValue;
+  }, 0);
   
   // Stats cards data
   const statsCards = [
@@ -28,7 +49,7 @@ const Dashboard = () => {
     },
     {
       title: "Value Estimate",
-      value: "$2.4M",
+      value: `$${(totalValueEstimate / 1000000).toFixed(1)}M`,
       description: "Total collection value",
       icon: <BarChart className="h-6 w-6 text-accent-green" />,
       change: "+$125K from last month"
@@ -107,3 +128,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
