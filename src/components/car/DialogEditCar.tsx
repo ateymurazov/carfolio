@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -29,6 +30,7 @@ import { Car } from "@/types/car";
 import { carFormSchema } from "./carFormSchema";
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
 import { ImageUploadField } from "./ImageUploadField";
+import { DocumentUploadField } from "./DocumentUploadField";
 
 type FormValues = z.infer<typeof carFormSchema>;
 
@@ -62,6 +64,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       status: car.status || "Available",
       value: car.value || 0,
       images: car.images || [],
+      documents: car.documents || [],
     },
   });
   
@@ -87,6 +90,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         owner: data.owner,
         value: data.value,
         images: data.images || [],
+        documents: data.documents || [],
       });
       
       toast({
@@ -345,6 +349,8 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
             
             <ImageUploadField form={form} />
             
+            <DocumentUploadField form={form} />
+            
             <AdditionalInfoFields form={form} />
             
             <FormField
@@ -383,3 +389,4 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
     </Dialog>
   );
 };
+
