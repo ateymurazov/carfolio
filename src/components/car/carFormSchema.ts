@@ -13,6 +13,10 @@ export const carFormSchema = z.object({
   mileage: z.coerce.number().nonnegative("Mileage must be a positive number"),
   notes: z.string().optional(),
   collectionId: z.string().min(1, "Collection is required"),
+  registration: z.string().optional(),
+  licensePlate: z.string().optional(),
+  numberOfKeys: z.coerce.number().nonnegative().optional(),
+  owner: z.string().optional(),
 });
 
 export type CarFormValues = z.infer<typeof carFormSchema>;

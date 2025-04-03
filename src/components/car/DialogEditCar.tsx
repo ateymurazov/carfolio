@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -27,23 +26,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/use-toast";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Car } from "@/types/car";
+import { carFormSchema } from "./carFormSchema";
+import { AdditionalInfoFields } from "./AdditionalInfoFields";
 
-const formSchema = z.object({
-  make: z.string().min(1, "Make is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.string().regex(/^\d{4}$/, "Year must be a 4-digit number"),
-  vin: z.string().min(1, "VIN is required"),
-  exteriorColor: z.string().optional(),
-  interiorColor: z.string().optional(),
-  transmission: z.string().optional(),
-  condition: z.string().optional(),
-  mileage: z.coerce.number().nonnegative("Mileage must be a positive number"),
-  notes: z.string().optional(),
-  collectionId: z.string().min(1, "Collection is required"),
-  status: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof carFormSchema>;
 
 interface DialogEditCarProps {
   car: Car;
@@ -55,7 +41,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
   const { collections, updateCar } = useCarCollections();
   
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(carFormSchema),
     defaultValues: {
       make: car.make,
       model: car.model,
@@ -68,7 +54,10 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       mileage: car.mileage,
       notes: car.notes,
       collectionId: car.collectionId,
-      status: car.status,
+      registration: car.registration || "",
+      licensePlate: car.licensePlate || "",
+      numberOfKeys: car.numberOfKeys || 0,
+      owner: car.owner || "",
     },
   });
   
@@ -87,7 +76,11 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         mileage: data.mileage,
         notes: data.notes || "",
         collectionId: data.collectionId,
-        status: data.status || "Available",
+        status: car.status || "Available",
+        registration: data.registration,
+        licensePlate: data.licensePlate,
+        numberOfKeys: data.numberOfKeys,
+        owner: data.owner,
       });
       
       toast({
@@ -107,7 +100,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Car</DialogTitle>
           <DialogDescription>
@@ -301,6 +294,8 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
                 )}
               />
             </div>
+            
+            <AdditionalInfoFields form={form} />
             
             <FormField
               control={form.control}

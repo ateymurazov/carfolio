@@ -23,6 +23,7 @@ import {
   DetailsFields,
   MiscFields
 } from "./CarFormFields";
+import { AdditionalInfoFields } from "./AdditionalInfoFields";
 
 interface DialogAddCarProps {
   open: boolean;
@@ -51,6 +52,10 @@ export const DialogAddCar = ({
       mileage: 0,
       notes: "",
       collectionId: defaultCollectionId || (collections.length > 0 ? collections[0].id : ""),
+      registration: "",
+      licensePlate: "",
+      numberOfKeys: 0,
+      owner: "",
     },
   });
   
@@ -72,6 +77,10 @@ export const DialogAddCar = ({
         images: [],
         status: "Available",
         acquisitionDate: new Date().toISOString().split('T')[0],
+        registration: data.registration,
+        licensePlate: data.licensePlate,
+        numberOfKeys: data.numberOfKeys,
+        owner: data.owner,
       });
       
       toast({
@@ -92,7 +101,7 @@ export const DialogAddCar = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Car</DialogTitle>
           <DialogDescription>
@@ -106,6 +115,7 @@ export const DialogAddCar = ({
             <IdentificationFields form={form} />
             <ColorFields form={form} />
             <DetailsFields form={form} />
+            <AdditionalInfoFields form={form} />
             <MiscFields form={form} collections={collections} />
             
             <DialogFooter>
