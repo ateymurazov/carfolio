@@ -22,7 +22,9 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   
   // Sync previewUrls with form images when component mounts or changes
   useEffect(() => {
-    const syncImages = () => {
+    let isMounted = true;
+    
+    const syncImages = async () => {
       try {
         const currentImages = form.getValues(fieldName) || [];
         
@@ -46,18 +48,17 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
             return '';
           }).filter(Boolean);
           
-          setPreviewUrls(loadedImages);
+          if (isMounted) {
+            setPreviewUrls(loadedImages);
+          }
           console.log(`Initialized ${fieldName} with ${loadedImages.length} images`);
         } else {
-          setPreviewUrls([]);
+          if (isMounted) {
+            setPreviewUrls([]);
+          }
         }
       } catch (error) {
         console.error("Error syncing images:", error);
-        toast({
-          title: "Error loading images",
-          description: "There was a problem loading your images",
-          variant: "destructive"
-        });
       }
     };
     
@@ -65,12 +66,15 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     // Watch for changes to the images field
     const subscription = form.watch((value, { name }) => {
-      if (name === fieldName) {
+      if (name === fieldName && isMounted) {
         syncImages();
       }
     });
     
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [form, fieldName, imageStorage]);
   
   /**
@@ -82,18 +86,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     setIsProcessing(true);
     
-    // Show loading toast for many images
-    let loadingToast;
-    if (files.length > 3) {
-      loadingToast = toast({
-        title: "Processing images",
-        description: `Optimizing ${files.length} images, please wait...`,
-      });
-    }
-    
     try {
-      const currentImages = form.getValues(fieldName) || [];
-      
       // Process the files
       const validFiles = await processFiles(files);
       
@@ -145,7 +138,11 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     if (imageToRemove && typeof imageToRemove === 'string' && !imageToRemove.startsWith('data:') && 
         !imageToRemove.startsWith('http') && !imageToRemove.startsWith('/')) {
       // Only remove from imageStorage if it's an ID (not a data URL or direct URL)
-      imageStorage.removeImage(imageToRemove);
+      try {
+        imageStorage.removeImage(imageToRemove);
+      } catch (error) {
+        console.error("Error removing image from storage:", error);
+      }
     }
     
     const updatedImages = [...currentImages];
@@ -168,11 +165,6 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     setPreviewUrls(previewImages);
     
     console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
-    
-    toast({
-      title: "Image removed",
-      description: `Image removed successfully. ${updatedImages.length} remaining.`,
-    });
   };
 
   return {

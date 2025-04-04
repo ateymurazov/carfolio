@@ -31,32 +31,28 @@ export const CarImage = ({
   
   useEffect(() => {
     let isMounted = true;
+    
+    // Always start with fallback image while loading the actual image
+    setImageUrl(fallbackSrc);
     setIsLoading(true);
-    
-    // Immediately set fallback as the initial state
-    if (fallbackSrc && isMounted) {
-      setImageUrl(fallbackSrc);
-    }
-    
-    // Reset error state when imageId changes
     setError(false);
     
     const loadImage = async () => {
-      try {
-        if (!imageId) {
-          if (isMounted) {
-            setError(true);
-            setIsLoading(false);
-            if (onError) onError();
-          }
-          return;
+      // Handle empty imageId case
+      if (!imageId) {
+        if (isMounted) {
+          setError(true);
+          setIsLoading(false);
+          if (onError) onError();
         }
-        
+        return;
+      }
+      
+      try {
         // Handle direct URLs and data URLs immediately
         if (imageId.startsWith('data:') || imageId.startsWith('http') || imageId.startsWith('/')) {
           if (isMounted) {
             setImageUrl(imageId);
-            setError(false);
             setIsLoading(false);
           }
           return;
@@ -67,6 +63,7 @@ export const CarImage = ({
         
         if (!img || img === '/placeholder.svg') {
           if (isMounted) {
+            console.log(`Image not found for ID: ${imageId}`);
             setError(true);
             setIsLoading(false);
             if (onError) onError();
@@ -74,19 +71,21 @@ export const CarImage = ({
           return;
         }
         
-        // Set the image URL first, then validate
+        // Set the image URL first so we can start showing something
         if (isMounted) {
           setImageUrl(img);
         }
         
-        // Validate the image in background
+        // Then validate the image in background to ensure it's valid
         const isValid = await validateImage(img);
         
         if (isMounted) {
           if (!isValid) {
+            console.log(`Image validation failed for ID: ${imageId}`);
             setError(true);
             if (onError) onError();
           }
+          
           setIsLoading(false);
         }
       } catch (err) {
@@ -99,7 +98,6 @@ export const CarImage = ({
       }
     };
     
-    // Load image immediately but don't cause cascading effects
     loadImage();
     
     return () => {
@@ -112,7 +110,7 @@ export const CarImage = ({
     if (onError) onError();
   };
   
-  // Show placeholder if image is in error state
+  // Show placeholder if in error state
   if (error) {
     if (!showPlaceholder) return null;
     
@@ -144,7 +142,7 @@ export const CarImage = ({
     <img 
       src={imageUrl}
       alt={alt}
-      className={className}
+      className={cn(className, isLoading && "opacity-70")}
       onError={handleImageError}
     />
   );

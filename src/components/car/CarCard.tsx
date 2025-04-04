@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ interface CarCardProps {
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   const [hasImageError, setHasImageError] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   
   // Get the first valid image ID or empty string if none exists
   const getFirstValidImage = () => {
@@ -23,9 +24,19 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   
   const imageId = getFirstValidImage();
   
+  // Reset image error state when car changes
+  useEffect(() => {
+    setHasImageError(false);
+    setIsImageLoaded(false);
+  }, [car.id, imageId]);
+  
   const handleImageError = () => {
     console.log(`Image error for car ${car.id}`);
     setHasImageError(true);
+  };
+  
+  const handleImageLoad = () => {
+    setIsImageLoaded(true);
   };
   
   return (

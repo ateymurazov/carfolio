@@ -1,3 +1,4 @@
+
 import { useImageStorageCore } from "./useImageStorageCore";
 import { optimizeImage } from "@/utils/imageUtils";
 import { toast } from "@/components/ui/use-toast";
@@ -24,11 +25,16 @@ export function useImageStorage(options = {}) {
       // Optimize the image if it's a data URL
       let optimizedImage = imageData;
       if (imageData.startsWith('data:image')) {
-        optimizedImage = await optimizeImage(
-          imageData, 
-          storageOptions.compressionQuality, 
-          storageOptions.maxWidth
-        );
+        try {
+          optimizedImage = await optimizeImage(
+            imageData, 
+            storageOptions.compressionQuality, 
+            storageOptions.maxWidth
+          );
+        } catch (error) {
+          console.warn("Image optimization failed, using original:", error);
+          optimizedImage = imageData; // Use original image if optimization fails
+        }
       }
       
       // Update the image store
@@ -56,14 +62,19 @@ export function useImageStorage(options = {}) {
     }
     
     // Process images in batches to avoid blocking the UI
-    const batchSize = 3;
+    const batchSize = 2; // Reduced batch size
     const results: string[] = [];
     
     for (let i = 0; i < imageDatas.length; i += batchSize) {
       const batch = imageDatas.slice(i, i + batchSize);
       const batchPromises = batch.filter(Boolean).map(img => storeImage(img));
-      const batchResults = await Promise.all(batchPromises);
-      results.push(...batchResults);
+      
+      try {
+        const batchResults = await Promise.all(batchPromises);
+        results.push(...batchResults);
+      } catch (error) {
+        console.error("Error processing image batch:", error);
+      }
     }
     
     return results;
@@ -76,7 +87,6 @@ export function useImageStorage(options = {}) {
     try {
       // Handle invalid inputs
       if (!imageId) {
-        console.warn("Empty image ID provided to getImage");
         return '/placeholder.svg';
       }
       

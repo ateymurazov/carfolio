@@ -87,7 +87,7 @@ export const validateImage = (imageUrl: string): Promise<boolean> => {
     const timeoutId = setTimeout(() => {
       console.warn("Image validation timed out:", imageUrl.substring(0, 50) + "...");
       resolve(false);
-    }, 3000);
+    }, 2000); // Reduced timeout to 2 seconds for faster feedback
     
     const img = new Image();
     
@@ -122,9 +122,8 @@ export const preloadImage = (imageUrl: string): Promise<string> => {
     
     // Set timeout to prevent hanging
     const timeoutId = setTimeout(() => {
-      console.warn("Image preload timed out:", imageUrl.substring(0, 50) + "...");
       reject(new Error(`Preload timed out: ${imageUrl.substring(0, 50)}...`));
-    }, 3000);
+    }, 2000); // Reduced timeout
     
     const img = new Image();
     img.onload = () => {
