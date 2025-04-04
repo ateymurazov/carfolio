@@ -35,6 +35,28 @@ export function getFromLocalStorage<T>(key: string, fallback: T): T {
     return parsed;
   } catch (error) {
     console.error(`Error reading ${key} from localStorage:`, error);
+    
+    // Try to recover from versions if available
+    try {
+      const versionsKey = `${key}_versions`;
+      const versionsData = localStorage.getItem(versionsKey);
+      
+      if (versionsData) {
+        const versions = JSON.parse(versionsData);
+        if (versions && Array.isArray(versions) && versions.length > 0) {
+          // Get the most recent version
+          const latestVersion = versions[versions.length - 1];
+          if (latestVersion && latestVersion.data) {
+            console.log(`Recovered ${key} from version backup`);
+            const recoveredData = JSON.parse(latestVersion.data);
+            return recoveredData;
+          }
+        }
+      }
+    } catch (recoveryError) {
+      console.error(`Recovery attempt for ${key} failed:`, recoveryError);
+    }
+    
     return fallback;
   }
 }
@@ -55,6 +77,17 @@ export function saveToLocalStorage<T>(key: string, data: T): boolean {
 
     // Use a temporary variable to ensure we can stringify before setting
     const serialized = JSON.stringify(data);
+    
+    // Create a quick backup of the previous value before overwriting
+    try {
+      const prevValue = localStorage.getItem(key);
+      if (prevValue) {
+        localStorage.setItem(`${key}_prev`, prevValue);
+      }
+    } catch (e) {
+      console.error(`Failed to create quick backup for ${key}`, e);
+    }
+    
     localStorage.setItem(key, serialized);
     
     // Verify the data was stored correctly
@@ -89,6 +122,38 @@ export function saveToLocalStorage<T>(key: string, data: T): boolean {
  */
 export function clearLocalStorage(): void {
   try {
+    // Create emergency backup of all data
+    const emergencyBackup: Record<string, any> = {};
+    const keys = getLocalStorageKeys();
+    
+    // Only backup actual data keys (not version or temporary keys)
+    const dataKeys = keys.filter(k => 
+      !k.includes('_versions') && 
+      !k.includes('_prev') && 
+      !k.includes('_backup') &&
+      !k.includes('_corrupted')
+    );
+    
+    // Collect all data
+    dataKeys.forEach(key => {
+      try {
+        const data = localStorage.getItem(key);
+        if (data) {
+          emergencyBackup[key] = data;
+        }
+      } catch (e) {
+        console.error(`Failed to backup ${key}`, e);
+      }
+    });
+    
+    // Save emergency backup
+    try {
+      const backupKey = `emergency_backup_${new Date().toISOString()}`;
+      localStorage.setItem(backupKey, JSON.stringify(emergencyBackup));
+    } catch (e) {
+      console.error('Failed to save emergency backup', e);
+    }
+    
     localStorage.clear();
     console.log('localStorage has been cleared');
   } catch (error) {
@@ -138,5 +203,47 @@ export function inspectLocalStorage(): Record<string, any> {
   } catch (error) {
     console.error('Error inspecting localStorage:', error);
     return {};
+  }
+}
+
+/**
+ * Attempts to restore data from an automatic backup
+ * @param key The localStorage key to restore
+ * @returns boolean indicating success
+ */
+export function restorePreviousVersion(key: string): boolean {
+  try {
+    // Check for a previous version
+    const prevKey = `${key}_prev`;
+    const prevValue = localStorage.getItem(prevKey);
+    
+    if (prevValue) {
+      // Restore the previous value
+      localStorage.setItem(key, prevValue);
+      console.log(`Restored previous version of ${key}`);
+      return true;
+    }
+    
+    // If no direct previous version, try version history
+    const versionsKey = `${key}_versions`;
+    const versionsData = localStorage.getItem(versionsKey);
+    
+    if (versionsData) {
+      const versions = JSON.parse(versionsData);
+      if (versions && Array.isArray(versions) && versions.length > 0) {
+        // Get the most recent version
+        const latestVersion = versions[versions.length - 1];
+        if (latestVersion && latestVersion.data) {
+          localStorage.setItem(key, latestVersion.data);
+          console.log(`Restored ${key} from version history`);
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error(`Error restoring ${key}:`, error);
+    return false;
   }
 }

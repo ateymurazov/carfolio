@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,13 +16,15 @@ import {
 } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, AlertCircle } from "lucide-react";
+import { InfoIcon, AlertCircle, Download, Upload, Database } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { exportDataToJson, parseImportedJson } from "@/utils/dataExportImport";
 import { clearLocalStorage, inspectLocalStorage } from "@/utils/localStorageUtils";
+import { useCarStorage } from "@/hooks/useCarStorage";
 
 const Settings = () => {
   const { cars, collections, mergeImportedData } = useCarCollections();
+  const { backupData } = useCarStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
@@ -40,6 +43,11 @@ const Settings = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Create a quick backup
+  const handleBackupData = () => {
+    backupData();
   };
 
   // Trigger file input click
@@ -63,6 +71,9 @@ const Settings = () => {
       if (window.confirm(
         `This will import ${importedData.cars.length} cars and ${importedData.collections.length} collections. Any existing data with the same IDs will be updated. Do you want to continue?`
       )) {
+        // Create automatic backup before import
+        backupData();
+        
         // Merge imported data with existing data instead of replacing
         mergeImportedData(importedData.cars, importedData.collections);
         
@@ -89,10 +100,13 @@ const Settings = () => {
   // Handle clearing local storage data
   const handleClearCache = () => {
     if (window.confirm("This will clear all data from the application cache. This action cannot be undone. Are you sure you want to continue?")) {
+      // Create automatic backup before clearing
+      backupData();
+      
       clearLocalStorage();
       toast({
         title: "Cache cleared",
-        description: "All cached data has been cleared. Please refresh the page.",
+        description: "All cached data has been cleared. A backup file was automatically downloaded.",
       });
       // Need to refresh to reinitialize the app state
       setTimeout(() => {
@@ -113,7 +127,7 @@ const Settings = () => {
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="data">Data Management</TabsTrigger>
           <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -127,24 +141,49 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                General settings will be available in a future update.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="data">
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>
+                Safely manage your car collection data with backup and restore options.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-3">
-                <h4 className="font-medium">Data Management</h4>
+                <h4 className="font-medium">Backup & Restore</h4>
                 <p className="text-sm text-muted-foreground">
-                  Export or import your car collection data.
+                  Regularly backup your data to prevent accidental loss. All sensitive operations automatically create backups.
                 </p>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                  <Button
+                    variant="outline" 
+                    onClick={handleBackupData}
+                    className="flex items-center justify-start"
+                  >
+                    <Download className="h-4 w-4 mr-2" /> Quick Backup
+                  </Button>
                   <Button
                     variant="outline" 
                     onClick={handleExportData}
+                    className="flex items-center justify-start"
                   >
-                    Export Data
+                    <Database className="h-4 w-4 mr-2" /> Export Full Data
                   </Button>
                   <Button
                     variant="outline"
                     onClick={handleImportClick}
                     disabled={importing}
+                    className="flex items-center justify-start"
                   >
-                    {importing ? "Importing..." : "Import Data"}
+                    <Upload className="h-4 w-4 mr-2" /> {importing ? "Importing..." : "Import Data"}
                   </Button>
                   <input 
                     type="file" 
@@ -157,9 +196,9 @@ const Settings = () => {
                 
                 <Alert className="mt-4 bg-blue-50">
                   <InfoIcon className="h-4 w-4" />
-                  <AlertTitle>Data Backup Tips</AlertTitle>
+                  <AlertTitle>Auto-Backup Protection</AlertTitle>
                   <AlertDescription>
-                    Regularly export your data to prevent accidental loss. Import previously exported files to restore your collections.
+                    Your data is automatically backed up before any potentially destructive operation like resetting or clearing cache.
                   </AlertDescription>
                 </Alert>
               </div>
@@ -173,6 +212,7 @@ const Settings = () => {
                   <Button
                     variant="outline"
                     onClick={handleClearCache}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
                   >
                     Clear Cache
                   </Button>
@@ -182,26 +222,10 @@ const Settings = () => {
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Warning</AlertTitle>
                   <AlertDescription>
-                    Clearing the cache will remove all locally stored data. Make sure to export your data before proceeding.
+                    Clearing the cache will remove all locally stored data. A backup will be automatically created before proceeding.
                   </AlertDescription>
                 </Alert>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="account">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Settings</CardTitle>
-              <CardDescription>
-                Manage your account details and preferences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Account management features will be available in a future update.
-              </p>
             </CardContent>
           </Card>
         </TabsContent>
