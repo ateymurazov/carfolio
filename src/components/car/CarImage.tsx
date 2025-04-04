@@ -25,14 +25,21 @@ export const CarImage = ({
   fallbackSrc = "/placeholder.svg"
 }: CarImageProps) => {
   const [error, setError] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageUrl, setImageUrl] = useState<string>(fallbackSrc);
   const [isLoading, setIsLoading] = useState(true);
   const imageStorage = useImageStorage();
   
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
-    setError(false); // Reset error state when imageId changes
+    
+    // Immediately set fallback as the initial state
+    if (fallbackSrc && isMounted) {
+      setImageUrl(fallbackSrc);
+    }
+    
+    // Reset error state when imageId changes
+    setError(false);
     
     const loadImage = async () => {
       try {
@@ -40,6 +47,7 @@ export const CarImage = ({
           if (isMounted) {
             setError(true);
             setIsLoading(false);
+            if (onError) onError();
           }
           return;
         }
@@ -66,14 +74,16 @@ export const CarImage = ({
           return;
         }
         
-        // Validate the image
+        // Set the image URL first, then validate
+        if (isMounted) {
+          setImageUrl(img);
+        }
+        
+        // Validate the image in background
         const isValid = await validateImage(img);
         
         if (isMounted) {
-          if (isValid) {
-            setImageUrl(img);
-            setError(false);
-          } else {
+          if (!isValid) {
             setError(true);
             if (onError) onError();
           }
@@ -81,6 +91,7 @@ export const CarImage = ({
         }
       } catch (err) {
         if (isMounted) {
+          console.error("Error loading image:", err);
           setError(true);
           setIsLoading(false);
           if (onError) onError();
@@ -94,15 +105,15 @@ export const CarImage = ({
     return () => {
       isMounted = false;
     };
-  }, [imageId, imageStorage, onError]);
+  }, [imageId, imageStorage, onError, fallbackSrc]);
   
   const handleImageError = () => {
     setError(true);
     if (onError) onError();
   };
   
-  // Show placeholder if image is in error state or loading
-  if (error || !imageUrl) {
+  // Show placeholder if image is in error state
+  if (error) {
     if (!showPlaceholder) return null;
     
     if (fallbackSrc) {

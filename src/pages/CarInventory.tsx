@@ -7,7 +7,6 @@ import { useCarCollections } from "@/hooks/useCarCollections";
 import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "@/components/ui/use-toast";
 
 const CarInventory = () => {
@@ -29,9 +28,9 @@ const CarInventory = () => {
   // Filter cars based on search term and selected collection
   const filteredCars = cars.filter(car => {
     const matchesSearch = 
-      car.make.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (car.year && car.year.toLowerCase().includes(searchTerm.toLowerCase()));
+      car.make?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      car.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (car.year && car.year.toString().toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesCollection = 
       selectedCollection === "all" || 
@@ -39,6 +38,9 @@ const CarInventory = () => {
     
     return matchesSearch && matchesCollection;
   });
+
+  // Get only the first 12 cars to improve performance
+  const limitedCars = filteredCars.slice(0, 20);
   
   return (
     <div className="space-y-6 p-6 animate-fade-in">
@@ -86,8 +88,8 @@ const CarInventory = () => {
       </div>
       
       {/* Car grid */}
-      {filteredCars.length > 0 ? (
-        <CarGrid cars={filteredCars} isLoading={isLoading} />
+      {limitedCars.length > 0 ? (
+        <CarGrid cars={limitedCars} isLoading={isLoading} />
       ) : (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <p>No cars found.</p>

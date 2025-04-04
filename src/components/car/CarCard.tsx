@@ -34,7 +34,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
       onClick={() => navigate(`/cars/${car.id}`)}
     >
       <div className="aspect-[16/9] bg-gray-200 relative">
-        {imageId ? (
+        {!hasImageError && imageId ? (
           <CarImage 
             imageId={imageId}
             alt={`${car.make} ${car.model}`} 
