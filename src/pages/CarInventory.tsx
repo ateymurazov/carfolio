@@ -14,25 +14,35 @@ const CarInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollection, setSelectedCollection] = useState<string>("all");
   const [isAddCarDialogOpen, setIsAddCarDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const imageStorage = useImageStorage();
   
   // Preload images to improve initial render
   useEffect(() => {
     const preloadImages = async () => {
-      // Get all image IDs from cars
-      const imageIds = cars.flatMap(car => car.images || []);
+      setIsLoading(true);
       
-      // Deduplicate
-      const uniqueImageIds = [...new Set(imageIds)];
-      
-      console.log(`Preloading ${uniqueImageIds.length} unique images for inventory view`);
-      
-      // Force loading of images
-      uniqueImageIds.forEach(imageId => {
-        if (typeof imageId === 'string' && !imageId.startsWith('data:') && !imageId.startsWith('http') && !imageId.startsWith('/')) {
-          imageStorage.getImage(imageId);
+      try {
+        // Get all image IDs from cars
+        const imageIds = cars.flatMap(car => car.images || []);
+        
+        // Deduplicate
+        const uniqueImageIds = [...new Set(imageIds)];
+        
+        console.log(`Preloading ${uniqueImageIds.length} unique images for inventory view`);
+        
+        // Force loading of images
+        for (const imageId of uniqueImageIds) {
+          if (typeof imageId === 'string' && !imageId.startsWith('data:') && !imageId.startsWith('http') && !imageId.startsWith('/')) {
+            imageStorage.getImage(imageId);
+          }
         }
-      });
+      } catch (error) {
+        console.error("Error preloading images:", error);
+      } finally {
+        // Set loading to false after a short delay to ensure UI is ready
+        setTimeout(() => setIsLoading(false), 300);
+      }
     };
     
     preloadImages();
@@ -99,7 +109,7 @@ const CarInventory = () => {
       
       {/* Car grid */}
       {filteredCars.length > 0 ? (
-        <CarGrid cars={filteredCars} />
+        <CarGrid cars={filteredCars} isLoading={isLoading} />
       ) : (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <p>No cars found.</p>

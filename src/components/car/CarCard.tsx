@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { useImageStorage } from "@/hooks/useImageStorage";
+import { ImageOff } from "lucide-react";
 
 interface CarCardProps {
   car: CarType;
@@ -21,25 +22,34 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     if (car.images && car.images.length > 0) {
       try {
         const imageId = car.images[0];
+        console.log(`Loading image for car ${car.id}: ${imageId}`);
+        
         // Handle both direct URLs and storage IDs
-        if (imageId.startsWith('http') || imageId.startsWith('/')) {
-          setLoadedImage(imageId);
-          setImageError(false);
-        } else {
-          const img = imageStorage.getImage(imageId);
-          
-          if (img) {
-            setLoadedImage(img);
+        if (typeof imageId === 'string') {
+          if (imageId.startsWith('http') || imageId.startsWith('/')) {
+            setLoadedImage(imageId);
             setImageError(false);
           } else {
-            console.warn(`Image ${imageId} not found in storage`);
-            setImageError(true);
+            const img = imageStorage.getImage(imageId);
+            
+            if (img) {
+              setLoadedImage(img);
+              setImageError(false);
+            } else {
+              console.warn(`Image ${imageId} not found in storage`);
+              setImageError(true);
+            }
           }
+        } else {
+          console.warn(`Invalid image ID for car ${car.id}`);
+          setImageError(true);
         }
       } catch (error) {
         console.error(`Error loading image for car ${car.id}:`, error);
         setImageError(true);
       }
+    } else {
+      setImageError(true);
     }
   }, [car.images, imageStorage, car.id]);
   
@@ -59,12 +69,18 @@ export const CarCard = ({ car, className }: CarCardProps) => {
       onClick={() => navigate(`/cars/${car.id}`)}
     >
       <div className="aspect-[16/9] bg-gray-200 relative">
-        <img 
-          src={carImage} 
-          alt={`${car.make} ${car.model}`} 
-          className="h-full w-full object-cover"
-          onError={handleImageError}
-        />
+        {imageError ? (
+          <div className="h-full w-full flex items-center justify-center bg-gray-100">
+            <ImageOff className="h-8 w-8 text-gray-400" />
+          </div>
+        ) : (
+          <img 
+            src={carImage} 
+            alt={`${car.make} ${car.model}`} 
+            className="h-full w-full object-cover"
+            onError={handleImageError}
+          />
+        )}
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold">

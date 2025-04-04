@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ImageOff } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
 import { useImageStorage } from "@/hooks/useImageStorage";
@@ -25,25 +25,34 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
     if (car.images && car.images.length > 0) {
       try {
         const imageId = car.images[0];
+        console.log(`Loading image for featured car ${car.id}: ${imageId}`);
+        
         // Handle both direct URLs and storage IDs
-        if (imageId.startsWith('http') || imageId.startsWith('/')) {
-          setLoadedImage(imageId);
-          setImageError(false);
-        } else {
-          const img = imageStorage.getImage(imageId);
-          
-          if (img) {
-            setLoadedImage(img);
+        if (typeof imageId === 'string') {
+          if (imageId.startsWith('http') || imageId.startsWith('/')) {
+            setLoadedImage(imageId);
             setImageError(false);
           } else {
-            console.warn(`Image ${imageId} not found in storage for featured car`);
-            setImageError(true);
+            const img = imageStorage.getImage(imageId);
+            
+            if (img) {
+              setLoadedImage(img);
+              setImageError(false);
+            } else {
+              console.warn(`Image ${imageId} not found in storage for featured car`);
+              setImageError(true);
+            }
           }
+        } else {
+          console.warn(`Invalid image ID for featured car ${car.id}`);
+          setImageError(true);
         }
       } catch (error) {
         console.error(`Error loading image for featured car ${car.id}:`, error);
         setImageError(true);
       }
+    } else {
+      setImageError(true);
     }
   }, [car.images, imageStorage, car.id]);
   
@@ -63,12 +72,18 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   return (
     <div className="flex flex-col space-y-4">
       <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-200">
-        <img 
-          src={carImage} 
-          alt={`${car.make} ${car.model}`} 
-          className="h-full w-full object-cover"
-          onError={handleImageError}
-        />
+        {imageError ? (
+          <div className="h-full w-full flex items-center justify-center bg-gray-100">
+            <ImageOff className="h-12 w-12 text-gray-400" />
+          </div>
+        ) : (
+          <img 
+            src={carImage} 
+            alt={`${car.make} ${car.model}`} 
+            className="h-full w-full object-cover"
+            onError={handleImageError}
+          />
+        )}
         <Badge className={cn(
           "absolute top-2 right-2 text-white",
           car.status === "In Service" ? "bg-amber-500" : "bg-emerald-500"
