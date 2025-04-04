@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocalStorageState } from "./useLocalStorageState";
 import { toast } from "@/components/ui/use-toast";
@@ -74,6 +75,11 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    */
   const storeImage = async (imageData: string): Promise<string> => {
     try {
+      // Skip if null/undefined
+      if (!imageData) {
+        throw new Error("No image data provided");
+      }
+      
       // Generate a unique ID for the image
       const imageId = `img_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       
@@ -103,13 +109,17 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    * Store multiple images at once
    */
   const storeImages = async (imageDatas: string[]): Promise<string[]> => {
+    if (!imageDatas || !Array.isArray(imageDatas) || imageDatas.length === 0) {
+      return [];
+    }
+    
     // Process images in batches to avoid blocking the UI
     const batchSize = 3;
     const results: string[] = [];
     
     for (let i = 0; i < imageDatas.length; i += batchSize) {
       const batch = imageDatas.slice(i, i + batchSize);
-      const batchPromises = batch.map(img => storeImage(img));
+      const batchPromises = batch.filter(Boolean).map(img => storeImage(img));
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
     }
@@ -122,8 +132,14 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    */
   const getImage = (imageId: string): string => {
     try {
+      // Handle invalid inputs
+      if (!imageId) {
+        console.warn("Empty image ID provided to getImage");
+        return '/placeholder.svg';
+      }
+      
       // If the imageId is already a data URL, return it directly
-      if (!imageId || imageId.startsWith('data:')) return imageId;
+      if (imageId.startsWith('data:')) return imageId;
       
       // If it's an external URL, return directly
       if (imageId.startsWith('http') || imageId.startsWith('/')) return imageId;
@@ -155,6 +171,11 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    * Remove an image from the image store
    */
   const removeImage = (imageId: string): void => {
+    if (!imageId) {
+      console.warn("Empty image ID provided to removeImage");
+      return;
+    }
+    
     if (!imageStore[imageId]) {
       console.warn(`Cannot remove image ${imageId}: not found in storage`);
       return;

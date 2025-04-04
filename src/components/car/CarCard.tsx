@@ -13,7 +13,18 @@ interface CarCardProps {
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   
-  const imageId = car.images && car.images.length > 0 ? car.images[0] : "";
+  // Get the first valid image ID or empty string if none exists
+  const getFirstValidImage = () => {
+    if (!car.images || !Array.isArray(car.images) || car.images.length === 0) return "";
+    return car.images[0] || "";
+  };
+  
+  const imageId = getFirstValidImage();
+  
+  const handleImageError = () => {
+    console.log(`Image error for car ${car.id}`);
+    // Could implement fallback logic here if needed
+  };
   
   return (
     <div 
@@ -26,6 +37,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
           aspectRatio="video"
+          onError={handleImageError}
         />
       </div>
       <div className="p-4">

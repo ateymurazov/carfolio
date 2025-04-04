@@ -20,47 +20,84 @@ const CarInventory = () => {
   
   // Preload images to improve initial render with better error handling
   useEffect(() => {
+    let isMounted = true;
+    let loadingToastId: any = null;
+    
     const preloadImages = async () => {
       setIsLoading(true);
       
-      try {
-        // Get all image IDs from cars
-        const imageIds = cars.flatMap(car => car.images || []).filter(Boolean);
-        
-        // Deduplicate
-        const uniqueImageIds = [...new Set(imageIds)];
-        
-        console.log(`Preloading ${uniqueImageIds.length} unique images for inventory view`);
-        
-        // Force loading of images
-        for (const imageId of uniqueImageIds) {
-          if (typeof imageId !== 'string') continue;
-          
-          try {
-            if (!imageId.startsWith('data:') && !imageId.startsWith('http') && !imageId.startsWith('/')) {
-              const image = imageStorage.getImage(imageId);
-              if (!image || image === '/placeholder.svg') {
-                console.warn(`Image ${imageId} not found in storage during preload`);
-              }
-            }
-          } catch (error) {
-            console.error(`Error preloading image ${imageId}:`, error);
-          }
-        }
-      } catch (error) {
-        console.error("Error preloading images:", error);
-        toast({
-          title: "Image Loading Error",
-          description: "Some car images could not be loaded. Please refresh the page to try again.",
-          variant: "destructive"
+      if (cars.length > 5) {
+        loadingToastId = toast({
+          title: "Loading car inventory",
+          description: "Preparing images, please wait...",
+          duration: 3000,
         });
+      }
+      
+      try {
+        // Before processing, check if we actually have images
+        const allImageIds = cars.flatMap(car => car.images || []).filter(Boolean);
+        
+        if (allImageIds.length === 0) {
+          console.log("No images to preload");
+          if (isMounted) {
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        // Deduplicate image IDs
+        const uniqueImageIds = [...new Set(allImageIds)];
+        
+        console.log(`Starting image preload for ${uniqueImageIds.length} unique images`);
+        
+        // Try loading all images in parallel with a limited batch size
+        const batchSize = 3;
+        for (let i = 0; i < uniqueImageIds.length; i += batchSize) {
+          if (!isMounted) break;
+          
+          const batch = uniqueImageIds.slice(i, i + batchSize);
+          
+          // Process each image in the batch
+          await Promise.allSettled(batch.map(async (imageId) => {
+            if (typeof imageId !== 'string') return;
+            
+            try {
+              // Skip external URLs and data URLs
+              if (imageId.startsWith('data:') || imageId.startsWith('http') || imageId.startsWith('/')) {
+                return;
+              }
+              
+              // Get image URL from storage
+              const imageUrl = imageStorage.getImage(imageId);
+              
+              // Log if image not found but don't throw error
+              if (!imageUrl || imageUrl === '/placeholder.svg') {
+                console.warn(`Image ${imageId} not found during preload`);
+                return;
+              }
+            } catch (error) {
+              console.error(`Error preloading image ${imageId}:`, error);
+            }
+          }));
+        }
+        
+        console.log("Image preload complete");
+      } catch (error) {
+        console.error("Error during image preload:", error);
       } finally {
         // Set loading to false after a short delay to ensure UI is ready
-        setTimeout(() => setIsLoading(false), 500);
+        if (isMounted) {
+          setTimeout(() => setIsLoading(false), 300);
+        }
       }
     };
     
     preloadImages();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [cars, imageStorage]);
   
   // Filter cars based on search term and selected collection

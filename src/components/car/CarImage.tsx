@@ -30,6 +30,7 @@ export const CarImage = ({
   useEffect(() => {
     let isMounted = true;
     setIsLoading(true);
+    setError(false); // Reset error state when imageId changes
     
     const loadImage = async () => {
       try {
@@ -41,8 +42,28 @@ export const CarImage = ({
           return;
         }
         
+        // Handle direct URLs and data URLs immediately
+        if (imageId.startsWith('data:') || imageId.startsWith('http') || imageId.startsWith('/')) {
+          if (isMounted) {
+            setImageUrl(imageId);
+            setError(false);
+            setIsLoading(false);
+          }
+          return;
+        }
+        
         // Get image from storage
         const img = imageStorage.getImage(imageId);
+        
+        if (!img || img === '/placeholder.svg') {
+          console.warn(`Image ${imageId} not found in storage during load`);
+          if (isMounted) {
+            setError(true);
+            setIsLoading(false);
+            if (onError) onError();
+          }
+          return;
+        }
         
         // Validate the image
         const isValid = await validateImage(img);
@@ -80,7 +101,7 @@ export const CarImage = ({
     if (onError) onError();
   };
   
-  // Show placeholder if image is in error state
+  // Show placeholder if image is in error state or loading
   if (error || !imageUrl) {
     if (!showPlaceholder) return null;
     

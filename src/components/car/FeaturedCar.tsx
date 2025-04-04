@@ -20,8 +20,18 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
-  // Get the primary image ID
-  const imageId = car.images && car.images.length > 0 ? car.images[0] : "";
+  // Get the primary image ID with better error handling
+  const getFirstValidImage = () => {
+    if (!car.images || !Array.isArray(car.images) || car.images.length === 0) return "";
+    return car.images[0] || "";
+  };
+  
+  const imageId = getFirstValidImage();
+  
+  const handleImageError = () => {
+    console.log(`Image error for featured car ${car.id}`);
+    // Could implement fallback logic here if needed
+  };
   
   return (
     <div className="flex flex-col space-y-4">
@@ -31,6 +41,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
           aspectRatio="video"
+          onError={handleImageError}
         />
         
         <Badge className={cn(

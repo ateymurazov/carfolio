@@ -71,14 +71,39 @@ export const optimizeImage = (dataUrl: string, quality: number = 0.7, maxWidth: 
  */
 export const validateImage = (imageUrl: string): Promise<boolean> => {
   return new Promise((resolve) => {
-    if (!imageUrl || imageUrl === '/placeholder.svg') {
+    // Quick check for empty URLs
+    if (!imageUrl) {
       resolve(false);
       return;
     }
     
+    // Placeholder is valid by definition
+    if (imageUrl === '/placeholder.svg') {
+      resolve(true);
+      return;
+    }
+    
+    // Set timeout to prevent hanging on invalid URLs
+    const timeoutId = setTimeout(() => {
+      console.warn("Image validation timed out:", imageUrl.substring(0, 50) + "...");
+      resolve(false);
+    }, 5000);
+    
     const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
+    
+    img.onload = () => {
+      clearTimeout(timeoutId);
+      // Verify image has actual dimensions
+      const isValid = img.width > 0 && img.height > 0;
+      resolve(isValid);
+    };
+    
+    img.onerror = () => {
+      clearTimeout(timeoutId);
+      console.warn("Image validation failed for:", imageUrl.substring(0, 50) + "...");
+      resolve(false);
+    };
+    
     img.src = imageUrl;
   });
 };
@@ -95,9 +120,21 @@ export const preloadImage = (imageUrl: string): Promise<string> => {
       return;
     }
     
+    // Set timeout to prevent hanging
+    const timeoutId = setTimeout(() => {
+      console.warn("Image preload timed out:", imageUrl.substring(0, 50) + "...");
+      reject(new Error(`Preload timed out: ${imageUrl.substring(0, 50)}...`));
+    }, 5000);
+    
     const img = new Image();
-    img.onload = () => resolve(imageUrl);
-    img.onerror = () => reject(new Error(`Failed to preload image: ${imageUrl}`));
+    img.onload = () => {
+      clearTimeout(timeoutId);
+      resolve(imageUrl);
+    };
+    img.onerror = () => {
+      clearTimeout(timeoutId);
+      reject(new Error(`Failed to preload image: ${imageUrl.substring(0, 50)}...`));
+    };
     img.src = imageUrl;
   });
 };

@@ -23,7 +23,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
         
         if (Array.isArray(currentImages) && currentImages.length > 0) {
           // Load images from storage if they're IDs
-          const loadedImages = currentImages.map(img => {
+          const loadedImages = currentImages.filter(Boolean).map(img => {
             // Skip processing if already a data URL
             if (typeof img === 'string') {
               if (img.startsWith('data:')) {
@@ -119,8 +119,11 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       // Wait for all images to be processed
       const processedFiles = await Promise.all(filePromises);
       
+      // Filter out any undefined/null entries to ensure clean data
+      const validFiles = processedFiles.filter(Boolean);
+      
       // Update the form with all images
-      const allImages = [...currentImages, ...processedFiles];
+      const allImages = [...currentImages.filter(Boolean), ...validFiles];
       form.setValue(fieldName, allImages, {
         shouldValidate: true,
         shouldDirty: true,
@@ -132,16 +135,17 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
         typeof img === 'string' && !img.startsWith('data:') && !img.startsWith('http') && !img.startsWith('/')
           ? imageStorage.getImage(img) 
           : img
-      );
+      ).filter(Boolean);
+      
       setPreviewUrls(previewImages);
       
       console.log(`Updated ${fieldName} with ${allImages.length} images`, allImages);
       
-      // Dismiss loading toast if it exists and show success
-      if (files.length > 0) {
+      // Success toast
+      if (validFiles.length > 0) {
         toast({
           title: "Images processed",
-          description: `Successfully added ${files.length} image${files.length > 1 ? 's' : ''}`,
+          description: `Successfully added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
         });
       }
     } catch (error) {
@@ -189,7 +193,8 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       typeof img === 'string' && !img.startsWith('data:') && !img.startsWith('http') && !img.startsWith('/')
         ? imageStorage.getImage(img) 
         : img
-    );
+    ).filter(Boolean);
+    
     setPreviewUrls(previewImages);
     
     console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
