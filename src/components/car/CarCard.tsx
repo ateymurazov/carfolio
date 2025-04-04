@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { CarImage } from "./CarImage";
 import { ImageOff } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CarCardProps {
   car: CarType;
@@ -15,6 +16,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   const [hasImageError, setHasImageError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   
   // Get the first valid image ID or empty string if none exists
   const getFirstValidImage = () => {
@@ -38,21 +40,23 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   }, [car.id, imageId]);
   
   const handleImageError = () => {
-    console.log(`Image error for car ${car.id}, image: ${imageId}`);
     setHasImageError(true);
   };
   
   const handleImageLoad = () => {
-    console.log(`Image loaded for car ${car.id}, image: ${imageId}`);
     setIsImageLoaded(true);
   };
   
   return (
     <div 
-      className={cn("bg-white border rounded-lg overflow-hidden shadow hover:shadow-md transition-all cursor-pointer", className)}
+      ref={cardRef}
+      className={cn(
+        "bg-white border rounded-lg overflow-hidden shadow hover:shadow-md transition-all cursor-pointer",
+        className
+      )}
       onClick={() => navigate(`/cars/${car.id}`)}
     >
-      <div className="aspect-[16/9] bg-gray-200 relative">
+      <div className="aspect-[16/9] bg-gray-100 relative">
         {!hasImageError && imageId ? (
           <CarImage 
             imageId={imageId}
@@ -71,7 +75,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
         
         {!isImageLoaded && !hasImageError && imageId && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-60">
-            <div className="w-6 h-6 border-2 border-t-transparent border-navy-800 rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-2 border-t-transparent border-primary rounded-full animate-spin"></div>
           </div>
         )}
       </div>

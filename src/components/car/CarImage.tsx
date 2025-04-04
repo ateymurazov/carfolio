@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { validateImage } from "@/utils/imageUtils";
 import { ImageOff } from "lucide-react";
@@ -30,10 +30,18 @@ export const CarImage = ({
   const [imageUrl, setImageUrl] = useState<string>(fallbackSrc);
   const [isLoading, setIsLoading] = useState(true);
   const imageStorage = useImageStorage();
+  const prevImageIdRef = useRef<string | null>(null);
   
   // Reset states when imageId changes
   useEffect(() => {
     let isMounted = true;
+    
+    // Prevent unnecessary reloads if the imageId hasn't changed
+    if (prevImageIdRef.current === imageId) {
+      return;
+    }
+    
+    prevImageIdRef.current = imageId;
     
     // Start with fallback image while loading the actual image
     if (isMounted) {
@@ -81,29 +89,29 @@ export const CarImage = ({
         // Set the image URL first so we can start showing something
         if (isMounted) {
           setImageUrl(img);
-        }
-        
-        // Then validate the image in background to ensure it's valid
-        try {
-          const isValid = await validateImage(img);
           
-          if (isMounted) {
-            if (!isValid) {
-              console.log(`Image validation failed for ID: ${imageId}`);
-              setError(true);
-              if (onError) onError();
-            } else {
-              if (onLoad) onLoad();
-            }
+          // Validate the image in background
+          try {
+            const isValid = await validateImage(img);
             
-            setIsLoading(false);
-          }
-        } catch (validationErr) {
-          if (isMounted) {
-            console.error("Image validation error:", validationErr);
-            setError(true);
-            setIsLoading(false);
-            if (onError) onError();
+            if (isMounted) {
+              if (!isValid) {
+                console.log(`Image validation failed for ID: ${imageId}`);
+                setError(true);
+                if (onError) onError();
+              } else {
+                if (onLoad) onLoad();
+              }
+              
+              setIsLoading(false);
+            }
+          } catch (validationErr) {
+            if (isMounted) {
+              console.error("Image validation error:", validationErr);
+              setError(true);
+              setIsLoading(false);
+              if (onError) onError();
+            }
           }
         }
       } catch (err) {
@@ -116,26 +124,29 @@ export const CarImage = ({
       }
     };
     
-    // Use requestAnimationFrame to load image after rendering
-    const timerId = requestAnimationFrame(() => {
-      loadImage();
-    });
+    // Use a small delay to prevent rapid flickering during navigation
+    const timerId = setTimeout(() => {
+      if (isMounted) {
+        loadImage();
+      }
+    }, 50);
     
     return () => {
-      window.cancelAnimationFrame(timerId);
+      clearTimeout(timerId);
       isMounted = false;
     };
   }, [imageId, imageStorage, onError, onLoad, fallbackSrc]);
+  
+  // Preload image before displaying to avoid flickering
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    if (onLoad) onLoad();
+  };
   
   const handleImageError = () => {
     console.log(`Image failed to load: ${imageId}`);
     setError(true);
     if (onError) onError();
-  };
-  
-  const handleImageLoad = () => {
-    setIsLoading(false);
-    if (onLoad) onLoad();
   };
   
   // Show placeholder if in error state
@@ -166,12 +177,16 @@ export const CarImage = ({
     );
   }
   
-  // Show actual image
+  // Use a CSS class to handle fade transition
   return (
     <img 
       src={imageUrl}
       alt={alt}
-      className={cn(className, isLoading && "opacity-70")}
+      className={cn(
+        className, 
+        "transition-opacity duration-200",
+        isLoading ? "opacity-30" : "opacity-100"
+      )}
       onError={handleImageError}
       onLoad={handleImageLoad}
     />

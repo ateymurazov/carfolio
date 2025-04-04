@@ -7,6 +7,7 @@ import { UseFormReturn } from "react-hook-form";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { toast } from "../ui/use-toast";
 import { CarImage } from "./CarImage";
+import { cn } from "@/lib/utils";
 
 interface ImageUploadFieldProps {
   form: UseFormReturn<any>;
@@ -93,19 +94,14 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {previewUrls.map((url: string, index: number) => (
-                    <div key={index} className="relative group aspect-video">
+                    <div key={`${index}-${url.substring(0, 20)}`} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
-                        {typeof url === 'string' ? (
-                          <CarImage 
-                            imageId={url}
-                            alt={`Car image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full w-full bg-gray-100">
-                            <ImagePlus className="h-8 w-8 text-gray-400" />
-                          </div>
-                        )}
+                        <CarImage 
+                          imageId={url}
+                          alt={`Car image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          fallbackSrc="/placeholder.svg"
+                        />
                       </div>
                       <Button
                         type="button"
@@ -119,6 +115,8 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                       </Button>
                     </div>
                   ))}
+                  
+                  {/* Add Image Button */}
                   <label className={cn(
                     "flex flex-col items-center justify-center aspect-video bg-muted text-muted-foreground rounded-md border-2 border-dashed cursor-pointer transition-colors",
                     isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-muted/80"
@@ -152,7 +150,6 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
   );
 }
 
-// Helper function to conditionally apply classes
 function cn(...classes: any[]) {
   return classes.filter(Boolean).join(' ');
 }

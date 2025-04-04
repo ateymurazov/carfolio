@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useImageUploadCore } from "./useImageUploadCore";
 import { toast } from "@/components/ui/use-toast";
@@ -12,6 +12,8 @@ import { toast } from "@/components/ui/use-toast";
  */
 export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "images") {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [syncInProgress, setSyncInProgress] = useState(false);
+  
   const { 
     imageStorage, 
     isProcessing, 
@@ -21,52 +23,68 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   } = useImageUploadCore(form, fieldName);
   
   // Sync previewUrls with form images when component mounts or changes
+  const syncImages = useCallback(async () => {
+    if (syncInProgress) return;
+    
+    try {
+      setSyncInProgress(true);
+      const currentImages = form.getValues(fieldName) || [];
+      
+      if (Array.isArray(currentImages) && currentImages.length > 0) {
+        // Load images from storage if they're IDs
+        const loadedImages = currentImages.filter(Boolean).map(img => {
+          // Skip processing if already a data URL
+          if (typeof img === 'string') {
+            if (img.startsWith('data:')) {
+              return img;
+            }
+            
+            // Handle direct URLs
+            if (img.startsWith('http') || img.startsWith('/')) {
+              return img;
+            }
+            
+            // Load from storage
+            return imageStorage.getImage(img);
+          }
+          return '';
+        }).filter(Boolean);
+        
+        setPreviewUrls(prev => {
+          // Only update if there's a real difference to prevent re-renders
+          if (prev.length !== loadedImages.length || 
+              prev.some((url, idx) => url !== loadedImages[idx])) {
+            return loadedImages;
+          }
+          return prev;
+        });
+      } else {
+        setPreviewUrls([]);
+      }
+    } catch (error) {
+      console.error("Error syncing images:", error);
+    } finally {
+      setSyncInProgress(false);
+    }
+  }, [form, fieldName, imageStorage, syncInProgress]);
+  
   useEffect(() => {
     let isMounted = true;
-    
-    const syncImages = async () => {
-      try {
-        const currentImages = form.getValues(fieldName) || [];
-        
-        if (Array.isArray(currentImages) && currentImages.length > 0) {
-          // Load images from storage if they're IDs
-          const loadedImages = currentImages.filter(Boolean).map(img => {
-            // Skip processing if already a data URL
-            if (typeof img === 'string') {
-              if (img.startsWith('data:')) {
-                return img;
-              }
-              
-              // Handle direct URLs
-              if (img.startsWith('http') || img.startsWith('/')) {
-                return img;
-              }
-              
-              // Load from storage
-              return imageStorage.getImage(img);
-            }
-            return '';
-          }).filter(Boolean);
-          
-          if (isMounted) {
-            setPreviewUrls(loadedImages);
-          }
-        } else {
-          if (isMounted) {
-            setPreviewUrls([]);
-          }
-        }
-      } catch (error) {
-        console.error("Error syncing images:", error);
-      }
-    };
+    let ignoreNext = false;
     
     syncImages();
     
     // Watch for changes to the images field
     const subscription = form.watch((value, { name }) => {
-      if (name === fieldName && isMounted) {
-        syncImages();
+      if (name === fieldName && isMounted && !ignoreNext) {
+        // Use a small timeout to batch multiple changes
+        setTimeout(() => {
+          if (isMounted) {
+            syncImages();
+          }
+        }, 50);
+      } else if (ignoreNext) {
+        ignoreNext = false;
       }
     });
     
@@ -74,7 +92,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [form, fieldName, imageStorage]);
+  }, [form, fieldName, syncImages]);
   
   /**
    * Handle image file selection
@@ -92,21 +110,15 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       // Update the form with all images
       const allImages = updateFormImages(validFiles);
       
-      // Update preview with actual image data for display
-      const previewImages = allImages.map(img => 
-        typeof img === 'string' && !img.startsWith('data:') && !img.startsWith('http') && !img.startsWith('/')
-          ? imageStorage.getImage(img) 
-          : img
-      ).filter(Boolean);
-      
-      setPreviewUrls(previewImages);
-      
-      // Success toast
+      // Success toast only if files were processed
       if (validFiles.length > 0) {
         toast({
           title: "Images processed",
           description: `Successfully added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
         });
+        
+        // Force sync after update
+        setTimeout(() => syncImages(), 100);
       }
     } catch (error) {
       console.error("Error processing images:", error);
@@ -152,14 +164,10 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       shouldTouch: true,
     });
     
-    // Update preview URLs
-    const previewImages = updatedImages.map(img => 
-      typeof img === 'string' && !img.startsWith('data:') && !img.startsWith('http') && !img.startsWith('/')
-        ? imageStorage.getImage(img) 
-        : img
-    ).filter(Boolean);
-    
-    setPreviewUrls(previewImages);
+    // Update preview arrays directly for immediate feedback
+    const updatePreview = [...previewUrls];
+    updatePreview.splice(index, 1);
+    setPreviewUrls(updatePreview);
     
     toast({
       title: "Image removed",
