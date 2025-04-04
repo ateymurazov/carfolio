@@ -30,13 +30,20 @@ export const CarCard = ({ car, className }: CarCardProps) => {
             setLoadedImage(imageId);
             setImageError(false);
           } else {
-            const img = imageStorage.getImage(imageId);
-            
-            if (img) {
-              setLoadedImage(img);
-              setImageError(false);
-            } else {
-              console.warn(`Image ${imageId} not found in storage`);
+            // Try to get image from storage, with fallback
+            try {
+              const img = imageStorage.getImage(imageId);
+              
+              // Check if we got a valid image or the placeholder
+              if (img && img !== '/placeholder.svg') {
+                setLoadedImage(img);
+                setImageError(false);
+              } else {
+                console.warn(`Image ${imageId} not found in storage or returned placeholder`);
+                setImageError(true);
+              }
+            } catch (error) {
+              console.error(`Error retrieving image ${imageId}:`, error);
               setImageError(true);
             }
           }

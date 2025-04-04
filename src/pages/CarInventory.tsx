@@ -8,6 +8,7 @@ import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useImageStorage } from "@/hooks/useImageStorage";
+import { toast } from "@/components/ui/use-toast";
 
 const CarInventory = () => {
   const { cars, collections } = useCarCollections();
@@ -17,14 +18,14 @@ const CarInventory = () => {
   const [isLoading, setIsLoading] = useState(true);
   const imageStorage = useImageStorage();
   
-  // Preload images to improve initial render
+  // Preload images to improve initial render with better error handling
   useEffect(() => {
     const preloadImages = async () => {
       setIsLoading(true);
       
       try {
         // Get all image IDs from cars
-        const imageIds = cars.flatMap(car => car.images || []);
+        const imageIds = cars.flatMap(car => car.images || []).filter(Boolean);
         
         // Deduplicate
         const uniqueImageIds = [...new Set(imageIds)];
@@ -33,15 +34,29 @@ const CarInventory = () => {
         
         // Force loading of images
         for (const imageId of uniqueImageIds) {
-          if (typeof imageId === 'string' && !imageId.startsWith('data:') && !imageId.startsWith('http') && !imageId.startsWith('/')) {
-            imageStorage.getImage(imageId);
+          if (typeof imageId !== 'string') continue;
+          
+          try {
+            if (!imageId.startsWith('data:') && !imageId.startsWith('http') && !imageId.startsWith('/')) {
+              const image = imageStorage.getImage(imageId);
+              if (!image || image === '/placeholder.svg') {
+                console.warn(`Image ${imageId} not found in storage during preload`);
+              }
+            }
+          } catch (error) {
+            console.error(`Error preloading image ${imageId}:`, error);
           }
         }
       } catch (error) {
         console.error("Error preloading images:", error);
+        toast({
+          title: "Image Loading Error",
+          description: "Some car images could not be loaded. Please refresh the page to try again.",
+          variant: "destructive"
+        });
       } finally {
         // Set loading to false after a short delay to ensure UI is ready
-        setTimeout(() => setIsLoading(false), 300);
+        setTimeout(() => setIsLoading(false), 500);
       }
     };
     
