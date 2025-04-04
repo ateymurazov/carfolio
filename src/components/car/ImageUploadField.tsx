@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
@@ -148,8 +147,4 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
       )}
     />
   );
-}
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
 }
