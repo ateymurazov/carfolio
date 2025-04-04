@@ -18,7 +18,8 @@ const CarInventory = () => {
   const filteredCars = cars.filter(car => {
     const matchesSearch = 
       car.make.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      car.model.toLowerCase().includes(searchTerm.toLowerCase());
+      car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      car.year.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCollection = 
       selectedCollection === "all" || 
@@ -31,11 +32,12 @@ const CarInventory = () => {
     <div className="space-y-6 p-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Car Inventory</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Car Inventory</h1>
           <p className="text-muted-foreground">Manage and view all cars in your collections.</p>
         </div>
         <Button 
-          className="w-full sm:w-auto"
+          size="sm"
+          className="bg-navy-800 w-full sm:w-auto"
           onClick={() => setIsAddCarDialogOpen(true)}
         >
           <Plus className="mr-2 h-4 w-4" /> Add Car
@@ -48,7 +50,7 @@ const CarInventory = () => {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search cars..."
-            className="w-full pl-8"
+            className="w-full pl-8 bg-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -57,7 +59,7 @@ const CarInventory = () => {
           value={selectedCollection} 
           onValueChange={setSelectedCollection}
         >
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px] bg-white">
             <SelectValue placeholder="All Collections" />
           </SelectTrigger>
           <SelectContent>

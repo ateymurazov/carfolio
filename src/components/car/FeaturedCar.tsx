@@ -43,7 +43,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   
   return (
     <div className="flex flex-col space-y-4">
-      <div className="relative aspect-video overflow-hidden rounded-lg bg-secondary">
+      <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-200">
         <img 
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
@@ -51,7 +51,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           onError={handleImageError}
         />
         <Badge className={cn(
-          "absolute top-2 right-2",
+          "absolute top-2 right-2 text-white",
           car.status === "In Service" ? "bg-amber-500" : "bg-emerald-500"
         )}>
           {car.status || "Available"}
@@ -73,15 +73,15 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
             </Button>
           </div>
         </div>
-        <div className="flex items-center text-sm text-muted-foreground">
+        <div className="flex items-center text-sm text-gray-600">
           <span className="mr-2">{car.exteriorColor}, {car.transmission}</span>
         </div>
-        <div className="mt-2 flex justify-between items-center">
+        <div className="mt-2 flex justify-between items-center pt-2 border-t border-gray-100">
           <div className="text-sm">
             <span>VIN: {car.vin.slice(-8)}</span>
           </div>
           {collection && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-gray-600">
               Collection: {collection.name}
             </div>
           )}
