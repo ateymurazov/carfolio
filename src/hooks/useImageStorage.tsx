@@ -1,4 +1,3 @@
-
 import { useImageStorageCore } from "./useImageStorageCore";
 import { optimizeImage } from "@/utils/imageUtils";
 import { toast } from "@/components/ui/use-toast";

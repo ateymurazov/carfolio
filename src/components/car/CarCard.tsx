@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { CarImage } from "./CarImage";
 import { ImageOff } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface CarCardProps {
   car: CarType;
@@ -16,28 +15,14 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   const [hasImageError, setHasImageError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
   
   // Get the first valid image ID or empty string if none exists
   const getFirstValidImage = () => {
     if (!car.images || !Array.isArray(car.images) || car.images.length === 0) return "";
-    
-    // Find first non-empty image ID
-    for (const img of car.images) {
-      if (img && typeof img === 'string' && img.trim() !== '') {
-        return img;
-      }
-    }
-    return "";
+    return car.images[0] || "";
   };
   
   const imageId = getFirstValidImage();
-  
-  // Reset image error state when car or imageId changes
-  useEffect(() => {
-    setHasImageError(false);
-    setIsImageLoaded(false);
-  }, [car.id, imageId]);
   
   const handleImageError = () => {
     setHasImageError(true);
@@ -49,7 +34,6 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   
   return (
     <div 
-      ref={cardRef}
       className={cn(
         "bg-white border rounded-lg overflow-hidden shadow hover:shadow-md transition-all cursor-pointer",
         className
@@ -57,28 +41,23 @@ export const CarCard = ({ car, className }: CarCardProps) => {
       onClick={() => navigate(`/cars/${car.id}`)}
     >
       <div className="aspect-[16/9] bg-gray-100 relative">
-        {!hasImageError && imageId ? (
-          <CarImage 
-            imageId={imageId}
-            alt={`${car.make} ${car.model}`} 
-            className="h-full w-full object-cover"
-            aspectRatio="video"
-            onError={handleImageError}
-            onLoad={handleImageLoad}
-            fallbackSrc="/placeholder.svg"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full w-full">
-            <ImageOff className="h-8 w-8 text-gray-400" />
-          </div>
-        )}
+        <CarImage 
+          imageId={imageId}
+          alt={`${car.make} ${car.model}`} 
+          className="h-full w-full object-cover"
+          aspectRatio="video"
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          fallbackSrc="/placeholder.svg"
+        />
         
-        {!isImageLoaded && !hasImageError && imageId && (
+        {!isImageLoaded && !hasImageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-60">
             <div className="w-6 h-6 border-2 border-t-transparent border-primary rounded-full animate-spin"></div>
           </div>
         )}
       </div>
+
       <div className="p-4">
         <h3 className="text-lg font-semibold">
           {car.year} {car.make} {car.model}
