@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ interface FeaturedCarProps {
 export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   const navigate = useNavigate();
   const { getCollectionById } = useCarCollections();
+  const [hasImageError, setHasImageError] = useState(false);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
@@ -30,7 +31,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   
   const handleImageError = () => {
     console.log(`Image error for featured car ${car.id}`);
-    // Could implement fallback logic here if needed
+    setHasImageError(true);
   };
   
   return (

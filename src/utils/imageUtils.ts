@@ -83,11 +83,11 @@ export const validateImage = (imageUrl: string): Promise<boolean> => {
       return;
     }
     
-    // Set timeout to prevent hanging on invalid URLs
+    // Set a shorter timeout to prevent hanging on invalid URLs
     const timeoutId = setTimeout(() => {
       console.warn("Image validation timed out:", imageUrl.substring(0, 50) + "...");
       resolve(false);
-    }, 5000);
+    }, 3000);
     
     const img = new Image();
     
@@ -124,7 +124,7 @@ export const preloadImage = (imageUrl: string): Promise<string> => {
     const timeoutId = setTimeout(() => {
       console.warn("Image preload timed out:", imageUrl.substring(0, 50) + "...");
       reject(new Error(`Preload timed out: ${imageUrl.substring(0, 50)}...`));
-    }, 5000);
+    }, 3000);
     
     const img = new Image();
     img.onload = () => {
@@ -137,4 +137,12 @@ export const preloadImage = (imageUrl: string): Promise<string> => {
     };
     img.src = imageUrl;
   });
+};
+
+/**
+ * Gets a fallback image URL
+ * @returns A placeholder image URL
+ */
+export const getFallbackImage = (): string => {
+  return '/placeholder.svg';
 };

@@ -9,6 +9,7 @@ import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "@/components/ui/use-toast";
+import { validateImage } from "@/utils/imageUtils";
 
 const CarInventory = () => {
   const { cars, collections } = useCarCollections();
@@ -24,6 +25,10 @@ const CarInventory = () => {
     let loadingToastId: any = null;
     
     const preloadImages = async () => {
+      // Set a timeout to make sure we show loading state for at least a short time
+      // This prevents flickering for fast loads
+      const minLoadingTime = new Promise(resolve => setTimeout(resolve, 300));
+      
       setIsLoading(true);
       
       if (cars.length > 5) {
@@ -36,11 +41,15 @@ const CarInventory = () => {
       
       try {
         // Before processing, check if we actually have images
-        const allImageIds = cars.flatMap(car => car.images || []).filter(Boolean);
+        const allImageIds = cars
+          .flatMap(car => car.images || [])
+          .filter(Boolean)
+          .slice(0, 20); // Limit preloading to first 20 images for performance
         
         if (allImageIds.length === 0) {
           console.log("No images to preload");
           if (isMounted) {
+            await minLoadingTime;
             setIsLoading(false);
           }
           return;
@@ -71,11 +80,14 @@ const CarInventory = () => {
               // Get image URL from storage
               const imageUrl = imageStorage.getImage(imageId);
               
-              // Log if image not found but don't throw error
+              // Skip validation if image not found
               if (!imageUrl || imageUrl === '/placeholder.svg') {
                 console.warn(`Image ${imageId} not found during preload`);
                 return;
               }
+              
+              // Pre-validate image
+              await validateImage(imageUrl);
             } catch (error) {
               console.error(`Error preloading image ${imageId}:`, error);
             }
@@ -86,9 +98,10 @@ const CarInventory = () => {
       } catch (error) {
         console.error("Error during image preload:", error);
       } finally {
-        // Set loading to false after a short delay to ensure UI is ready
+        // Set loading to false, but ensure we've shown loading for at least the minimum time
         if (isMounted) {
-          setTimeout(() => setIsLoading(false), 300);
+          await minLoadingTime;
+          setIsLoading(false);
         }
       }
     };

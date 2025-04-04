@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ interface CarCardProps {
 
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
+  const [hasImageError, setHasImageError] = useState(false);
   
   // Get the first valid image ID or empty string if none exists
   const getFirstValidImage = () => {
@@ -23,7 +24,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   
   const handleImageError = () => {
     console.log(`Image error for car ${car.id}`);
-    // Could implement fallback logic here if needed
+    setHasImageError(true);
   };
   
   return (

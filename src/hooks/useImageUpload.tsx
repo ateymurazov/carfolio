@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { useImageStorage } from "./useImageStorage";
+import { useImageUploadCore } from "./useImageUploadCore";
 import { toast } from "@/components/ui/use-toast";
 
 /**
@@ -12,8 +12,13 @@ import { toast } from "@/components/ui/use-toast";
  */
 export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "images") {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const imageStorage = useImageStorage();
+  const { 
+    imageStorage, 
+    isProcessing, 
+    setIsProcessing,
+    processFiles,
+    updateFormImages
+  } = useImageUploadCore(form, fieldName);
   
   // Sync previewUrls with form images when component mounts or changes
   useEffect(() => {
@@ -88,47 +93,12 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     try {
       const currentImages = form.getValues(fieldName) || [];
-      const filePromises: Promise<string>[] = [];
       
-      // Process each file and create URL
-      Array.from(files).forEach(file => {
-        const promise = new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = async (e) => {
-            if (e.target?.result) {
-              const imageUrl = e.target.result.toString();
-              
-              try {
-                // Store the image persistently and get an ID
-                const storedImageId = await imageStorage.storeImage(imageUrl);
-                resolve(storedImageId);
-              } catch (err) {
-                reject(err);
-              }
-            } else {
-              reject(new Error("Failed to read file"));
-            }
-          };
-          reader.onerror = () => reject(new Error("File read error"));
-          reader.readAsDataURL(file);
-        });
-        
-        filePromises.push(promise);
-      });
-      
-      // Wait for all images to be processed
-      const processedFiles = await Promise.all(filePromises);
-      
-      // Filter out any undefined/null entries to ensure clean data
-      const validFiles = processedFiles.filter(Boolean);
+      // Process the files
+      const validFiles = await processFiles(files);
       
       // Update the form with all images
-      const allImages = [...currentImages.filter(Boolean), ...validFiles];
-      form.setValue(fieldName, allImages, {
-        shouldValidate: true,
-        shouldDirty: true,
-        shouldTouch: true,
-      });
+      const allImages = updateFormImages(validFiles);
       
       // Update preview with actual image data for display
       const previewImages = allImages.map(img => 

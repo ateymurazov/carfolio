@@ -1,74 +1,12 @@
-
-import { useState, useEffect } from "react";
-import { useLocalStorageState } from "./useLocalStorageState";
-import { toast } from "@/components/ui/use-toast";
+import { useImageStorageCore } from "./useImageStorageCore";
 import { optimizeImage } from "@/utils/imageUtils";
-
-interface ImageStorageOptions {
-  compressionQuality?: number;
-  maxWidth?: number;
-  maxStorageSize?: number; // MB
-}
+import { toast } from "@/components/ui/use-toast";
 
 /**
  * Hook for managing persistent image storage
  */
-export function useImageStorage(options: ImageStorageOptions = {}) {
-  const { compressionQuality = 0.7, maxWidth = 1920, maxStorageSize = 50 } = options;
-  
-  // Store image data separately from car data to avoid localStorage size limits
-  const [imageStore, setImageStore] = useLocalStorageState<Record<string, string>>(
-    'carImageStore', 
-    {}
-  );
-  
-  // Track storage usage for monitoring
-  const [storageUsage, setStorageUsage] = useState({ 
-    size: 0, 
-    count: 0,
-    percentage: 0
-  });
-  
-  // Calculate storage usage on init and when imageStore changes
-  useEffect(() => {
-    calculateStorageUsage();
-  }, [imageStore, maxStorageSize]);
-  
-  // Calculate current storage usage
-  const calculateStorageUsage = () => {
-    try {
-      // Get total size of images in MB
-      let totalSize = 0;
-      Object.values(imageStore).forEach(img => {
-        totalSize += img.length * 2 / 1024 / 1024; // Approximate size in MB
-      });
-      
-      const count = Object.keys(imageStore).length;
-      const percentage = (totalSize / maxStorageSize) * 100;
-      
-      setStorageUsage({
-        size: Math.round(totalSize * 100) / 100,
-        count,
-        percentage: Math.round(percentage)
-      });
-      
-      console.log(`Image store: ${count} images, ${totalSize.toFixed(2)}MB (${percentage.toFixed(0)}% of limit)`);
-      
-      // Warn if approaching storage limit
-      if (percentage > 80 && percentage < 90) {
-        console.warn(`Image storage is at ${percentage.toFixed(0)}% of capacity`);
-      } else if (percentage >= 90) {
-        toast({
-          title: "Storage Warning",
-          description: `Image storage is at ${percentage.toFixed(0)}% of capacity. Consider removing unused images.`,
-          variant: "destructive",
-          duration: 8000
-        });
-      }
-    } catch (error) {
-      console.error("Error calculating storage usage:", error);
-    }
-  };
+export function useImageStorage(options = {}) {
+  const { imageStore, setImageStore, storageUsage, options: storageOptions } = useImageStorageCore(options);
   
   /**
    * Store an image in the image store
@@ -86,7 +24,11 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
       // Optimize the image if it's a data URL
       let optimizedImage = imageData;
       if (imageData.startsWith('data:image')) {
-        optimizedImage = await optimizeImage(imageData, compressionQuality, maxWidth);
+        optimizedImage = await optimizeImage(
+          imageData, 
+          storageOptions.compressionQuality, 
+          storageOptions.maxWidth
+        );
       }
       
       // Update the image store

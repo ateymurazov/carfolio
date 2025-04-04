@@ -89,10 +89,16 @@ export const CarImage = ({
       }
     };
     
-    loadImage();
+    // Add a small delay to prevent too many rapid calls
+    const timer = setTimeout(() => {
+      if (isMounted) {
+        loadImage();
+      }
+    }, 50);
     
     return () => {
       isMounted = false;
+      clearTimeout(timer);
     };
   }, [imageId, imageStorage, onError]);
   
