@@ -58,7 +58,6 @@ export const CarImage = ({
         const img = imageStorage.getImage(imageId);
         
         if (!img || img === '/placeholder.svg') {
-          console.warn(`Image ${imageId} not found in storage during load`);
           if (isMounted) {
             setError(true);
             setIsLoading(false);
@@ -75,7 +74,6 @@ export const CarImage = ({
             setImageUrl(img);
             setError(false);
           } else {
-            console.warn(`Invalid image for ID: ${imageId}`);
             setError(true);
             if (onError) onError();
           }
@@ -83,7 +81,6 @@ export const CarImage = ({
         }
       } catch (err) {
         if (isMounted) {
-          console.error(`Error loading image ${imageId}:`, err);
           setError(true);
           setIsLoading(false);
           if (onError) onError();
@@ -91,16 +88,11 @@ export const CarImage = ({
       }
     };
     
-    // Add a small delay to prevent too many rapid calls
-    const timer = setTimeout(() => {
-      if (isMounted) {
-        loadImage();
-      }
-    }, 50);
+    // Load image immediately but don't cause cascading effects
+    loadImage();
     
     return () => {
       isMounted = false;
-      clearTimeout(timer);
     };
   }, [imageId, imageStorage, onError]);
   

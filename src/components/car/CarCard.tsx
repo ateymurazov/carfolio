@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { CarImage } from "./CarImage";
+import { ImageOff } from "lucide-react";
 
 interface CarCardProps {
   car: CarType;
@@ -33,13 +34,20 @@ export const CarCard = ({ car, className }: CarCardProps) => {
       onClick={() => navigate(`/cars/${car.id}`)}
     >
       <div className="aspect-[16/9] bg-gray-200 relative">
-        <CarImage 
-          imageId={imageId}
-          alt={`${car.make} ${car.model}`} 
-          className="h-full w-full object-cover"
-          aspectRatio="video"
-          onError={handleImageError}
-        />
+        {imageId ? (
+          <CarImage 
+            imageId={imageId}
+            alt={`${car.make} ${car.model}`} 
+            className="h-full w-full object-cover"
+            aspectRatio="video"
+            onError={handleImageError}
+            fallbackSrc="/placeholder.svg"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full w-full">
+            <ImageOff className="h-8 w-8 text-gray-400" />
+          </div>
+        )}
       </div>
       <div className="p-4">
         <h3 className="text-lg font-semibold">

@@ -9,7 +9,6 @@ import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "@/components/ui/use-toast";
-import { validateImage } from "@/utils/imageUtils";
 
 const CarInventory = () => {
   const { cars, collections } = useCarCollections();
@@ -17,102 +16,15 @@ const CarInventory = () => {
   const [selectedCollection, setSelectedCollection] = useState<string>("all");
   const [isAddCarDialogOpen, setIsAddCarDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const imageStorage = useImageStorage();
   
-  // Preload images to improve initial render with better error handling
+  // Use a shorter loading time to improve user experience
   useEffect(() => {
-    let isMounted = true;
-    let loadingToastId: any = null;
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
     
-    const preloadImages = async () => {
-      // Set a timeout to make sure we show loading state for at least a short time
-      // This prevents flickering for fast loads
-      const minLoadingTime = new Promise(resolve => setTimeout(resolve, 300));
-      
-      setIsLoading(true);
-      
-      try {
-        // Skip preloading if localStorage is already close to quota
-        try {
-          // Simple test to check if localStorage is accessible
-          const testKey = "_test_storage_" + Date.now();
-          localStorage.setItem(testKey, "test");
-          localStorage.removeItem(testKey);
-        } catch (err) {
-          console.warn("LocalStorage appears to be full, skipping image preload");
-          if (isMounted) {
-            await minLoadingTime;
-            setIsLoading(false);
-          }
-          return;
-        }
-        
-        // Before processing, check if we actually have images
-        const allImageIds = cars
-          .flatMap(car => car.images || [])
-          .filter(Boolean)
-          .slice(0, 10); // Limit preloading to first 10 images for performance
-        
-        if (allImageIds.length === 0) {
-          console.log("No images to preload");
-          if (isMounted) {
-            await minLoadingTime;
-            setIsLoading(false);
-          }
-          return;
-        }
-        
-        // Deduplicate image IDs
-        const uniqueImageIds = [...new Set(allImageIds)];
-        
-        console.log(`Starting image preload for ${uniqueImageIds.length} unique images`);
-        
-        // Try loading images sequentially to avoid overwhelming localStorage
-        for (let i = 0; i < Math.min(uniqueImageIds.length, 5); i++) {
-          if (!isMounted) break;
-          
-          const imageId = uniqueImageIds[i];
-          
-          try {
-            // Skip external URLs and data URLs
-            if (typeof imageId !== 'string' || 
-                imageId.startsWith('data:') || 
-                imageId.startsWith('http') || 
-                imageId.startsWith('/')) {
-              continue;
-            }
-            
-            // Get image URL from storage
-            const imageUrl = imageStorage.getImage(imageId);
-            
-            // Skip validation if image not found
-            if (!imageUrl || imageUrl === '/placeholder.svg') {
-              console.warn(`Image ${imageId} not found during preload`);
-              continue;
-            }
-          } catch (error) {
-            console.error(`Error preloading image ${imageId}:`, error);
-          }
-        }
-        
-        console.log("Image preload complete");
-      } catch (error) {
-        console.error("Error during image preload:", error);
-      } finally {
-        // Set loading to false, but ensure we've shown loading for at least the minimum time
-        if (isMounted) {
-          await minLoadingTime;
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    preloadImages();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [cars, imageStorage]);
+    return () => clearTimeout(timer);
+  }, []);
   
   // Filter cars based on search term and selected collection
   const filteredCars = cars.filter(car => {
