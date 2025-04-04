@@ -36,10 +36,10 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   
   return (
     <div 
-      className={cn("car-card rounded-lg border shadow hover:shadow-md transition-all overflow-hidden bg-card", className)}
+      className={cn("bg-card border rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-all", className)}
       onClick={() => navigate(`/cars/${car.id}`)}
     >
-      <div className="car-card-image aspect-[16/9] bg-secondary relative">
+      <div className="aspect-[16/9] bg-secondary relative">
         <img 
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
@@ -47,18 +47,17 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           onError={handleImageError}
         />
       </div>
-      <div className="car-card-content p-4">
-        <h3 className="text-lg font-semibold mb-1">
+      <div className="p-4">
+        <h3 className="text-xl font-semibold">
           {car.year} {car.make} {car.model}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-1">
           {car.exteriorColor}, {car.transmission}
         </p>
         
-        <div className="mt-4 flex items-center justify-between">
+        <div className="flex justify-between items-center mt-4">
           <div className="text-sm">
-            <span className="text-muted-foreground">VIN: </span>
-            <span>{car.vin.slice(-8)}</span>
+            <span>VIN: {car.vin.slice(-8)}</span>
           </div>
           <span className={cn(
             "text-xs px-3 py-1 rounded-full",

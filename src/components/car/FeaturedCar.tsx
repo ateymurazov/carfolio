@@ -78,12 +78,13 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
         </div>
         <div className="mt-2 flex justify-between items-center">
           <div className="text-sm">
-            <span className="text-muted-foreground">VIN: </span>
-            <span>{car.vin.slice(-8)}</span>
+            <span>VIN: {car.vin.slice(-8)}</span>
           </div>
-          <div className="text-sm text-muted-foreground">
-            Collection: {collection?.name || "None"}
-          </div>
+          {collection && (
+            <div className="text-sm text-muted-foreground">
+              Collection: {collection.name}
+            </div>
+          )}
         </div>
       </div>
     </div>
