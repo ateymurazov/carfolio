@@ -25,14 +25,20 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
     if (car.images && car.images.length > 0) {
       try {
         const imageId = car.images[0];
-        const img = imageStorage.getImage(imageId);
-        
-        if (img) {
-          setLoadedImage(img);
+        // Handle both direct URLs and storage IDs
+        if (imageId.startsWith('http') || imageId.startsWith('/')) {
+          setLoadedImage(imageId);
           setImageError(false);
         } else {
-          console.warn(`Image ${imageId} not found in storage for featured car`);
-          setImageError(true);
+          const img = imageStorage.getImage(imageId);
+          
+          if (img) {
+            setLoadedImage(img);
+            setImageError(false);
+          } else {
+            console.warn(`Image ${imageId} not found in storage for featured car`);
+            setImageError(true);
+          }
         }
       } catch (error) {
         console.error(`Error loading image for featured car ${car.id}:`, error);
