@@ -58,7 +58,7 @@ const CarInventory = () => {
           onValueChange={setSelectedCollection}
         >
           <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Collection" />
+            <SelectValue placeholder="All Collections" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Collections</SelectItem>

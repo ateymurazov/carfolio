@@ -3,10 +3,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Car as CarIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
 import { useImageStorage } from "@/hooks/useImageStorage";
+import { cn } from "@/lib/utils";
 
 interface FeaturedCarProps {
   car: Car;
@@ -49,7 +50,10 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           className="h-full w-full object-cover"
           onError={handleImageError}
         />
-        <Badge className="absolute top-2 right-2">
+        <Badge className={cn(
+          "absolute top-2 right-2",
+          car.status === "In Service" ? "bg-amber-500" : "bg-emerald-500"
+        )}>
           {car.status || "Available"}
         </Badge>
       </div>
@@ -70,12 +74,16 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           </div>
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
-          <CarIcon className="mr-1 h-4 w-4" /> Collection: {collection?.name || "None"}
+          <span className="mr-2">{car.exteriorColor}, {car.transmission}</span>
         </div>
-        <div className="mt-2">
-          <p className="text-sm line-clamp-2">
-            {car.notes || `${car.exteriorColor} exterior with ${car.interiorColor} interior. ${car.transmission} transmission.`}
-          </p>
+        <div className="mt-2 flex justify-between items-center">
+          <div className="text-sm">
+            <span className="text-muted-foreground">VIN: </span>
+            <span>{car.vin.slice(-8)}</span>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Collection: {collection?.name || "None"}
+          </div>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ interface CarGridProps {
 
 export const CarGrid = ({ cars, className }: CarGridProps) => {
   return (
-    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4", className)}>
+    <div className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6", className)}>
       {cars.map(car => (
         <CarCard key={car.id} car={car} />
       ))}
