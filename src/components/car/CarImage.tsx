@@ -12,6 +12,7 @@ interface CarImageProps {
   aspectRatio?: "square" | "video" | "auto";
   showPlaceholder?: boolean;
   onError?: () => void;
+  onLoad?: () => void;
   fallbackSrc?: string;
 }
 
@@ -22,6 +23,7 @@ export const CarImage = ({
   aspectRatio = "video",
   showPlaceholder = true,
   onError,
+  onLoad,
   fallbackSrc = "/placeholder.svg"
 }: CarImageProps) => {
   const [error, setError] = useState(false);
@@ -29,18 +31,20 @@ export const CarImage = ({
   const [isLoading, setIsLoading] = useState(true);
   const imageStorage = useImageStorage();
   
+  // Reset states when imageId changes
   useEffect(() => {
     let isMounted = true;
     
-    // Always start with fallback image while loading the actual image
+    // Start with fallback image while loading the actual image
     setImageUrl(fallbackSrc);
     setIsLoading(true);
     setError(false);
     
     const loadImage = async () => {
       // Handle empty imageId case
-      if (!imageId) {
+      if (!imageId || imageId.trim() === '') {
         if (isMounted) {
+          console.log("Empty imageId provided");
           setError(true);
           setIsLoading(false);
           if (onError) onError();
@@ -54,6 +58,7 @@ export const CarImage = ({
           if (isMounted) {
             setImageUrl(imageId);
             setIsLoading(false);
+            if (onLoad) onLoad();
           }
           return;
         }
@@ -77,16 +82,27 @@ export const CarImage = ({
         }
         
         // Then validate the image in background to ensure it's valid
-        const isValid = await validateImage(img);
-        
-        if (isMounted) {
-          if (!isValid) {
-            console.log(`Image validation failed for ID: ${imageId}`);
+        try {
+          const isValid = await validateImage(img);
+          
+          if (isMounted) {
+            if (!isValid) {
+              console.log(`Image validation failed for ID: ${imageId}`);
+              setError(true);
+              if (onError) onError();
+            } else {
+              if (onLoad) onLoad();
+            }
+            
+            setIsLoading(false);
+          }
+        } catch (validationErr) {
+          if (isMounted) {
+            console.error("Image validation error:", validationErr);
             setError(true);
+            setIsLoading(false);
             if (onError) onError();
           }
-          
-          setIsLoading(false);
         }
       } catch (err) {
         if (isMounted) {
@@ -103,11 +119,17 @@ export const CarImage = ({
     return () => {
       isMounted = false;
     };
-  }, [imageId, imageStorage, onError, fallbackSrc]);
+  }, [imageId, imageStorage, onError, onLoad, fallbackSrc]);
   
   const handleImageError = () => {
+    console.log(`Image failed to load: ${imageId}`);
     setError(true);
     if (onError) onError();
+  };
+  
+  const handleImageLoad = () => {
+    setIsLoading(false);
+    if (onLoad) onLoad();
   };
   
   // Show placeholder if in error state
@@ -144,6 +166,7 @@ export const CarImage = ({
       alt={alt}
       className={cn(className, isLoading && "opacity-70")}
       onError={handleImageError}
+      onLoad={handleImageLoad}
     />
   );
 };

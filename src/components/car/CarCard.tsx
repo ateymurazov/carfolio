@@ -24,14 +24,14 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   
   const imageId = getFirstValidImage();
   
-  // Reset image error state when car changes
+  // Reset image error state when car or imageId changes
   useEffect(() => {
     setHasImageError(false);
     setIsImageLoaded(false);
   }, [car.id, imageId]);
   
   const handleImageError = () => {
-    console.log(`Image error for car ${car.id}`);
+    console.log(`Image error for car ${car.id}, image: ${imageId}`);
     setHasImageError(true);
   };
   
@@ -52,6 +52,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
             className="h-full w-full object-cover"
             aspectRatio="video"
             onError={handleImageError}
+            onLoad={handleImageLoad}
             fallbackSrc="/placeholder.svg"
           />
         ) : (
