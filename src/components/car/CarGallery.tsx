@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Car } from "@/types/car";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { 
@@ -12,6 +12,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useCarCollections } from "@/hooks/useCarCollections";
+import { toast } from "@/components/ui/use-toast";
 
 interface CarGalleryProps {
   car: Car;
@@ -22,6 +24,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [loadedImages, setLoadedImages] = useState<string[]>([]);
   const imageStorage = useImageStorage();
+  const { updateCar } = useCarCollections();
   
   // Load images from storage on component mount
   useEffect(() => {
@@ -64,6 +67,61 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
       setCurrentImageIndex(0);
     }
   };
+
+  // Handle deleting an image
+  const handleDeleteImage = (index: number) => {
+    if (!car.images || index >= car.images.length) {
+      toast({
+        title: "Error",
+        description: "Cannot delete image: Invalid image index",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Get the image ID to remove
+    const imageId = car.images[index];
+    
+    try {
+      // Remove from storage
+      if (typeof imageId === 'string' && !imageId.startsWith('data:')) {
+        imageStorage.removeImage(imageId);
+      }
+      
+      // Update car with remaining images
+      const updatedImages = [...car.images];
+      updatedImages.splice(index, 1);
+      
+      updateCar(car.id, {
+        ...car,
+        images: updatedImages,
+      });
+      
+      // Update loaded images
+      setLoadedImages(prev => {
+        const updated = [...prev];
+        updated.splice(index, 1);
+        return updated;
+      });
+      
+      // Adjust current index if needed
+      if (currentImageIndex >= updatedImages.length) {
+        setCurrentImageIndex(Math.max(0, updatedImages.length - 1));
+      }
+      
+      toast({
+        title: "Image deleted",
+        description: "Image was successfully removed"
+      });
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete image. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
   // If using a placeholder image, show a different UI
   if (images.length === 1 && images[0] === "/placeholder.svg") {
@@ -97,6 +155,15 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                   <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs">
                     {index + 1} / {images.length}
                   </div>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={() => handleDeleteImage(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </CarouselItem>
             ))}
@@ -110,7 +177,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
             <button
               key={index}
               className={cn(
-                "relative w-20 h-16 flex-shrink-0 rounded border transition-opacity",
+                "relative w-20 h-16 flex-shrink-0 rounded border transition-opacity group",
                 currentImageIndex === index 
                   ? "border-primary" 
                   : "hover:opacity-80"
@@ -123,6 +190,18 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                 className="h-full w-full object-cover rounded"
                 onError={() => handleImageError(index)}
               />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-0 right-0 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteImage(index);
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
             </button>
           ))}
         </div>
@@ -140,6 +219,17 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
           className="h-full w-full object-contain"
           onError={() => handleImageError(0)}
         />
+        {images[0] !== "/placeholder.svg" && (
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2"
+            onClick={() => handleDeleteImage(0)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
