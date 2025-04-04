@@ -90,28 +90,14 @@ export const CarImage = ({
         if (isMounted) {
           setImageUrl(img);
           
-          // Validate the image in background
-          try {
-            const isValid = await validateImage(img);
-            
-            if (isMounted) {
-              if (!isValid) {
-                console.log(`Image validation failed for ID: ${imageId}`);
-                setError(true);
-                if (onError) onError();
-              } else {
-                if (onLoad) onLoad();
-              }
-              
-              setIsLoading(false);
-            }
-          } catch (validationErr) {
-            if (isMounted) {
-              console.error("Image validation error:", validationErr);
-              setError(true);
-              setIsLoading(false);
-              if (onError) onError();
-            }
+          // Simplified validation
+          if (img && img !== '/placeholder.svg') {
+            if (onLoad) onLoad();
+            setIsLoading(false);
+          } else {
+            setError(true);
+            if (onError) onError();
+            setIsLoading(false);
           }
         }
       } catch (err) {
@@ -124,20 +110,14 @@ export const CarImage = ({
       }
     };
     
-    // Use a small delay to prevent rapid flickering during navigation
-    const timerId = setTimeout(() => {
-      if (isMounted) {
-        loadImage();
-      }
-    }, 50);
+    // Quick load to prevent delay
+    loadImage();
     
     return () => {
-      clearTimeout(timerId);
       isMounted = false;
     };
   }, [imageId, imageStorage, onError, onLoad, fallbackSrc]);
   
-  // Preload image before displaying to avoid flickering
   const handleImageLoad = () => {
     setIsLoading(false);
     if (onLoad) onLoad();
@@ -146,6 +126,7 @@ export const CarImage = ({
   const handleImageError = () => {
     console.log(`Image failed to load: ${imageId}`);
     setError(true);
+    setIsLoading(false);
     if (onError) onError();
   };
   
@@ -177,7 +158,6 @@ export const CarImage = ({
     );
   }
   
-  // Use a CSS class to handle fade transition
   return (
     <img 
       src={imageUrl}
