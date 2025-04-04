@@ -3,28 +3,44 @@ import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { initialCars, initialCollections } from "@/data/initialCarData";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { toast } from "@/components/ui/use-toast";
 
-// Define return type for the hook
 export type CarStorageState = {
   cars: Car[];
   collections: Collection[];
 };
 
-/**
- * Hook to manage car and collection data persistence
- */
 export function useCarStorage(): CarStorageState & {
   updateCars: (cars: Car[]) => void;
   updateCollections: (collections: Collection[]) => void;
+  resetToInitialData: () => void;
 } {
-  // Use local storage state with the extracted initial data
   const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
   const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
+  
+  const resetToInitialData = () => {
+    const confirmReset = window.confirm(
+      "Are you sure you want to reset all data to the initial state? This will replace all your current data."
+    );
+    
+    if (confirmReset) {
+      setCars(initialCars);
+      setCollections(initialCollections);
+      
+      toast({
+        title: "Data Reset",
+        description: "All data has been reset to the initial state.",
+        variant: "default"
+      });
+    }
+  };
   
   return {
     cars,
     collections,
     updateCars: setCars,
-    updateCollections: setCollections
+    updateCollections: setCollections,
+    resetToInitialData
   };
 }
+
