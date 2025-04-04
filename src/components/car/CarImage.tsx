@@ -12,6 +12,7 @@ interface CarImageProps {
   aspectRatio?: "square" | "video" | "auto";
   showPlaceholder?: boolean;
   onError?: () => void;
+  fallbackSrc?: string;
 }
 
 export const CarImage = ({ 
@@ -20,7 +21,8 @@ export const CarImage = ({
   className,
   aspectRatio = "video",
   showPlaceholder = true,
-  onError
+  onError,
+  fallbackSrc = "/placeholder.svg"
 }: CarImageProps) => {
   const [error, setError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
@@ -110,6 +112,16 @@ export const CarImage = ({
   // Show placeholder if image is in error state or loading
   if (error || !imageUrl) {
     if (!showPlaceholder) return null;
+    
+    if (fallbackSrc) {
+      return (
+        <img 
+          src={fallbackSrc}
+          alt={alt}
+          className={cn(className)}
+        />
+      );
+    }
     
     return (
       <div className={cn(

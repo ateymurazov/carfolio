@@ -39,7 +39,6 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           className="h-full w-full object-cover"
           aspectRatio="video"
           onError={handleImageError}
-          fallbackSrc="/placeholder.svg"
         />
       </div>
       <div className="p-4">
