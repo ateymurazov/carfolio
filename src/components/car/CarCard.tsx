@@ -19,7 +19,14 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   // Get the first valid image ID or empty string if none exists
   const getFirstValidImage = () => {
     if (!car.images || !Array.isArray(car.images) || car.images.length === 0) return "";
-    return car.images[0] || "";
+    
+    // Find first non-empty image ID
+    for (const img of car.images) {
+      if (img && typeof img === 'string' && img.trim() !== '') {
+        return img;
+      }
+    }
+    return "";
   };
   
   const imageId = getFirstValidImage();
@@ -36,6 +43,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   };
   
   const handleImageLoad = () => {
+    console.log(`Image loaded for car ${car.id}, image: ${imageId}`);
     setIsImageLoaded(true);
   };
   
@@ -58,6 +66,12 @@ export const CarCard = ({ car, className }: CarCardProps) => {
         ) : (
           <div className="flex items-center justify-center h-full w-full">
             <ImageOff className="h-8 w-8 text-gray-400" />
+          </div>
+        )}
+        
+        {!isImageLoaded && !hasImageError && imageId && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-60">
+            <div className="w-6 h-6 border-2 border-t-transparent border-navy-800 rounded-full animate-spin"></div>
           </div>
         )}
       </div>

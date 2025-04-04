@@ -62,18 +62,31 @@ export function useImageStorage(options = {}) {
     }
     
     // Process images in batches to avoid blocking the UI
-    const batchSize = 2; // Reduced batch size
+    const batchSize = 2; // Reduced batch size for better performance
     const results: string[] = [];
     
     for (let i = 0; i < imageDatas.length; i += batchSize) {
       const batch = imageDatas.slice(i, i + batchSize);
-      const batchPromises = batch.filter(Boolean).map(img => storeImage(img));
       
       try {
-        const batchResults = await Promise.all(batchPromises);
-        results.push(...batchResults);
+        // Process batch sequentially to avoid overwhelming storage
+        for (const img of batch) {
+          if (img) {
+            try {
+              const id = await storeImage(img);
+              results.push(id);
+            } catch (err) {
+              console.error("Error storing image in batch:", err);
+            }
+          }
+        }
       } catch (error) {
         console.error("Error processing image batch:", error);
+      }
+      
+      // Give UI a chance to breathe between batches
+      if (i + batchSize < imageDatas.length) {
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
     }
     
@@ -86,7 +99,7 @@ export function useImageStorage(options = {}) {
   const getImage = (imageId: string): string => {
     try {
       // Handle invalid inputs
-      if (!imageId) {
+      if (!imageId || typeof imageId !== 'string') {
         return '/placeholder.svg';
       }
       

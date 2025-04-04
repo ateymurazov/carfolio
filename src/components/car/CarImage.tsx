@@ -114,9 +114,13 @@ export const CarImage = ({
       }
     };
     
-    loadImage();
+    // Use a small timeout to avoid blocking UI during navigation
+    const timerId = setTimeout(() => {
+      loadImage();
+    }, 10);
     
     return () => {
+      clearTimeout(timerId);
       isMounted = false;
     };
   }, [imageId, imageStorage, onError, onLoad, fallbackSrc]);
@@ -136,12 +140,13 @@ export const CarImage = ({
   if (error) {
     if (!showPlaceholder) return null;
     
-    if (fallbackSrc) {
+    if (fallbackSrc && fallbackSrc !== '/placeholder.svg') {
       return (
         <img 
           src={fallbackSrc}
           alt={alt}
           className={cn(className)}
+          onError={() => console.log("Even fallback image failed to load")}
         />
       );
     }
