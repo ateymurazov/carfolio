@@ -19,10 +19,23 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   // Load image from storage when component mounts
   useEffect(() => {
     if (car.images && car.images.length > 0) {
-      const img = imageStorage.getImage(car.images[0]);
-      setLoadedImage(img);
+      try {
+        const imageId = car.images[0];
+        const img = imageStorage.getImage(imageId);
+        
+        if (img) {
+          setLoadedImage(img);
+          setImageError(false);
+        } else {
+          console.warn(`Image ${imageId} not found in storage`);
+          setImageError(true);
+        }
+      } catch (error) {
+        console.error(`Error loading image for car ${car.id}:`, error);
+        setImageError(true);
+      }
     }
-  }, [car.images, imageStorage]);
+  }, [car.images, imageStorage, car.id]);
   
   // Placeholder car image if not provided or if there's an error
   const carImage = imageError || !loadedImage

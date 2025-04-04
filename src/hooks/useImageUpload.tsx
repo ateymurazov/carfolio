@@ -16,17 +16,30 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   
   // Sync previewUrls with form images when component mounts
   useEffect(() => {
-    const currentImages = form.getValues(fieldName) || [];
-    if (Array.isArray(currentImages) && currentImages.length > 0) {
-      // Load images from storage if they're IDs
-      const loadedImages = currentImages.map(img => 
-        typeof img === 'string' && !img.startsWith('data:') 
-          ? imageStorage.getImage(img) 
-          : img
-      );
-      setPreviewUrls(loadedImages);
-      console.log(`Initialized ${fieldName} with ${loadedImages.length} images`);
-    }
+    const syncImages = () => {
+      const currentImages = form.getValues(fieldName) || [];
+      if (Array.isArray(currentImages) && currentImages.length > 0) {
+        // Load images from storage if they're IDs
+        const loadedImages = currentImages.map(img => 
+          typeof img === 'string' && !img.startsWith('data:') 
+            ? imageStorage.getImage(img) 
+            : img
+        );
+        setPreviewUrls(loadedImages);
+        console.log(`Initialized ${fieldName} with ${loadedImages.length} images`);
+      }
+    };
+    
+    syncImages();
+    
+    // Watch for changes to the images field
+    const subscription = form.watch((value, { name }) => {
+      if (name === fieldName) {
+        syncImages();
+      }
+    });
+    
+    return () => subscription.unsubscribe();
   }, [form, fieldName, imageStorage]);
   
   /**
@@ -83,6 +96,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       form.setValue(fieldName, allImages, {
         shouldValidate: true,
         shouldDirty: true,
+        shouldTouch: true,
       });
       
       // Update preview with actual image data for display
@@ -136,6 +150,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     form.setValue(fieldName, updatedImages, {
       shouldValidate: true,
       shouldDirty: true,
+      shouldTouch: true,
     });
     
     // Update preview URLs

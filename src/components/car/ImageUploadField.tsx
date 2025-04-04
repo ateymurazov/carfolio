@@ -1,5 +1,5 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
 import { ImagePlus, Trash2, Upload } from "lucide-react";
@@ -14,6 +14,15 @@ interface ImageUploadFieldProps {
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
   const { handleImageChange, removeImage, previewUrls } = useImageUpload(form, "images");
+  const imageStorage = useImageStorage();
+  
+  useEffect(() => {
+    // Verify image loading from storage on mount
+    const currentImages = form.getValues("images") || [];
+    if (currentImages.length > 0) {
+      console.log(`ImageUploadField: ${currentImages.length} images loaded`);
+    }
+  }, [form]);
   
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();

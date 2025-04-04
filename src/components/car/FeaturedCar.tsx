@@ -23,10 +23,23 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   // Load image from storage when component mounts
   useEffect(() => {
     if (car.images && car.images.length > 0) {
-      const img = imageStorage.getImage(car.images[0]);
-      setLoadedImage(img);
+      try {
+        const imageId = car.images[0];
+        const img = imageStorage.getImage(imageId);
+        
+        if (img) {
+          setLoadedImage(img);
+          setImageError(false);
+        } else {
+          console.warn(`Image ${imageId} not found in storage for featured car`);
+          setImageError(true);
+        }
+      } catch (error) {
+        console.error(`Error loading image for featured car ${car.id}:`, error);
+        setImageError(true);
+      }
     }
-  }, [car.images, imageStorage]);
+  }, [car.images, imageStorage, car.id]);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
