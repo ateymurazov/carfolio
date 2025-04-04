@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -9,28 +9,61 @@ import { CarGallery } from "@/components/car/CarGallery";
 import { CarInfoTable } from "@/components/car/CarInfoTable";
 import { DialogEditCar } from "@/components/car/DialogEditCar";
 import { DialogDeleteCar } from "@/components/car/DialogDeleteCar";
+import { toast } from "@/components/ui/use-toast";
 
 const CarDetails = () => {
   const { carId } = useParams<{carId: string}>();
   const navigate = useNavigate();
   const { getCarById, getCollectionById } = useCarCollections();
   
-  const car = getCarById(carId || "");
-  const collection = car ? getCollectionById(car.collectionId) : null;
-  
   const [isEditCarDialogOpen, setIsEditCarDialogOpen] = useState(false);
   const [isDeleteCarDialogOpen, setIsDeleteCarDialogOpen] = useState(false);
   
+  useEffect(() => {
+    // Validate that carId is provided
+    if (!carId) {
+      console.error("No car ID provided in URL parameters");
+      toast({
+        title: "Error",
+        description: "No car ID provided",
+        variant: "destructive"
+      });
+      navigate("/inventory");
+      return;
+    }
+    
+    // Validate that the car exists
+    const car = getCarById(carId);
+    if (!car) {
+      console.error(`Car with ID ${carId} not found`);
+      toast({
+        title: "Car Not Found",
+        description: `We couldn't find a car with ID: ${carId}`,
+        variant: "destructive"
+      });
+      navigate("/inventory");
+    }
+  }, [carId, getCarById, navigate]);
+  
+  // Get car from context
+  const car = carId ? getCarById(carId) : null;
+  
+  // Get collection if car exists
+  const collection = car ? getCollectionById(car.collectionId) : null;
+  
+  // If car is not found, show a message and a button to return to inventory
   if (!car) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6">
-        <p>Car not found.</p>
-        <Button 
-          variant="link" 
-          onClick={() => navigate("/inventory")}
-        >
-          Return to inventory
-        </Button>
+      <div className="flex flex-col items-center justify-center h-[80vh] p-6">
+        <div className="text-center space-y-4">
+          <p className="text-xl">Car not found or still loading...</p>
+          <Button 
+            variant="default" 
+            onClick={() => navigate("/inventory")}
+          >
+            Return to inventory
+          </Button>
+        </div>
       </div>
     );
   }
