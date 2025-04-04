@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useImageStorage } from "./useImageStorage";
@@ -22,7 +21,7 @@ export function useImageUploadCore(form: UseFormReturn<any>, fieldName: string =
       toast({
         title: "Too many files",
         description: `Maximum 10 files can be uploaded at once. Processing first 10.`,
-        variant: "warning"
+        variant: "default"
       });
     }
     
