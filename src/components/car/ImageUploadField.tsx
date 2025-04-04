@@ -1,12 +1,12 @@
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
 import { ImagePlus, Trash2, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "../ui/use-toast";
+import { CarImage } from "./CarImage";
 
 interface ImageUploadFieldProps {
   form: UseFormReturn<any>;
@@ -14,15 +14,6 @@ interface ImageUploadFieldProps {
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
   const { handleImageChange, removeImage, previewUrls } = useImageUpload(form, "images");
-  const imageStorage = useImageStorage();
-  
-  useEffect(() => {
-    // Verify image loading from storage on mount
-    const currentImages = form.getValues("images") || [];
-    if (currentImages.length > 0) {
-      console.log(`ImageUploadField: ${currentImages.length} images loaded`);
-    }
-  }, [form]);
   
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -88,16 +79,17 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                   {previewUrls.map((url: string, index: number) => (
                     <div key={index} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
-                        <img 
-                          src={url} 
-                          alt={`Car image ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.log(`Image error for index ${index}, url length: ${url.length}`);
-                            // Fallback to placeholder if image fails to load
-                            e.currentTarget.src = "/placeholder.svg";
-                          }}
-                        />
+                        {typeof url === 'string' ? (
+                          <CarImage 
+                            imageId={url}
+                            alt={`Car image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full w-full bg-gray-100">
+                            <ImagePlus className="h-8 w-8 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                       <Button
                         type="button"

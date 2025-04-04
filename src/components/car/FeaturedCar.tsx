@@ -1,13 +1,13 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ImageOff } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
-import { useImageStorage } from "@/hooks/useImageStorage";
 import { cn } from "@/lib/utils";
+import { CarImage } from "./CarImage";
 
 interface FeaturedCarProps {
   car: Car;
@@ -16,81 +16,23 @@ interface FeaturedCarProps {
 export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   const navigate = useNavigate();
   const { getCollectionById } = useCarCollections();
-  const [imageError, setImageError] = useState(false);
-  const [loadedImage, setLoadedImage] = useState<string>("");
-  const imageStorage = useImageStorage();
-  
-  // Load image from storage when component mounts
-  useEffect(() => {
-    if (car.images && car.images.length > 0) {
-      try {
-        const imageId = car.images[0];
-        console.log(`Loading image for featured car ${car.id}: ${imageId}`);
-        
-        // Handle both direct URLs and storage IDs
-        if (typeof imageId === 'string') {
-          if (imageId.startsWith('http') || imageId.startsWith('/')) {
-            setLoadedImage(imageId);
-            setImageError(false);
-          } else {
-            // Try to get image from storage, with fallback
-            try {
-              const img = imageStorage.getImage(imageId);
-              
-              // Check if we got a valid image or the placeholder
-              if (img && img !== '/placeholder.svg') {
-                setLoadedImage(img);
-                setImageError(false);
-              } else {
-                console.warn(`Image ${imageId} not found in storage or returned placeholder for featured car`);
-                setImageError(true);
-              }
-            } catch (error) {
-              console.error(`Error retrieving image ${imageId} for featured car:`, error);
-              setImageError(true);
-            }
-          }
-        } else {
-          console.warn(`Invalid image ID for featured car ${car.id}`);
-          setImageError(true);
-        }
-      } catch (error) {
-        console.error(`Error loading image for featured car ${car.id}:`, error);
-        setImageError(true);
-      }
-    } else {
-      setImageError(true);
-    }
-  }, [car.images, imageStorage, car.id]);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
-  // Placeholder car image if not provided or if there's an error
-  const carImage = imageError || !loadedImage
-    ? "/placeholder.svg"
-    : loadedImage;
-  
-  const handleImageError = () => {
-    console.log(`Image error for featured car: ${car.id}`);
-    setImageError(true);
-  };
+  // Get the primary image ID
+  const imageId = car.images && car.images.length > 0 ? car.images[0] : "";
   
   return (
     <div className="flex flex-col space-y-4">
       <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-200">
-        {imageError ? (
-          <div className="h-full w-full flex items-center justify-center bg-gray-100">
-            <ImageOff className="h-12 w-12 text-gray-400" />
-          </div>
-        ) : (
-          <img 
-            src={carImage} 
-            alt={`${car.make} ${car.model}`} 
-            className="h-full w-full object-cover"
-            onError={handleImageError}
-          />
-        )}
+        <CarImage 
+          imageId={imageId}
+          alt={`${car.make} ${car.model}`} 
+          className="h-full w-full object-cover"
+          aspectRatio="video"
+        />
+        
         <Badge className={cn(
           "absolute top-2 right-2 text-white",
           car.status === "In Service" ? "bg-amber-500" : "bg-emerald-500"
