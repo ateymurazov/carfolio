@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocalStorageState } from "./useLocalStorageState";
+import { toast } from "@/components/ui/use-toast";
 
 interface ImageStorageOptions {
   compressionQuality?: number;
   maxWidth?: number;
+  maxStorageSize?: number; // MB
 }
 
 /**
@@ -11,7 +13,7 @@ interface ImageStorageOptions {
  * This hook specifically focuses on handling images with better persistence and error recovery
  */
 export function useImageStorage(options: ImageStorageOptions = {}) {
-  const { compressionQuality = 0.7, maxWidth = 1920 } = options;
+  const { compressionQuality = 0.7, maxWidth = 1920, maxStorageSize = 50 } = options;
   
   // Store image data separately from car data to avoid localStorage size limits
   const [imageStore, setImageStore] = useLocalStorageState<Record<string, string>>(
@@ -19,10 +21,52 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
     {}
   );
   
-  // Debug info for development
+  // Track storage usage for monitoring
+  const [storageUsage, setStorageUsage] = useState({ 
+    size: 0, 
+    count: 0,
+    percentage: 0
+  });
+  
+  // Calculate storage usage on init and when imageStore changes
   useEffect(() => {
-    console.log(`Image store initialized with ${Object.keys(imageStore).length} images`);
-  }, []);
+    const calculateStorageUsage = () => {
+      try {
+        // Get total size of images in MB
+        let totalSize = 0;
+        Object.values(imageStore).forEach(img => {
+          totalSize += img.length * 2 / 1024 / 1024; // Approximate size in MB
+        });
+        
+        const count = Object.keys(imageStore).length;
+        const percentage = (totalSize / maxStorageSize) * 100;
+        
+        setStorageUsage({
+          size: Math.round(totalSize * 100) / 100,
+          count,
+          percentage: Math.round(percentage)
+        });
+        
+        console.log(`Image store: ${count} images, ${totalSize.toFixed(2)}MB (${percentage.toFixed(0)}% of limit)`);
+        
+        // Warn if approaching storage limit
+        if (percentage > 80 && percentage < 90) {
+          console.warn(`Image storage is at ${percentage.toFixed(0)}% of capacity`);
+        } else if (percentage >= 90) {
+          toast({
+            title: "Storage Warning",
+            description: `Image storage is at ${percentage.toFixed(0)}% of capacity. Consider removing unused images.`,
+            variant: "destructive",
+            duration: 8000
+          });
+        }
+      } catch (error) {
+        console.error("Error calculating storage usage:", error);
+      }
+    };
+    
+    calculateStorageUsage();
+  }, [imageStore, maxStorageSize]);
   
   /**
    * Store an image in the image store
@@ -50,7 +94,7 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
       return imageId;
     } catch (error) {
       console.error("Failed to store image:", error);
-      return imageData; // Fallback to original image data on error
+      throw error;
     }
   };
   
@@ -58,14 +102,18 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    * Store multiple images at once
    */
   const storeImages = async (imageDatas: string[]): Promise<string[]> => {
-    const imageIds: string[] = [];
+    // Process images in batches to avoid blocking the UI
+    const batchSize = 3;
+    const results: string[] = [];
     
-    for (const imageData of imageDatas) {
-      const imageId = await storeImage(imageData);
-      imageIds.push(imageId);
+    for (let i = 0; i < imageDatas.length; i += batchSize) {
+      const batch = imageDatas.slice(i, i + batchSize);
+      const batchPromises = batch.map(img => storeImage(img));
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
     }
     
-    return imageIds;
+    return results;
   };
   
   /**
@@ -73,16 +121,24 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    */
   const getImage = (imageId: string): string => {
     // If the imageId is already a data URL, return it directly
-    if (imageId.startsWith('data:')) return imageId;
+    if (!imageId || imageId.startsWith('data:')) return imageId;
     
     // Otherwise try to retrieve from image store
-    return imageStore[imageId] || imageId;
+    const image = imageStore[imageId];
+    
+    if (!image) {
+      console.warn(`Image ${imageId} not found in storage`);
+      return '/placeholder.svg'; // Fallback to placeholder
+    }
+    
+    return image;
   };
   
   /**
    * Get multiple images at once
    */
   const getImages = (imageIds: string[]): string[] => {
+    if (!imageIds || !Array.isArray(imageIds)) return [];
     return imageIds.map(getImage);
   };
   
@@ -90,13 +146,18 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    * Remove an image from the image store
    */
   const removeImage = (imageId: string): void => {
-    if (!imageStore[imageId]) return;
+    if (!imageStore[imageId]) {
+      console.warn(`Cannot remove image ${imageId}: not found in storage`);
+      return;
+    }
     
     setImageStore(prev => {
       const updated = { ...prev };
       delete updated[imageId];
       return updated;
     });
+    
+    console.log(`Removed image ${imageId} from storage`);
   };
 
   /**
@@ -124,6 +185,7 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
           canvas.height = height;
           
           if (!ctx) {
+            console.warn("Failed to get canvas context for image optimization");
             resolve(dataUrl); // Fallback if context creation fails
             return;
           }
@@ -133,7 +195,11 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
           const optimizedDataUrl = canvas.toDataURL('image/jpeg', quality);
           
           // Log compression results
-          console.log(`Image optimized: ${Math.round(dataUrl.length / 1024)}KB → ${Math.round(optimizedDataUrl.length / 1024)}KB`);
+          const originalSize = Math.round(dataUrl.length / 1024);
+          const optimizedSize = Math.round(optimizedDataUrl.length / 1024);
+          const savingsPercent = Math.round((1 - (optimizedSize / originalSize)) * 100);
+          
+          console.log(`Image optimized: ${originalSize}KB → ${optimizedSize}KB (${savingsPercent}% smaller)`);
           
           resolve(optimizedDataUrl);
         };
@@ -151,6 +217,36 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
     });
   };
   
+  /**
+   * Clean up unused images (not referenced by any car)
+   */
+  const cleanupUnusedImages = (usedImageIds: string[]) => {
+    const unusedImages: string[] = [];
+    
+    // Find unused images
+    Object.keys(imageStore).forEach(imageId => {
+      if (!usedImageIds.includes(imageId)) {
+        unusedImages.push(imageId);
+      }
+    });
+    
+    // Remove unused images if any
+    if (unusedImages.length > 0) {
+      setImageStore(prev => {
+        const updated = { ...prev };
+        unusedImages.forEach(id => {
+          delete updated[id];
+        });
+        return updated;
+      });
+      
+      console.log(`Cleaned up ${unusedImages.length} unused images`);
+      return unusedImages.length;
+    }
+    
+    return 0;
+  };
+  
   return {
     storeImage,
     storeImages,
@@ -158,6 +254,8 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
     getImages,
     removeImage,
     optimizeImage,
-    imageStore
+    cleanupUnusedImages,
+    imageStore,
+    storageUsage
   };
 }

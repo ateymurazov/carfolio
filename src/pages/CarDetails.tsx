@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Images } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { CarGallery } from "@/components/car/CarGallery";
 import { CarInfoTable } from "@/components/car/CarInfoTable";
@@ -115,7 +115,17 @@ const CarDetails = () => {
       </div>
       
       {/* Car Images */}
-      <CarGallery car={car} />
+      <div className="relative">
+        <CarGallery car={car} />
+        <Button
+          variant="outline"
+          size="sm"
+          className="absolute top-2 right-2 bg-background/80"
+          onClick={() => setIsEditCarDialogOpen(true)}
+        >
+          <Images className="mr-2 h-4 w-4" /> Manage Images
+        </Button>
+      </div>
       
       <Separator />
       

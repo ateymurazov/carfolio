@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { useImageStorage } from "./useImageStorage";
+import { toast } from "@/components/ui/use-toast";
 
 /**
  * Custom hook to manage image uploads and previews
@@ -31,49 +32,84 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   /**
    * Handle image file selection
    */
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    const currentImages = form.getValues(fieldName) || [];
-    const processedFiles: string[] = [];
-    const totalFiles = files.length;
+    // Show loading toast for many images
+    let loadingToast;
+    if (files.length > 3) {
+      loadingToast = toast({
+        title: "Processing images",
+        description: `Optimizing ${files.length} images, please wait...`,
+      });
+    }
     
-    // Process each file and create URL
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        if (e.target?.result) {
-          const imageUrl = e.target.result.toString();
-          
-          // Store the image persistently and get an ID
-          const storedImageId = await imageStorage.storeImage(imageUrl);
-          processedFiles.push(storedImageId);
-          
-          // Update preview URLs and form value atomically when all files are processed
-          if (processedFiles.length === totalFiles) {
-            const allImages = [...currentImages, ...processedFiles];
-            
-            // Update the form with all images
-            form.setValue(fieldName, allImages, {
-              shouldValidate: true,
-              shouldDirty: true,
-            });
-            
-            // Update preview with actual image data for display
-            const previewImages = allImages.map(img => 
-              typeof img === 'string' && !img.startsWith('data:') 
-                ? imageStorage.getImage(img) 
-                : img
-            );
-            setPreviewUrls(previewImages);
-            
-            console.log(`Updated ${fieldName} with ${allImages.length} images`, allImages);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const currentImages = form.getValues(fieldName) || [];
+      const filePromises: Promise<string>[] = [];
+      
+      // Process each file and create URL
+      Array.from(files).forEach(file => {
+        const promise = new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            if (e.target?.result) {
+              const imageUrl = e.target.result.toString();
+              
+              try {
+                // Store the image persistently and get an ID
+                const storedImageId = await imageStorage.storeImage(imageUrl);
+                resolve(storedImageId);
+              } catch (err) {
+                reject(err);
+              }
+            } else {
+              reject(new Error("Failed to read file"));
+            }
+          };
+          reader.onerror = () => reject(new Error("File read error"));
+          reader.readAsDataURL(file);
+        });
+        
+        filePromises.push(promise);
+      });
+      
+      // Wait for all images to be processed
+      const processedFiles = await Promise.all(filePromises);
+      
+      // Update the form with all images
+      const allImages = [...currentImages, ...processedFiles];
+      form.setValue(fieldName, allImages, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      
+      // Update preview with actual image data for display
+      const previewImages = allImages.map(img => 
+        typeof img === 'string' && !img.startsWith('data:') 
+          ? imageStorage.getImage(img) 
+          : img
+      );
+      setPreviewUrls(previewImages);
+      
+      console.log(`Updated ${fieldName} with ${allImages.length} images`, allImages);
+      
+      // Dismiss loading toast if it exists
+      if (loadingToast) {
+        toast({
+          title: "Images processed",
+          description: `Successfully added ${files.length} images`,
+        });
+      }
+    } catch (error) {
+      console.error("Error processing images:", error);
+      toast({
+        title: "Error uploading images",
+        description: "Some images could not be processed. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   /**
@@ -111,6 +147,11 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     setPreviewUrls(previewImages);
     
     console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
+    
+    toast({
+      title: "Image removed",
+      description: `Image removed successfully. ${updatedImages.length} remaining.`,
+    });
   };
 
   return {

@@ -2,9 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { Car } from "@/types/car";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useImageStorage } from "@/hooks/useImageStorage";
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface CarGalleryProps {
   car: Car;
@@ -58,59 +65,46 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     }
   };
   
-  return (
-    <div className="space-y-4">
-      <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-secondary">
-        <img 
-          src={images[currentImageIndex]} 
-          alt={`${car.make} ${car.model}`} 
-          className="h-full w-full object-contain"
-          onError={() => handleImageError(currentImageIndex)}
-        />
-        
-        {images.length > 1 && (
-          <>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-background/80 hover:bg-background/90"
-              onClick={handlePrevious}
-            >
-              <ChevronLeft className="h-5 w-5" />
-              <span className="sr-only">Previous image</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-background/80 hover:bg-background/90"
-              onClick={handleNext}
-            >
-              <ChevronRight className="h-5 w-5" />
-              <span className="sr-only">Next image</span>
-            </Button>
-            
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-1.5">
-              {images.map((_, index) => (
-                <button
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    currentImageIndex === index 
-                      ? "bg-background" 
-                      : "bg-background/50"
-                  )}
-                  onClick={() => setCurrentImageIndex(index)}
-                >
-                  <span className="sr-only">Image {index + 1}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+  // If using a placeholder image, show a different UI
+  if (images.length === 1 && images[0] === "/placeholder.svg") {
+    return (
+      <div className="space-y-4">
+        <div className="relative aspect-[16/9] flex items-center justify-center rounded-lg border bg-muted">
+          <div className="text-center p-6">
+            <ImageOff className="h-16 w-16 mx-auto text-muted-foreground mb-2" />
+            <p className="text-muted-foreground">No images available for this car</p>
+          </div>
+        </div>
       </div>
-      
-      {images.length > 1 && (
+    );
+  }
+  
+  // For multiple images, use the carousel component
+  if (images.length > 1) {
+    return (
+      <div className="space-y-4">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {images.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="aspect-[16/9] relative rounded-lg border overflow-hidden bg-secondary">
+                  <img 
+                    src={image}
+                    alt={`${car.make} ${car.model} - Image ${index + 1}`}
+                    className="h-full w-full object-contain"
+                    onError={() => handleImageError(index)}
+                  />
+                  <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs">
+                    {index + 1} / {images.length}
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-2" />
+          <CarouselNext className="right-2" />
+        </Carousel>
+        
         <div className="flex gap-2 overflow-x-auto pb-2">
           {images.map((image, index) => (
             <button
@@ -132,7 +126,21 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
             </button>
           ))}
         </div>
-      )}
+      </div>
+    );
+  }
+  
+  // Single image display
+  return (
+    <div className="space-y-4">
+      <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-secondary">
+        <img 
+          src={images[0]} 
+          alt={`${car.make} ${car.model}`} 
+          className="h-full w-full object-contain"
+          onError={() => handleImageError(0)}
+        />
+      </div>
     </div>
   );
 };
