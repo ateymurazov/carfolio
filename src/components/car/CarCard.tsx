@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
+import { useImageStorage } from "@/hooks/useImageStorage";
 
 interface CarCardProps {
   car: CarType;
@@ -12,11 +13,21 @@ interface CarCardProps {
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
+  const [loadedImage, setLoadedImage] = useState<string>("");
+  const imageStorage = useImageStorage();
+  
+  // Load image from storage when component mounts
+  useEffect(() => {
+    if (car.images && car.images.length > 0) {
+      const img = imageStorage.getImage(car.images[0]);
+      setLoadedImage(img);
+    }
+  }, [car.images, imageStorage]);
   
   // Placeholder car image if not provided or if there's an error
-  const carImage = imageError || !(car.images && car.images.length > 0)
+  const carImage = imageError || !loadedImage
     ? "/placeholder.svg"
-    : car.images[0];
+    : loadedImage;
   
   const handleImageError = () => {
     console.log(`Image error for car: ${car.id}`);

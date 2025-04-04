@@ -1,11 +1,12 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Car as CarIcon } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
+import { useImageStorage } from "@/hooks/useImageStorage";
 
 interface FeaturedCarProps {
   car: Car;
@@ -14,13 +15,22 @@ interface FeaturedCarProps {
 export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   const navigate = useNavigate();
   const { getCollectionById } = useCarCollections();
-  const collection = getCollectionById(car.collectionId);
   const [imageError, setImageError] = useState(false);
+  const [loadedImage, setLoadedImage] = useState<string>("");
+  const imageStorage = useImageStorage();
+  
+  // Load image from storage when component mounts
+  useEffect(() => {
+    if (car.images && car.images.length > 0) {
+      const img = imageStorage.getImage(car.images[0]);
+      setLoadedImage(img);
+    }
+  }, [car.images, imageStorage]);
   
   // Placeholder car image if not provided or if there's an error
-  const carImage = imageError || !(car.images && car.images.length > 0)
+  const carImage = imageError || !loadedImage
     ? "/placeholder.svg"
-    : car.images[0];
+    : loadedImage;
   
   const handleImageError = () => {
     console.log(`Image error for featured car: ${car.id}`);

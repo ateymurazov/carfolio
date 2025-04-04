@@ -1,9 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Car } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useImageStorage } from "@/hooks/useImageStorage";
 
 interface CarGalleryProps {
   car: Car;
@@ -12,10 +13,22 @@ interface CarGalleryProps {
 export const CarGallery = ({ car }: CarGalleryProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [loadedImages, setLoadedImages] = useState<string[]>([]);
+  const imageStorage = useImageStorage();
+  
+  // Load images from storage on component mount
+  useEffect(() => {
+    if (car.images && car.images.length > 0) {
+      const images = car.images.map(img => imageStorage.getImage(img));
+      setLoadedImages(images);
+    } else {
+      setLoadedImages([]);
+    }
+  }, [car.images, imageStorage]);
   
   // Use placeholder if no images are available or if all images have errors
-  const validImages = car.images && car.images.length > 0
-    ? car.images.filter((_, index) => !imageErrors[index])
+  const validImages = loadedImages.length > 0
+    ? loadedImages.filter((_, index) => !imageErrors[index])
     : [];
     
   const images = validImages.length > 0 ? validImages : ["/placeholder.svg"];

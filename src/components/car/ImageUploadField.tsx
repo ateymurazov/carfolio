@@ -5,13 +5,14 @@ import { Button } from "../ui/button";
 import { ImagePlus, Trash2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useImageStorage } from "@/hooks/useImageStorage";
 
 interface ImageUploadFieldProps {
   form: UseFormReturn<any>;
 }
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
-  const { handleImageChange, removeImage } = useImageUpload(form, "images");
+  const { handleImageChange, removeImage, previewUrls } = useImageUpload(form, "images");
   
   return (
     <FormField
@@ -23,7 +24,7 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
           <FormControl>
             <div className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {(field.value || []).map((url: string, index: number) => (
+                {previewUrls.map((url: string, index: number) => (
                   <div key={index} className="relative group">
                     <div className="aspect-video bg-secondary rounded-md overflow-hidden">
                       <img 
