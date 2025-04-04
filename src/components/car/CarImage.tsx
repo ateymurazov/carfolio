@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,11 +26,26 @@ export const CarImage = ({
   fallbackSrc = "/placeholder.svg"
 }: CarImageProps) => {
   const [error, setError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
   const imageStorage = useImageStorage();
   
-  // Direct URL handling
-  if (imageId && (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:'))) {
+  const renderPlaceholder = () => (
+    <div className={cn(
+      "flex items-center justify-center bg-gray-100",
+      aspectRatio === "video" && "aspect-video",
+      aspectRatio === "square" && "aspect-square",
+      className
+    )}>
+      <ImageOff className="h-8 w-8 text-gray-400" />
+    </div>
+  );
+  
+  // Handle empty or invalid ID
+  if (!imageId || imageId.trim() === '' || error) {
+    return showPlaceholder ? renderPlaceholder() : null;
+  }
+  
+  // Direct URL handling (http, data URLs, or local files)
+  if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
     return (
       <img 
         src={imageId}
@@ -41,26 +56,9 @@ export const CarImage = ({
           if (onError) onError();
         }}
         onLoad={() => {
-          setLoaded(true);
           if (onLoad) onLoad();
         }}
       />
-    );
-  }
-  
-  // Empty or invalid ID handling
-  if (!imageId || imageId.trim() === '') {
-    if (!showPlaceholder) return null;
-    
-    return (
-      <div className={cn(
-        "flex items-center justify-center bg-gray-100",
-        aspectRatio === "video" && "aspect-video",
-        aspectRatio === "square" && "aspect-square",
-        className
-      )}>
-        <ImageOff className="h-8 w-8 text-gray-400" />
-      </div>
     );
   }
   
@@ -68,18 +66,7 @@ export const CarImage = ({
   const imageUrl = imageStorage.getImage(imageId);
   
   if (!imageUrl || imageUrl === '/placeholder.svg') {
-    if (!showPlaceholder) return null;
-    
-    return (
-      <div className={cn(
-        "flex items-center justify-center bg-gray-100",
-        aspectRatio === "video" && "aspect-video",
-        aspectRatio === "square" && "aspect-square",
-        className
-      )}>
-        <ImageOff className="h-8 w-8 text-gray-400" />
-      </div>
-    );
+    return showPlaceholder ? renderPlaceholder() : null;
   }
   
   return (
@@ -92,7 +79,6 @@ export const CarImage = ({
         if (onError) onError();
       }}
       onLoad={() => {
-        setLoaded(true);
         if (onLoad) onLoad();
       }}
     />

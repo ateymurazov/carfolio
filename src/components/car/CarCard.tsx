@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { CarImage } from "./CarImage";
-import { ImageOff } from "lucide-react";
 
 interface CarCardProps {
   car: CarType;
@@ -19,12 +18,21 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   // Get the first valid image ID or empty string if none exists
   const getFirstValidImage = () => {
     if (!car.images || !Array.isArray(car.images) || car.images.length === 0) return "";
-    return car.images[0] || "";
+    
+    // Try each image in sequence until we find one that seems valid
+    for (const img of car.images) {
+      if (img && img !== "/placeholder.svg") {
+        return img;
+      }
+    }
+    
+    return "";
   };
   
   const imageId = getFirstValidImage();
   
   const handleImageError = () => {
+    console.log(`Image error for car ${car.id}: ${imageId}`);
     setHasImageError(true);
   };
   

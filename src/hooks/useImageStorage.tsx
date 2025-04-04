@@ -1,5 +1,6 @@
+
 import { useImageStorageCore } from "./useImageStorageCore";
-import { optimizeImage } from "@/utils/imageUtils";
+import { optimizeImage, validateImage } from "@/utils/imageUtils";
 import { toast } from "@/components/ui/use-toast";
 
 /**
@@ -15,7 +16,8 @@ export function useImageStorage(options = {}) {
     try {
       // Skip if null/undefined
       if (!imageData) {
-        throw new Error("No image data provided");
+        console.warn("No image data provided to storeImage");
+        return "";
       }
       
       // Generate a unique ID for the image
@@ -42,13 +44,10 @@ export function useImageStorage(options = {}) {
         [imageId]: optimizedImage
       }));
       
-      console.log(`Stored image ${imageId}, size: ${Math.round(optimizedImage.length / 1024)}KB`);
-      
-      // Return the image ID which can be used to reference the image
       return imageId;
     } catch (error) {
       console.error("Failed to store image:", error);
-      throw error;
+      return "";
     }
   };
   
@@ -60,32 +59,16 @@ export function useImageStorage(options = {}) {
       return [];
     }
     
-    // Process images in batches to avoid blocking the UI
-    const batchSize = 2; // Reduced batch size for better performance
     const results: string[] = [];
     
-    for (let i = 0; i < imageDatas.length; i += batchSize) {
-      const batch = imageDatas.slice(i, i + batchSize);
-      
-      try {
-        // Process batch sequentially to avoid overwhelming storage
-        for (const img of batch) {
-          if (img) {
-            try {
-              const id = await storeImage(img);
-              results.push(id);
-            } catch (err) {
-              console.error("Error storing image in batch:", err);
-            }
-          }
+    for (const img of imageDatas) {
+      if (img) {
+        try {
+          const id = await storeImage(img);
+          if (id) results.push(id);
+        } catch (err) {
+          console.error("Error storing image in batch:", err);
         }
-      } catch (error) {
-        console.error("Error processing image batch:", error);
-      }
-      
-      // Give UI a chance to breathe between batches
-      if (i + batchSize < imageDatas.length) {
-        await new Promise(resolve => setTimeout(resolve, 10));
       }
     }
     
@@ -96,31 +79,24 @@ export function useImageStorage(options = {}) {
    * Retrieve an image from the image store
    */
   const getImage = (imageId: string): string => {
-    try {
-      // Handle invalid inputs
-      if (!imageId || typeof imageId !== 'string') {
-        return '/placeholder.svg';
-      }
-      
-      // If the imageId is already a data URL, return it directly
-      if (imageId.startsWith('data:')) return imageId;
-      
-      // If it's an external URL, return directly
-      if (imageId.startsWith('http') || imageId.startsWith('/')) return imageId;
-      
-      // Otherwise try to retrieve from image store
-      const image = imageStore[imageId];
-      
-      if (!image) {
-        console.warn(`Image ${imageId} not found in storage`);
-        return '/placeholder.svg'; // Fallback to placeholder
-      }
-      
-      return image;
-    } catch (error) {
-      console.error(`Error retrieving image ${imageId}:`, error);
+    // Handle direct URLs (http, data URL, or local path)
+    if (imageId && (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:'))) {
+      return imageId;
+    }
+    
+    // Invalid or empty imageId
+    if (!imageId || typeof imageId !== 'string' || imageId.trim() === '') {
       return '/placeholder.svg';
     }
+    
+    // Try to retrieve from image store
+    const image = imageStore[imageId];
+    
+    if (!image) {
+      return '/placeholder.svg';
+    }
+    
+    return image;
   };
   
   /**
@@ -135,13 +111,7 @@ export function useImageStorage(options = {}) {
    * Remove an image from the image store
    */
   const removeImage = (imageId: string): void => {
-    if (!imageId) {
-      console.warn("Empty image ID provided to removeImage");
-      return;
-    }
-    
-    if (!imageStore[imageId]) {
-      console.warn(`Cannot remove image ${imageId}: not found in storage`);
+    if (!imageId || !imageStore[imageId]) {
       return;
     }
     
@@ -150,8 +120,6 @@ export function useImageStorage(options = {}) {
       delete updated[imageId];
       return updated;
     });
-    
-    console.log(`Removed image ${imageId} from storage`);
   };
 
   /**
@@ -177,7 +145,6 @@ export function useImageStorage(options = {}) {
         return updated;
       });
       
-      console.log(`Cleaned up ${unusedImages.length} unused images`);
       return unusedImages.length;
     }
     

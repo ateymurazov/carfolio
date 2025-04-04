@@ -51,11 +51,15 @@ export const optimizeImage = (dataUrl: string, quality: number = 0.7, maxWidth: 
         const optimizedDataUrl = canvas.toDataURL('image/jpeg', safeQuality);
         resolve(optimizedDataUrl);
       } catch (err) {
+        console.warn("Image optimization failed:", err);
         resolve(dataUrl); // Return original on error
       }
     };
     
-    img.onerror = () => resolve(dataUrl); // Return original on error
+    img.onerror = () => {
+      console.warn("Image failed to load for optimization:", dataUrl.substring(0, 50) + "...");
+      resolve('/placeholder.svg');
+    };
     img.src = dataUrl;
   });
 };
@@ -68,31 +72,28 @@ export const optimizeImage = (dataUrl: string, quality: number = 0.7, maxWidth: 
 export const validateImage = (imageUrl: string): Promise<boolean> => {
   return new Promise((resolve) => {
     // Quick check for empty URLs
-    if (!imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') {
       resolve(false);
       return;
     }
     
-    // Placeholder is valid by definition
-    if (imageUrl === '/placeholder.svg') {
+    // For data URLs or placeholder, consider them valid
+    if (imageUrl === '/placeholder.svg' || imageUrl.startsWith('data:image/')) {
       resolve(true);
       return;
     }
     
-    // For data URLs, consider them valid
-    if (imageUrl.startsWith('data:image/')) {
-      resolve(true);
-      return;
-    }
-    
-    // For http URLs, consider them valid
+    // For http URLs, test with an Image object
     if (imageUrl.startsWith('http') || imageUrl.startsWith('/')) {
-      resolve(true);
+      const testImage = new Image();
+      testImage.onload = () => resolve(true);
+      testImage.onerror = () => resolve(false);
+      testImage.src = imageUrl;
       return;
     }
     
-    // For everything else, assume valid
-    resolve(true);
+    // For everything else, assume invalid
+    resolve(false);
   });
 };
 
@@ -103,20 +104,26 @@ export const validateImage = (imageUrl: string): Promise<boolean> => {
  */
 export const preloadImage = (imageUrl: string): Promise<string> => {
   return new Promise((resolve) => {
-    if (!imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') {
       resolve('/placeholder.svg');
       return;
     }
     
-    // For data URLs or placeholders, resolve immediately
-    if (imageUrl.startsWith('data:') || imageUrl === '/placeholder.svg' || 
-        imageUrl.startsWith('http') || imageUrl.startsWith('/')) {
+    if (imageUrl === '/placeholder.svg' || imageUrl.startsWith('data:')) {
       resolve(imageUrl);
       return;
     }
+
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('/')) {
+      const img = new Image();
+      img.onload = () => resolve(imageUrl);
+      img.onerror = () => resolve('/placeholder.svg');
+      img.src = imageUrl;
+      return;
+    }
     
-    // Resolve with the original URL
-    resolve(imageUrl);
+    // Resolve with placeholder for invalid inputs
+    resolve('/placeholder.svg');
   });
 };
 
