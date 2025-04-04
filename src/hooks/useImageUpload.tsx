@@ -51,7 +51,6 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
           if (isMounted) {
             setPreviewUrls(loadedImages);
           }
-          console.log(`Initialized ${fieldName} with ${loadedImages.length} images`);
         } else {
           if (isMounted) {
             setPreviewUrls([]);
@@ -101,8 +100,6 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       ).filter(Boolean);
       
       setPreviewUrls(previewImages);
-      
-      console.log(`Updated ${fieldName} with ${allImages.length} images`, allImages);
       
       // Success toast
       if (validFiles.length > 0) {
@@ -164,7 +161,11 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     setPreviewUrls(previewImages);
     
-    console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
+    toast({
+      title: "Image removed",
+      description: `Image was successfully removed.`,
+      duration: 2000,
+    });
   };
 
   return {

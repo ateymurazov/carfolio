@@ -36,9 +36,11 @@ export const CarImage = ({
     let isMounted = true;
     
     // Start with fallback image while loading the actual image
-    setImageUrl(fallbackSrc);
-    setIsLoading(true);
-    setError(false);
+    if (isMounted) {
+      setImageUrl(fallbackSrc);
+      setIsLoading(true);
+      setError(false);
+    }
     
     const loadImage = async () => {
       // Handle empty imageId case
@@ -114,13 +116,13 @@ export const CarImage = ({
       }
     };
     
-    // Use a small timeout to avoid blocking UI during navigation
-    const timerId = setTimeout(() => {
+    // Use requestAnimationFrame to load image after rendering
+    const timerId = requestAnimationFrame(() => {
       loadImage();
-    }, 10);
+    });
     
     return () => {
-      clearTimeout(timerId);
+      window.cancelAnimationFrame(timerId);
       isMounted = false;
     };
   }, [imageId, imageStorage, onError, onLoad, fallbackSrc]);
