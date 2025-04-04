@@ -4,6 +4,10 @@ import { Car } from "@/types/car";
 import { CarCard } from "./CarCard";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { useCarStorage } from "@/hooks/useCarStorage";
+import { toast } from "@/components/ui/use-toast";
 
 interface CarGridProps {
   cars: Car[];
@@ -12,6 +16,25 @@ interface CarGridProps {
 }
 
 export const CarGrid = ({ cars, className, isLoading = false }: CarGridProps) => {
+  const { backupData } = useCarStorage();
+  
+  const handleBackup = () => {
+    try {
+      backupData();
+      toast({
+        title: "Backup Created",
+        description: "All current data has been backed up successfully.",
+      });
+    } catch (error) {
+      console.error("Backup failed:", error);
+      toast({
+        title: "Backup Failed",
+        description: "There was an error creating your backup.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   if (isLoading) {
     return (
       <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6", className)}>
@@ -33,10 +56,23 @@ export const CarGrid = ({ cars, className, isLoading = false }: CarGridProps) =>
   }
   
   return (
-    <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6", className)}>
-      {cars.map(car => (
-        <CarCard key={car.id} car={car} />
-      ))}
-    </div>
+    <>
+      <div className="mb-4 flex justify-end">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleBackup}
+          className="flex items-center gap-1"
+        >
+          <Download className="h-4 w-4" />
+          <span>Backup Data</span>
+        </Button>
+      </div>
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6", className)}>
+        {cars.map(car => (
+          <CarCard key={car.id} car={car} />
+        ))}
+      </div>
+    </>
   );
 };
