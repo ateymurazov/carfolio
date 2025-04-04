@@ -27,6 +27,9 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
     }
   }, [car.images, imageStorage]);
   
+  // Get the collection for this car
+  const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
+  
   // Placeholder car image if not provided or if there's an error
   const carImage = imageError || !loadedImage
     ? "/placeholder.svg"
