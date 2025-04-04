@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +21,7 @@ import { exportDataToJson, parseImportedJson } from "@/utils/dataExportImport";
 import { clearLocalStorage, inspectLocalStorage } from "@/utils/localStorageUtils";
 
 const Settings = () => {
-  const { cars, collections, updateCar, updateCollection } = useCarCollections();
+  const { cars, collections, mergeImportedData } = useCarCollections();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
@@ -60,17 +59,16 @@ const Settings = () => {
     try {
       const importedData = await parseImportedJson(file);
       
-      // Ask for confirmation before overwriting data
+      // Ask for confirmation before merging data
       if (window.confirm(
-        `This will import ${importedData.cars.length} cars and ${importedData.collections.length} collections. Any existing data with the same IDs will be overwritten. Are you sure you want to continue?`
+        `This will import ${importedData.cars.length} cars and ${importedData.collections.length} collections. Any existing data with the same IDs will be updated. Do you want to continue?`
       )) {
-        // Replace cars and collections in the database
-        updateCar(importedData.cars);
-        updateCollection(importedData.collections);
+        // Merge imported data with existing data instead of replacing
+        mergeImportedData(importedData.cars, importedData.collections);
         
         toast({
           title: "Data imported successfully",
-          description: `Imported ${importedData.cars.length} cars and ${importedData.collections.length} collections.`,
+          description: `Merged ${importedData.cars.length} cars and ${importedData.collections.length} collections with your existing data.`,
         });
       }
     } catch (error) {

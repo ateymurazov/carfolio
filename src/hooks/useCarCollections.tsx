@@ -17,6 +17,7 @@ interface CarCollectionsContextType {
   addCollection: (collection: Collection) => void;
   updateCollection: (idOrCollections: string | Collection[], collection?: Collection) => void;
   deleteCollection: (id: string) => void;
+  mergeImportedData: (importedCars: Car[], importedCollections: Collection[]) => void;
 }
 
 // Create the context
@@ -83,6 +84,49 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     updateCollections(collections.filter(collection => collection.id !== id));
   };
   
+  // New method to handle merging imported data with existing data
+  const mergeImportedData = (importedCars: Car[], importedCollections: Collection[]) => {
+    // Create maps of existing data for faster lookup
+    const existingCarsMap = new Map(cars.map(car => [car.id, car]));
+    const existingCollectionsMap = new Map(collections.map(collection => [collection.id, collection]));
+    
+    // Process imported collections first
+    const mergedCollections = [...collections];
+    
+    importedCollections.forEach(importedCollection => {
+      if (existingCollectionsMap.has(importedCollection.id)) {
+        // Update existing collection
+        const index = mergedCollections.findIndex(c => c.id === importedCollection.id);
+        if (index !== -1) {
+          mergedCollections[index] = importedCollection;
+        }
+      } else {
+        // Add new collection
+        mergedCollections.push(importedCollection);
+      }
+    });
+    
+    // Process imported cars
+    const mergedCars = [...cars];
+    
+    importedCars.forEach(importedCar => {
+      if (existingCarsMap.has(importedCar.id)) {
+        // Update existing car
+        const index = mergedCars.findIndex(c => c.id === importedCar.id);
+        if (index !== -1) {
+          mergedCars[index] = importedCar;
+        }
+      } else {
+        // Add new car
+        mergedCars.push(importedCar);
+      }
+    });
+    
+    // Update storage with merged data
+    updateCollections(mergedCollections);
+    updateCars(mergedCars);
+  };
+  
   // Context value
   const contextValue = {
     cars,
@@ -95,7 +139,8 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     deleteCar,
     addCollection,
     updateCollection,
-    deleteCollection
+    deleteCollection,
+    mergeImportedData
   };
   
   return (
