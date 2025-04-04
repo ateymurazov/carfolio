@@ -31,20 +31,27 @@ const CarInventory = () => {
       
       setIsLoading(true);
       
-      if (cars.length > 5) {
-        loadingToastId = toast({
-          title: "Loading car inventory",
-          description: "Preparing images, please wait...",
-          duration: 3000,
-        });
-      }
-      
       try {
+        // Skip preloading if localStorage is already close to quota
+        try {
+          // Simple test to check if localStorage is accessible
+          const testKey = "_test_storage_" + Date.now();
+          localStorage.setItem(testKey, "test");
+          localStorage.removeItem(testKey);
+        } catch (err) {
+          console.warn("LocalStorage appears to be full, skipping image preload");
+          if (isMounted) {
+            await minLoadingTime;
+            setIsLoading(false);
+          }
+          return;
+        }
+        
         // Before processing, check if we actually have images
         const allImageIds = cars
           .flatMap(car => car.images || [])
           .filter(Boolean)
-          .slice(0, 20); // Limit preloading to first 20 images for performance
+          .slice(0, 10); // Limit preloading to first 10 images for performance
         
         if (allImageIds.length === 0) {
           console.log("No images to preload");
@@ -60,38 +67,32 @@ const CarInventory = () => {
         
         console.log(`Starting image preload for ${uniqueImageIds.length} unique images`);
         
-        // Try loading all images in parallel with a limited batch size
-        const batchSize = 3;
-        for (let i = 0; i < uniqueImageIds.length; i += batchSize) {
+        // Try loading images sequentially to avoid overwhelming localStorage
+        for (let i = 0; i < Math.min(uniqueImageIds.length, 5); i++) {
           if (!isMounted) break;
           
-          const batch = uniqueImageIds.slice(i, i + batchSize);
+          const imageId = uniqueImageIds[i];
           
-          // Process each image in the batch
-          await Promise.allSettled(batch.map(async (imageId) => {
-            if (typeof imageId !== 'string') return;
-            
-            try {
-              // Skip external URLs and data URLs
-              if (imageId.startsWith('data:') || imageId.startsWith('http') || imageId.startsWith('/')) {
-                return;
-              }
-              
-              // Get image URL from storage
-              const imageUrl = imageStorage.getImage(imageId);
-              
-              // Skip validation if image not found
-              if (!imageUrl || imageUrl === '/placeholder.svg') {
-                console.warn(`Image ${imageId} not found during preload`);
-                return;
-              }
-              
-              // Pre-validate image
-              await validateImage(imageUrl);
-            } catch (error) {
-              console.error(`Error preloading image ${imageId}:`, error);
+          try {
+            // Skip external URLs and data URLs
+            if (typeof imageId !== 'string' || 
+                imageId.startsWith('data:') || 
+                imageId.startsWith('http') || 
+                imageId.startsWith('/')) {
+              continue;
             }
-          }));
+            
+            // Get image URL from storage
+            const imageUrl = imageStorage.getImage(imageId);
+            
+            // Skip validation if image not found
+            if (!imageUrl || imageUrl === '/placeholder.svg') {
+              console.warn(`Image ${imageId} not found during preload`);
+              continue;
+            }
+          } catch (error) {
+            console.error(`Error preloading image ${imageId}:`, error);
+          }
         }
         
         console.log("Image preload complete");
@@ -118,7 +119,7 @@ const CarInventory = () => {
     const matchesSearch = 
       car.make.toLowerCase().includes(searchTerm.toLowerCase()) || 
       car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      car.year.toLowerCase().includes(searchTerm.toLowerCase());
+      (car.year && car.year.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesCollection = 
       selectedCollection === "all" || 

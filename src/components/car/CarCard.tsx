@@ -39,6 +39,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           className="h-full w-full object-cover"
           aspectRatio="video"
           onError={handleImageError}
+          fallbackSrc="/placeholder.svg"
         />
       </div>
       <div className="p-4">
@@ -51,7 +52,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
         
         <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
           <div className="text-sm">
-            <span>VIN: {car.vin.slice(-8)}</span>
+            <span>VIN: {car.vin ? car.vin.slice(-8) : 'N/A'}</span>
           </div>
           <span className={cn(
             "text-xs px-2 py-1 rounded-full text-white",

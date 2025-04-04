@@ -38,11 +38,28 @@ export function useImageStorageCore(options: ImageStorageOptions = {}) {
     try {
       // Get total size of images in MB
       let totalSize = 0;
-      Object.values(imageStore).forEach(img => {
-        totalSize += img.length * 2 / 1024 / 1024; // Approximate size in MB
+      let count = 0;
+      
+      // Only process a sample of keys to avoid performance issues
+      const keys = Object.keys(imageStore);
+      const sampleSize = Math.min(keys.length, 50);
+      const sampleKeys = keys.slice(0, sampleSize);
+      
+      sampleKeys.forEach(key => {
+        const img = imageStore[key];
+        if (img) {
+          totalSize += img.length * 2 / 1024 / 1024; // Approximate size in MB
+          count++;
+        }
       });
       
-      const count = Object.keys(imageStore).length;
+      // Extrapolate if we sampled
+      if (sampleSize < keys.length) {
+        const scaleFactor = keys.length / sampleSize;
+        totalSize = totalSize * scaleFactor;
+      }
+      
+      count = keys.length;
       const percentage = (totalSize / maxStorageSize) * 100;
       
       setStorageUsage({
@@ -57,12 +74,9 @@ export function useImageStorageCore(options: ImageStorageOptions = {}) {
       if (percentage > 80 && percentage < 90) {
         console.warn(`Image storage is at ${percentage.toFixed(0)}% of capacity`);
       } else if (percentage >= 90) {
-        toast({
-          title: "Storage Warning",
-          description: `Image storage is at ${percentage.toFixed(0)}% of capacity. Consider removing unused images.`,
-          variant: "destructive",
-          duration: 8000
-        });
+        // Instead of showing a toast, which might create more state changes,
+        // just log it to the console
+        console.error(`Image storage is at ${percentage.toFixed(0)}% of capacity. Consider removing unused images.`);
       }
     } catch (error) {
       console.error("Error calculating storage usage:", error);
