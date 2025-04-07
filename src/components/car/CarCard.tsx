@@ -21,8 +21,15 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   useEffect(() => {
     try {
       if (car.images && car.images.length > 0) {
+        // Try to get the image from storage
         const img = imageStorage.getImage(car.images[0]);
-        setLoadedImage(img);
+        // Check if we got a placeholder back (indicating image not found)
+        if (img === '/placeholder.svg') {
+          console.log(`Using placeholder for car ${car.id} - image not found in storage`);
+          setImageError(true);
+        } else {
+          setLoadedImage(img);
+        }
       }
     } catch (error) {
       console.error(`Failed to load image for car ${car.id}:`, error);
@@ -30,7 +37,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     }
   }, [car.images, car.id, imageStorage]);
   
-  // Placeholder car image if not provided or if there's an error
+  // Determine which image to display
   const carImage = imageError || !loadedImage || loadedImage === '/placeholder.svg'
     ? "/placeholder.svg"
     : loadedImage;

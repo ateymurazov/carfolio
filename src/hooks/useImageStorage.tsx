@@ -120,18 +120,29 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    * Retrieve an image from the image store
    */
   const getImage = (imageId: string): string => {
-    // If the imageId is already a data URL, return it directly
-    if (!imageId || imageId.startsWith('data:')) return imageId;
-    
-    // Otherwise try to retrieve from image store
-    const image = imageStore[imageId];
-    
-    if (!image) {
-      console.warn(`Image ${imageId} not found in storage`);
-      return '/placeholder.svg'; // Fallback to placeholder
+    // Validate inputs
+    if (!imageId) {
+      console.warn("No imageId provided to getImage");
+      return '/placeholder.svg';
     }
     
-    return image;
+    // If the imageId is already a data URL, return it directly
+    if (imageId.startsWith('data:')) return imageId;
+    
+    try {
+      // Otherwise try to retrieve from image store
+      const image = imageStore[imageId];
+      
+      if (!image) {
+        console.warn(`Image ${imageId} not found in storage`);
+        return '/placeholder.svg'; // Fallback to placeholder
+      }
+      
+      return image;
+    } catch (error) {
+      console.error(`Error retrieving image ${imageId}:`, error);
+      return '/placeholder.svg'; // Fallback to placeholder on error
+    }
   };
   
   /**
@@ -139,25 +150,49 @@ export function useImageStorage(options: ImageStorageOptions = {}) {
    */
   const getImages = (imageIds: string[]): string[] => {
     if (!imageIds || !Array.isArray(imageIds)) return [];
-    return imageIds.map(getImage);
+    
+    // Map each ID to its image, with error handling
+    return imageIds.map(id => {
+      try {
+        return getImage(id);
+      } catch (error) {
+        console.error(`Error getting image ${id}:`, error);
+        return '/placeholder.svg';
+      }
+    });
   };
   
   /**
    * Remove an image from the image store
    */
   const removeImage = (imageId: string): void => {
+    if (!imageId) {
+      console.warn("No imageId provided to removeImage");
+      return;
+    }
+    
+    // Skip if it's a data URL
+    if (imageId.startsWith('data:')) {
+      console.log("Cannot remove data URL image - not stored in image store");
+      return;
+    }
+    
     if (!imageStore[imageId]) {
       console.warn(`Cannot remove image ${imageId}: not found in storage`);
       return;
     }
     
-    setImageStore(prev => {
-      const updated = { ...prev };
-      delete updated[imageId];
-      return updated;
-    });
-    
-    console.log(`Removed image ${imageId} from storage`);
+    try {
+      setImageStore(prev => {
+        const updated = { ...prev };
+        delete updated[imageId];
+        return updated;
+      });
+      
+      console.log(`Removed image ${imageId} from storage`);
+    } catch (error) {
+      console.error(`Error removing image ${imageId}:`, error);
+    }
   };
 
   /**

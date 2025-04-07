@@ -22,17 +22,27 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   
   // Load image from storage when component mounts
   useEffect(() => {
-    if (car.images && car.images.length > 0) {
-      const img = imageStorage.getImage(car.images[0]);
-      setLoadedImage(img);
+    try {
+      if (car.images && car.images.length > 0) {
+        const img = imageStorage.getImage(car.images[0]);
+        if (img === '/placeholder.svg') {
+          console.log(`Using placeholder for featured car ${car.id} - image not found in storage`);
+          setImageError(true);
+        } else {
+          setLoadedImage(img);
+        }
+      }
+    } catch (error) {
+      console.error(`Failed to load image for featured car ${car.id}:`, error);
+      setImageError(true);
     }
-  }, [car.images, imageStorage]);
+  }, [car.images, car.id, imageStorage]);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
   // Placeholder car image if not provided or if there's an error
-  const carImage = imageError || !loadedImage
+  const carImage = imageError || !loadedImage || loadedImage === '/placeholder.svg'
     ? "/placeholder.svg"
     : loadedImage;
   
