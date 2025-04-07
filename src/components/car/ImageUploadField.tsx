@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
@@ -94,7 +93,7 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {previewUrls.map((url: string, index: number) => (
-                    <div key={`image-${index}-${Date.now()}`} className="relative group aspect-video">
+                    <div key={`preview-${index}-${url.substring(0, 8)}`} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
                         <CarImage 
                           imageId={url}
@@ -116,7 +115,6 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                     </div>
                   ))}
                   
-                  {/* Add Image Button */}
                   <label className={cn(
                     "flex flex-col items-center justify-center aspect-video bg-muted text-muted-foreground rounded-md border-2 border-dashed cursor-pointer transition-colors",
                     isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-muted/80"

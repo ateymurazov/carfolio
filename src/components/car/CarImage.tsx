@@ -39,8 +39,16 @@ export const CarImage = ({
       return;
     }
     
-    // Direct URL handling (http, data URLs, or local files)
-    if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
+    // Handle external URLs that may fail
+    if (imageId.startsWith('http')) {
+      console.log(`Loading external image: ${imageId.substring(0, 50)}...`);
+      // For external URLs, we'll set the URL but prepare for fallback
+      if (isMounted) setImageUrl(imageId);
+      return;
+    }
+    
+    // Direct URL handling (data URLs or local files)
+    if (imageId.startsWith('/') || imageId.startsWith('data:')) {
       if (isMounted) setImageUrl(imageId);
       return;
     }
@@ -65,8 +73,33 @@ export const CarImage = ({
     </div>
   );
   
+  const handleImageError = () => {
+    console.error(`Image failed to load: ${imageUrl.substring(0, 50)}...`);
+    setError(true);
+    if (onError) onError();
+  };
+  
   // Handle empty URL or error cases
   if (!imageUrl || error) {
+    // Try fallback for external URLs
+    if (error && imageUrl.startsWith('http') && fallbackSrc) {
+      return (
+        <img 
+          src={fallbackSrc}
+          alt={alt}
+          className={cn(className)}
+          onLoad={() => {
+            if (onLoad) onLoad();
+          }}
+          onError={() => {
+            // If even the fallback fails, show placeholder
+            setError(true);
+            if (onError) onError();
+          }}
+        />
+      );
+    }
+    
     return showPlaceholder ? renderPlaceholder() : null;
   }
   
@@ -75,11 +108,7 @@ export const CarImage = ({
       src={imageUrl}
       alt={alt}
       className={cn(className)}
-      onError={() => {
-        console.error(`Image failed to load: ${imageUrl.substring(0, 50)}...`);
-        setError(true);
-        if (onError) onError();
-      }}
+      onError={handleImageError}
       onLoad={() => {
         if (onLoad) onLoad();
       }}
