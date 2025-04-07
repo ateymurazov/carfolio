@@ -21,19 +21,17 @@ import { useCarCollections } from "@/hooks/useCarCollections";
 import { exportDataToJson, parseImportedJson } from "@/utils/dataExportImport";
 import { clearLocalStorage, inspectLocalStorage } from "@/utils/localStorageUtils";
 import { useCarStorage } from "@/hooks/useCarStorage";
-import { useImageStorage } from "@/hooks/useImageStorage";
 
 const Settings = () => {
   const { cars, collections, mergeImportedData } = useCarCollections();
   const { backupData } = useCarStorage();
-  const { imageStore, setImageStore } = useImageStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
   // Handle data export
   const handleExportData = () => {
     try {
-      exportDataToJson(cars, collections, imageStore);
+      exportDataToJson(cars, collections);
       toast({
         title: "Data exported successfully",
         description: "Your collection data has been exported to a JSON file.",
@@ -78,18 +76,6 @@ const Settings = () => {
         
         // Merge imported data with existing data instead of replacing
         mergeImportedData(importedData.cars, importedData.collections);
-        
-        // Handle image data import if it exists
-        if (importedData.images && Object.keys(importedData.images).length > 0) {
-          setImageStore(prevImages => ({
-            ...prevImages,
-            ...importedData.images
-          }));
-          toast({
-            title: "Images imported",
-            description: `Imported ${Object.keys(importedData.images).length} images.`,
-          });
-        }
         
         toast({
           title: "Data imported successfully",

@@ -31,7 +31,6 @@ import { carFormSchema } from "./carFormSchema";
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
 import { ImageUploadField } from "./ImageUploadField";
 import { DocumentUploadField } from "./DocumentUploadField";
-import { BasicInfoFields, IdentificationFields, ColorFields, DetailsFields, MiscFields } from "./CarFormFields";
 
 type FormValues = z.infer<typeof carFormSchema>;
 
@@ -41,11 +40,7 @@ interface DialogEditCarProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const DialogEditCar = ({ 
-  car, 
-  open, 
-  onOpenChange 
-}: DialogEditCarProps) => {
+export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) => {
   const { collections, updateCar } = useCarCollections();
   
   const form = useForm<FormValues>({
@@ -55,12 +50,12 @@ export const DialogEditCar = ({
       model: car.model,
       year: car.year,
       vin: car.vin,
-      exteriorColor: car.exteriorColor || "",
-      interiorColor: car.interiorColor || "",
-      transmission: car.transmission || "",
-      condition: car.condition || "",
+      exteriorColor: car.exteriorColor,
+      interiorColor: car.interiorColor,
+      transmission: car.transmission,
+      condition: car.condition,
       mileage: car.mileage,
-      notes: car.notes || "",
+      notes: car.notes,
       collectionId: car.collectionId,
       registration: car.registration || "",
       licensePlate: car.licensePlate || "",
@@ -75,16 +70,13 @@ export const DialogEditCar = ({
   
   const onSubmit = (data: FormValues) => {
     try {
-      console.log("Form data submitted:", data);
-      
       const validDocuments = (data.documents || []).filter(
         doc => doc.name && doc.name.trim() !== "" && 
                doc.url && doc.url.trim() !== ""
       ) as { name: string; url: string }[];
       
-      // Create a new car object with the updated data
-      const updatedCar: Car = {
-        ...car, // Keep original data
+      updateCar(car.id, {
+        ...car,
         make: data.make,
         model: data.model,
         year: data.year,
@@ -102,15 +94,9 @@ export const DialogEditCar = ({
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
         value: data.value,
-        // Make sure we create new arrays to avoid reference issues
-        images: Array.isArray(data.images) ? [...data.images] : [],
+        images: data.images || [],
         documents: validDocuments,
-      };
-      
-      console.log("Updating car with data:", updatedCar);
-      
-      // Call updateCar with the car ID and the updated car object
-      updateCar(car.id, updatedCar);
+      });
       
       toast({
         title: "Car updated",
@@ -120,7 +106,6 @@ export const DialogEditCar = ({
       
       onOpenChange(false);
     } catch (error) {
-      console.error("Error updating car:", error);
       toast({
         title: "Error",
         description: "Failed to update car. Please try again.",
@@ -141,21 +126,255 @@ export const DialogEditCar = ({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <BasicInfoFields form={form} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="make"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Make</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Toyota" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Supra" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
-            <IdentificationFields form={form} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Year</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. 2021" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="vin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>VIN</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Vehicle Identification Number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
-            <ColorFields form={form} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="exteriorColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Exterior Color</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Red" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="interiorColor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Interior Color</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Black" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
-            <DetailsFields form={form} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="transmission"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transmission</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select transmission" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Automatic">Automatic</SelectItem>
+                        <SelectItem value="Manual">Manual</SelectItem>
+                        <SelectItem value="CVT">CVT</SelectItem>
+                        <SelectItem value="Semi-automatic">Semi-automatic</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="condition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Condition</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select condition" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="New">New</SelectItem>
+                        <SelectItem value="Like New">Like New</SelectItem>
+                        <SelectItem value="Excellent">Excellent</SelectItem>
+                        <SelectItem value="Good">Good</SelectItem>
+                        <SelectItem value="Fair">Fair</SelectItem>
+                        <SelectItem value="Poor">Poor</SelectItem>
+                        <SelectItem value="Project">Project</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
-            <MiscFields form={form} collections={collections} />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="mileage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mileage</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="value"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Value ($)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g. 50000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Available">Available</SelectItem>
+                        <SelectItem value="Sold">Sold</SelectItem>
+                        <SelectItem value="Reserved">Reserved</SelectItem>
+                        <SelectItem value="In Service">In Service</SelectItem>
+                        <SelectItem value="Not Available">Not Available</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="collectionId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Collection</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select collection" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {collections.map(collection => (
+                          <SelectItem key={collection.id} value={collection.id}>
+                            {collection.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             
             <ImageUploadField form={form} />
             
             <DocumentUploadField form={form} />
             
             <AdditionalInfoFields form={form} />
+            
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Additional information about the vehicle" 
+                      className="resize-none" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <DialogFooter>
               <Button 

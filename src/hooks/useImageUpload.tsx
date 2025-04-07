@@ -32,7 +32,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       
       if (Array.isArray(currentImages) && currentImages.length > 0) {
         // Load images from storage if they're IDs
-        const loadedImages = await Promise.all(currentImages.filter(Boolean).map(async (img) => {
+        const loadedImages = currentImages.filter(Boolean).map(img => {
           // Skip processing if already a data URL
           if (typeof img === 'string') {
             if (img.startsWith('data:')) {
@@ -48,9 +48,16 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
             return imageStorage.getImage(img);
           }
           return '';
-        }));
+        }).filter(Boolean);
         
-        setPreviewUrls(loadedImages.filter(Boolean));
+        setPreviewUrls(prev => {
+          // Only update if there's a real difference to prevent re-renders
+          if (prev.length !== loadedImages.length || 
+              prev.some((url, idx) => url !== loadedImages[idx])) {
+            return loadedImages;
+          }
+          return prev;
+        });
       } else {
         setPreviewUrls([]);
       }
@@ -63,18 +70,21 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   
   useEffect(() => {
     let isMounted = true;
+    let ignoreNext = false;
     
     syncImages();
     
     // Watch for changes to the images field
     const subscription = form.watch((value, { name }) => {
-      if (name === fieldName && isMounted) {
+      if (name === fieldName && isMounted && !ignoreNext) {
         // Use a small timeout to batch multiple changes
         setTimeout(() => {
           if (isMounted) {
             syncImages();
           }
         }, 50);
+      } else if (ignoreNext) {
+        ignoreNext = false;
       }
     });
     
@@ -95,49 +105,21 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     try {
       // Process the files
-      const newImageIds = await processFiles(files);
+      const validFiles = await processFiles(files);
       
-      if (newImageIds.length === 0) {
-        throw new Error("No images were processed successfully");
+      // Update the form with all images
+      const allImages = updateFormImages(validFiles);
+      
+      // Success toast only if files were processed
+      if (validFiles.length > 0) {
+        toast({
+          title: "Images processed",
+          description: `Successfully added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
+        });
+        
+        // Force sync after update
+        setTimeout(() => syncImages(), 100);
       }
-      
-      // Get current form images
-      const currentImages = form.getValues(fieldName) || [];
-      const existingImages = Array.isArray(currentImages) ? [...currentImages] : [];
-      
-      // Combine existing with new images
-      const updatedImages = [...existingImages, ...newImageIds];
-      
-      // Update form
-      form.setValue(fieldName, updatedImages, {
-        shouldValidate: true,
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      
-      // Immediately update preview URLs for better UX
-      const newPreviews = [...previewUrls];
-      
-      // Add new image previews
-      for (const imageId of newImageIds) {
-        if (imageId) {
-          const imageUrl = imageStorage.getImage(imageId);
-          if (imageUrl) {
-            newPreviews.push(imageUrl);
-          }
-        }
-      }
-      
-      setPreviewUrls(newPreviews);
-      
-      // Success toast
-      toast({
-        title: "Images uploaded",
-        description: `Successfully added ${newImageIds.length} image${newImageIds.length > 1 ? 's' : ''}`,
-      });
-      
-      // Then do a full sync to ensure consistency
-      setTimeout(() => syncImages(), 100);
     } catch (error) {
       console.error("Error processing images:", error);
       toast({

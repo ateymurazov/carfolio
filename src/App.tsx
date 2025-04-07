@@ -13,86 +13,31 @@ import Collections from "./pages/Collections";
 import CollectionDetails from "./pages/CollectionDetails";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import { useEffect } from "react";
 
-// Configure the query client with retry logic to handle intermittent issues
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      staleTime: 10 * 60 * 1000, // 10 minutes
-    },
-  },
-});
+const queryClient = new QueryClient();
 
-// Check for data continuity on startup
-const checkDataContinuity = () => {
-  try {
-    console.log("Checking data continuity on application startup");
-    
-    // Check if we have cars and collections data
-    const hasCarData = localStorage.getItem('cars') !== null;
-    const hasCollectionData = localStorage.getItem('collections') !== null;
-    const hasImageData = localStorage.getItem('carImageStore') !== null;
-    
-    if (!hasCarData || !hasCollectionData || !hasImageData) {
-      console.log("Some data appears to be missing, checking backup options");
-      
-      // Check for backups
-      const carsPrevious = localStorage.getItem('cars_previous');
-      const collectionsPrevious = localStorage.getItem('collections_previous');
-      const imageStorePrevious = localStorage.getItem('carImageStore_previous');
-      
-      // Restore from previous if available
-      if (!hasCarData && carsPrevious) {
-        console.log("Restoring cars from previous backup");
-        localStorage.setItem('cars', carsPrevious);
-      }
-      
-      if (!hasCollectionData && collectionsPrevious) {
-        console.log("Restoring collections from previous backup");
-        localStorage.setItem('collections', collectionsPrevious);
-      }
-      
-      if (!hasImageData && imageStorePrevious) {
-        console.log("Restoring image store from previous backup");
-        localStorage.setItem('carImageStore', imageStorePrevious);
-      }
-    }
-  } catch (error) {
-    console.error("Error during data continuity check:", error);
-  }
-};
-
-const App = () => {
-  // Run data continuity check on app initialization
-  useEffect(() => {
-    checkDataContinuity();
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <CarCollectionsProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/inventory" element={<CarInventory />} />
-                <Route path="/cars/:carId" element={<CarDetails />} />
-                <Route path="/collections" element={<Collections />} />
-                <Route path="/collections/:collectionId" element={<CollectionDetails />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </CarCollectionsProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <BrowserRouter>
+        <CarCollectionsProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/inventory" element={<CarInventory />} />
+              <Route path="/cars/:carId" element={<CarDetails />} />
+              <Route path="/collections" element={<Collections />} />
+              <Route path="/collections/:collectionId" element={<CollectionDetails />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </CarCollectionsProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

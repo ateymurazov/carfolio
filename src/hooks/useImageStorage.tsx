@@ -38,13 +38,11 @@ export function useImageStorage(options = {}) {
         }
       }
       
-      // Update the image store with a new object to ensure state update
+      // Update the image store
       setImageStore(prev => ({
         ...prev,
         [imageId]: optimizedImage
       }));
-      
-      console.log(`Image stored with ID: ${imageId}`);
       
       return imageId;
     } catch (error) {
@@ -82,39 +80,23 @@ export function useImageStorage(options = {}) {
    */
   const getImage = (imageId: string): string => {
     // Handle direct URLs (http, data URL, or local path)
-    if (!imageId) {
-      console.warn("Empty imageId provided to getImage");
-      return fallbackImage();
-    }
-    
-    if (typeof imageId !== 'string') {
-      console.warn(`Invalid imageId type: ${typeof imageId}`);
-      return fallbackImage();
-    }
-    
-    if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
+    if (imageId && (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:'))) {
       return imageId;
     }
     
     // Invalid or empty imageId
-    if (imageId.trim() === '') {
-      console.warn(`Empty imageId string provided`);
-      return fallbackImage();
+    if (!imageId || typeof imageId !== 'string' || imageId.trim() === '') {
+      return '/placeholder.svg';
     }
     
     // Try to retrieve from image store
     const image = imageStore[imageId];
     
     if (!image) {
-      console.warn(`Image not found in storage: ${imageId}`);
-      return fallbackImage();
+      return '/placeholder.svg';
     }
     
     return image;
-  };
-  
-  const fallbackImage = (): string => {
-    return '/placeholder.svg';
   };
   
   /**
@@ -138,8 +120,6 @@ export function useImageStorage(options = {}) {
       delete updated[imageId];
       return updated;
     });
-    
-    console.log(`Image removed from storage: ${imageId}`);
   };
 
   /**
@@ -179,7 +159,6 @@ export function useImageStorage(options = {}) {
     removeImage,
     cleanupUnusedImages,
     imageStore,
-    setImageStore,
     storageUsage
   };
 }

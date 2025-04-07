@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
@@ -89,12 +88,20 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                   isProcessing ? "opacity-70" : ""
                 )}
                 onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragActive(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragActive(false);
+                }}
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Array.isArray(previewUrls) && previewUrls.map((url: string, index: number) => (
-                    <div key={`preview-${index}-${Date.now().toString().substring(8, 13)}`} className="relative group aspect-video">
+                  {previewUrls.map((url: string, index: number) => (
+                    <div key={`${index}-${url.substring(0, 20)}`} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
                         <CarImage 
                           imageId={url}
@@ -116,6 +123,7 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                     </div>
                   ))}
                   
+                  {/* Add Image Button */}
                   <label className={cn(
                     "flex flex-col items-center justify-center aspect-video bg-muted text-muted-foreground rounded-md border-2 border-dashed cursor-pointer transition-colors",
                     isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-muted/80"

@@ -21,6 +21,10 @@ export const CarGrid = ({ cars, className, isLoading = false }: CarGridProps) =>
   const handleBackup = () => {
     try {
       backupData();
+      toast({
+        title: "Backup Created",
+        description: "All current data has been backed up successfully.",
+      });
     } catch (error) {
       console.error("Backup failed:", error);
       toast({

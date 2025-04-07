@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,54 +26,7 @@ export const CarImage = ({
   fallbackSrc = "/placeholder.svg"
 }: CarImageProps) => {
   const [error, setError] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string>("");
-  const [useFallback, setUseFallback] = useState(false);
   const imageStorage = useImageStorage();
-  
-  // Update image URL when imageId changes
-  useEffect(() => {
-    let isMounted = true;
-    
-    // Reset states when imageId changes
-    setError(false);
-    setUseFallback(false);
-    
-    if (!imageId || imageId.trim() === '') {
-      if (isMounted) {
-        setImageUrl("");
-        setError(true);
-      }
-      return;
-    }
-    
-    // Handle different image source types
-    if (imageId.startsWith('data:') || imageId.startsWith('/')) {
-      // Direct data URLs or local paths
-      if (isMounted) setImageUrl(imageId);
-    } else if (imageId.startsWith('http')) {
-      // External URLs
-      if (isMounted) {
-        setImageUrl(imageId);
-        console.log(`Loading external image: ${imageId.substring(0, 50)}...`);
-      }
-    } else {
-      // Image IDs from storage
-      try {
-        const resolvedUrl = imageStorage.getImage(imageId);
-        if (isMounted) setImageUrl(resolvedUrl);
-      } catch (err) {
-        console.warn(`Failed to get image from storage: ${imageId}`, err);
-        if (isMounted) {
-          setError(true);
-          setImageUrl(fallbackSrc);
-        }
-      }
-    }
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [imageId, imageStorage, fallbackSrc]);
   
   const renderPlaceholder = () => (
     <div className={cn(
@@ -86,26 +39,33 @@ export const CarImage = ({
     </div>
   );
   
-  const handleImageError = () => {
-    console.error(`Image failed to load: ${imageUrl.substring(0, 50)}...`);
-    
-    if (useFallback) {
-      // Already tried fallback, show placeholder
-      setError(true);
-      if (onError) onError();
-    } else if (imageUrl !== fallbackSrc && fallbackSrc) {
-      // Try fallback
-      setUseFallback(true);
-      setImageUrl(fallbackSrc);
-    } else {
-      // No fallback or fallback failed
-      setError(true);
-      if (onError) onError();
-    }
-  };
+  // Handle empty or invalid ID
+  if (!imageId || imageId.trim() === '' || error) {
+    return showPlaceholder ? renderPlaceholder() : null;
+  }
   
-  // Handle empty URL or error cases
-  if (!imageUrl || (error && !useFallback)) {
+  // Direct URL handling (http, data URLs, or local files)
+  if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
+    return (
+      <img 
+        src={imageId}
+        alt={alt}
+        className={cn(className)}
+        onError={() => {
+          setError(true);
+          if (onError) onError();
+        }}
+        onLoad={() => {
+          if (onLoad) onLoad();
+        }}
+      />
+    );
+  }
+  
+  // Image from storage
+  const imageUrl = imageStorage.getImage(imageId);
+  
+  if (!imageUrl || imageUrl === '/placeholder.svg') {
     return showPlaceholder ? renderPlaceholder() : null;
   }
   
@@ -113,8 +73,11 @@ export const CarImage = ({
     <img 
       src={imageUrl}
       alt={alt}
-      className={cn(className)}
-      onError={handleImageError}
+      className={className}
+      onError={() => {
+        setError(true);
+        if (onError) onError();
+      }}
       onLoad={() => {
         if (onLoad) onLoad();
       }}
