@@ -15,14 +15,19 @@ export const CarGrid = ({ cars, className }: CarGridProps) => {
   // Filter out invalid cars
   useEffect(() => {
     // Make sure we have valid car data
-    const filtered = cars.filter(car => 
-      car && car.id && car.make && car.model
-    );
+    const filtered = cars.filter(car => {
+      const isValid = car && car.id && car.make && car.model;
+      if (!isValid) {
+        console.warn(`CarGrid: Filtered out invalid car`, car);
+      }
+      return isValid;
+    });
     
     if (filtered.length !== cars.length) {
-      console.log(`Filtered out ${cars.length - filtered.length} invalid cars`);
+      console.log(`CarGrid: Filtered out ${cars.length - filtered.length} invalid cars`);
     }
     
+    console.log(`CarGrid: Rendering ${filtered.length} valid cars`);
     setValidCars(filtered);
   }, [cars]);
 

@@ -22,17 +22,31 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     try {
       if (car.images && car.images.length > 0) {
         // Try to get the image from storage
-        const img = imageStorage.getImage(car.images[0]);
+        const imageId = car.images[0];
+        console.log(`CarCard: Loading image for car ${car.id}, image ID: ${imageId}`);
+        
+        if (!imageId) {
+          console.log(`CarCard: Image ID is empty or invalid for car ${car.id}`);
+          setImageError(true);
+          return;
+        }
+        
+        const img = imageStorage.getImage(imageId);
+        
         // Check if we got a placeholder back (indicating image not found)
-        if (img === '/placeholder.svg') {
-          console.log(`Using placeholder for car ${car.id} - image not found in storage`);
+        if (!img || img === '/placeholder.svg') {
+          console.log(`CarCard: Using placeholder for car ${car.id} - image not found in storage`);
           setImageError(true);
         } else {
+          console.log(`CarCard: Successfully loaded image for car ${car.id}`);
           setLoadedImage(img);
         }
+      } else {
+        console.log(`CarCard: No images available for car ${car.id}`);
+        setImageError(true);
       }
     } catch (error) {
-      console.error(`Failed to load image for car ${car.id}:`, error);
+      console.error(`CarCard: Failed to load image for car ${car.id}:`, error);
       setImageError(true);
     }
   }, [car.images, car.id, imageStorage]);
@@ -43,7 +57,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     : loadedImage;
   
   const handleImageError = () => {
-    console.log(`Image error for car: ${car.id}`);
+    console.log(`CarCard: Image error for car: ${car.id}`);
     setImageError(true);
   };
   

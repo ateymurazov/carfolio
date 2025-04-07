@@ -1,14 +1,44 @@
-import React from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Car, Users, PackageOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { CollectionGrid } from "@/components/collection/CollectionGrid";
 import { FeaturedCar } from "@/components/car/FeaturedCar";
+import { useImageStorage } from "@/hooks/useImageStorage";
+import { toast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { collections, cars } = useCarCollections();
+  const imageStorage = useImageStorage();
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Check image storage on component mount
+  useEffect(() => {
+    try {
+      // Verify image storage is working
+      const storageStatus = imageStorage.storageUsage;
+      console.log(`Dashboard: Image storage status - ${storageStatus.count} images, ${storageStatus.size}MB (${storageStatus.percentage}% of limit)`);
+      
+      if (cars.length > 0 && cars[0].images && cars[0].images.length > 0) {
+        const featuredCarImage = imageStorage.getImage(cars[0].images[0]);
+        console.log(`Dashboard: Featured car image loaded: ${featuredCarImage === '/placeholder.svg' ? 'placeholder' : 'actual image'}`);
+      } else {
+        console.log("Dashboard: No featured car images available");
+      }
+    } catch (error) {
+      console.error("Dashboard: Error checking image storage:", error);
+      toast({
+        title: "Image Storage Error",
+        description: "There was a problem accessing the image storage.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [imageStorage, cars]);
   
   // Calculate estimated total value (using provided values if available)
   const totalValueEstimate = cars.reduce((total, car) => {

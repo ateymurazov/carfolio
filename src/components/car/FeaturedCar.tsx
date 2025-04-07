@@ -24,16 +24,30 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   useEffect(() => {
     try {
       if (car.images && car.images.length > 0) {
-        const img = imageStorage.getImage(car.images[0]);
-        if (img === '/placeholder.svg') {
-          console.log(`Using placeholder for featured car ${car.id} - image not found in storage`);
+        const imageId = car.images[0];
+        console.log(`FeaturedCar: Loading image for car ${car.id}, image ID: ${imageId}`);
+        
+        if (!imageId) {
+          console.log(`FeaturedCar: Image ID is empty or invalid for car ${car.id}`);
+          setImageError(true);
+          return;
+        }
+        
+        const img = imageStorage.getImage(imageId);
+        
+        if (!img || img === '/placeholder.svg') {
+          console.log(`FeaturedCar: Using placeholder for featured car ${car.id} - image not found in storage`);
           setImageError(true);
         } else {
+          console.log(`FeaturedCar: Successfully loaded image for car ${car.id}`);
           setLoadedImage(img);
         }
+      } else {
+        console.log(`FeaturedCar: No images available for car ${car.id}`);
+        setImageError(true);
       }
     } catch (error) {
-      console.error(`Failed to load image for featured car ${car.id}:`, error);
+      console.error(`FeaturedCar: Failed to load image for featured car ${car.id}:`, error);
       setImageError(true);
     }
   }, [car.images, car.id, imageStorage]);
@@ -47,7 +61,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
     : loadedImage;
   
   const handleImageError = () => {
-    console.log(`Image error for featured car: ${car.id}`);
+    console.log(`FeaturedCar: Image error for featured car: ${car.id}`);
     setImageError(true);
   };
   
