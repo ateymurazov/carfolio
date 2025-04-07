@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { useImageStorage } from "@/hooks/useImageStorage";
+import { toast } from "@/components/ui/use-toast";
 
 interface CarCardProps {
   car: CarType;
@@ -18,14 +19,19 @@ export const CarCard = ({ car, className }: CarCardProps) => {
   
   // Load image from storage when component mounts
   useEffect(() => {
-    if (car.images && car.images.length > 0) {
-      const img = imageStorage.getImage(car.images[0]);
-      setLoadedImage(img);
+    try {
+      if (car.images && car.images.length > 0) {
+        const img = imageStorage.getImage(car.images[0]);
+        setLoadedImage(img);
+      }
+    } catch (error) {
+      console.error(`Failed to load image for car ${car.id}:`, error);
+      setImageError(true);
     }
-  }, [car.images, imageStorage]);
+  }, [car.images, car.id, imageStorage]);
   
   // Placeholder car image if not provided or if there's an error
-  const carImage = imageError || !loadedImage
+  const carImage = imageError || !loadedImage || loadedImage === '/placeholder.svg'
     ? "/placeholder.svg"
     : loadedImage;
   
