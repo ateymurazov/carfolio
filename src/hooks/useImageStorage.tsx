@@ -44,7 +44,6 @@ export function useImageStorage(options = {}) {
         [imageId]: optimizedImage
       }));
       
-      // Verify the image was stored correctly
       console.log(`Image stored with ID: ${imageId}`);
       
       return imageId;

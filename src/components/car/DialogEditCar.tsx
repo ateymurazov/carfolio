@@ -75,7 +75,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
                doc.url && doc.url.trim() !== ""
       ) as { name: string; url: string }[];
       
-      updateCar(car.id, {
+      const updatedCar = {
         ...car,
         make: data.make,
         model: data.model,
@@ -96,7 +96,10 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         value: data.value,
         images: data.images || [],
         documents: validDocuments,
-      });
+      };
+      
+      console.log("Updating car with data:", updatedCar);
+      updateCar(car.id, updatedCar);
       
       toast({
         title: "Car updated",
@@ -106,6 +109,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
       
       onOpenChange(false);
     } catch (error) {
+      console.error("Error updating car:", error);
       toast({
         title: "Error",
         description: "Failed to update car. Please try again.",
