@@ -44,7 +44,25 @@ export const CarImage = ({
     return showPlaceholder ? renderPlaceholder() : null;
   }
   
-  // Get image from local storage only
+  // If the imageId is already a data URL, use it directly
+  if (imageId.startsWith('data:')) {
+    return (
+      <img 
+        src={imageId}
+        alt={alt}
+        className={className}
+        onError={() => {
+          setError(true);
+          if (onError) onError();
+        }}
+        onLoad={() => {
+          if (onLoad) onLoad();
+        }}
+      />
+    );
+  }
+  
+  // Get image from local storage for IDs
   const imageUrl = imageStorage.getImage(imageId);
   
   if (!imageUrl || imageUrl === '/placeholder.svg') {

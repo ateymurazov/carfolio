@@ -50,14 +50,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
           return '';
         }).filter(Boolean);
         
-        setPreviewUrls(prev => {
-          // Only update if there's a real difference to prevent re-renders
-          if (prev.length !== loadedImages.length || 
-              prev.some((url, idx) => url !== loadedImages[idx])) {
-            return loadedImages;
-          }
-          return prev;
-        });
+        setPreviewUrls(loadedImages);
       } else {
         setPreviewUrls([]);
       }
@@ -70,21 +63,18 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   
   useEffect(() => {
     let isMounted = true;
-    let ignoreNext = false;
     
     syncImages();
     
     // Watch for changes to the images field
     const subscription = form.watch((value, { name }) => {
-      if (name === fieldName && isMounted && !ignoreNext) {
+      if (name === fieldName && isMounted) {
         // Use a small timeout to batch multiple changes
         setTimeout(() => {
           if (isMounted) {
             syncImages();
           }
         }, 50);
-      } else if (ignoreNext) {
-        ignoreNext = false;
       }
     });
     
@@ -164,10 +154,8 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       shouldTouch: true,
     });
     
-    // Update preview arrays directly for immediate feedback
-    const updatePreview = [...previewUrls];
-    updatePreview.splice(index, 1);
-    setPreviewUrls(updatePreview);
+    // Force sync after update for immediate feedback
+    setTimeout(() => syncImages(), 50);
     
     toast({
       title: "Image removed",
