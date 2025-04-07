@@ -44,25 +44,7 @@ export const CarImage = ({
     return showPlaceholder ? renderPlaceholder() : null;
   }
   
-  // Direct URL handling (http, data URLs, or local files)
-  if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
-    return (
-      <img 
-        src={imageId}
-        alt={alt}
-        className={cn(className)}
-        onError={() => {
-          setError(true);
-          if (onError) onError();
-        }}
-        onLoad={() => {
-          if (onLoad) onLoad();
-        }}
-      />
-    );
-  }
-  
-  // Image from storage
+  // Get image from local storage only
   const imageUrl = imageStorage.getImage(imageId);
   
   if (!imageUrl || imageUrl === '/placeholder.svg') {

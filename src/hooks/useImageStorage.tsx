@@ -1,7 +1,6 @@
 
 import { useImageStorageCore } from "./useImageStorageCore";
-import { optimizeImage, validateImage } from "@/utils/imageUtils";
-import { toast } from "@/components/ui/use-toast";
+import { optimizeImage } from "@/utils/imageUtils";
 
 /**
  * Hook for managing persistent image storage
@@ -79,11 +78,6 @@ export function useImageStorage(options = {}) {
    * Retrieve an image from the image store
    */
   const getImage = (imageId: string): string => {
-    // Handle direct URLs (http, data URL, or local path)
-    if (imageId && (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:'))) {
-      return imageId;
-    }
-    
     // Invalid or empty imageId
     if (!imageId || typeof imageId !== 'string' || imageId.trim() === '') {
       return '/placeholder.svg';

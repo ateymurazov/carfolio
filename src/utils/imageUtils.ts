@@ -12,9 +12,9 @@
  */
 export const optimizeImage = (dataUrl: string, quality: number = 0.7, maxWidth: number = 1920): Promise<string> => {
   return new Promise((resolve) => {
-    // If not a data URL, return as is
+    // If not a data URL, return placeholder
     if (!dataUrl || !dataUrl.startsWith('data:')) {
-      resolve(dataUrl);
+      resolve('/placeholder.svg');
       return;
     }
     
@@ -57,7 +57,7 @@ export const optimizeImage = (dataUrl: string, quality: number = 0.7, maxWidth: 
     };
     
     img.onerror = () => {
-      console.warn("Image failed to load for optimization:", dataUrl.substring(0, 50) + "...");
+      console.warn("Image failed to load for optimization");
       resolve('/placeholder.svg');
     };
     img.src = dataUrl;
@@ -83,15 +83,6 @@ export const validateImage = (imageUrl: string): Promise<boolean> => {
       return;
     }
     
-    // For http URLs, test with an Image object
-    if (imageUrl.startsWith('http') || imageUrl.startsWith('/')) {
-      const testImage = new Image();
-      testImage.onload = () => resolve(true);
-      testImage.onerror = () => resolve(false);
-      testImage.src = imageUrl;
-      return;
-    }
-    
     // For everything else, assume invalid
     resolve(false);
   });
@@ -113,16 +104,8 @@ export const preloadImage = (imageUrl: string): Promise<string> => {
       resolve(imageUrl);
       return;
     }
-
-    if (imageUrl.startsWith('http') || imageUrl.startsWith('/')) {
-      const img = new Image();
-      img.onload = () => resolve(imageUrl);
-      img.onerror = () => resolve('/placeholder.svg');
-      img.src = imageUrl;
-      return;
-    }
     
-    // Resolve with placeholder for invalid inputs
+    // Resolve with placeholder for all other inputs
     resolve('/placeholder.svg');
   });
 };
