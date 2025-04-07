@@ -25,7 +25,8 @@ export function useCarStorage(): CarStorageState & {
   // Helper to create and download data backup file
   const backupData = () => {
     try {
-      return createAndDownloadBackup(cars, collections, imageStore, "car-inventory-backup");
+      createAndDownloadBackup(cars, collections, imageStore, "car-inventory-backup");
+      // Note: createAndDownloadBackup already shows success/failure toast
     } catch (error) {
       console.error("Backup failed:", error);
       toast({
@@ -33,7 +34,6 @@ export function useCarStorage(): CarStorageState & {
         description: "There was an error creating your backup.",
         variant: "destructive"
       });
-      return false;
     }
   };
   
