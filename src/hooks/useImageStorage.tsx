@@ -82,14 +82,24 @@ export function useImageStorage(options = {}) {
    */
   const getImage = (imageId: string): string => {
     // Handle direct URLs (http, data URL, or local path)
-    if (imageId && (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:'))) {
+    if (!imageId) {
+      console.warn("Empty imageId provided to getImage");
+      return fallbackImage();
+    }
+    
+    if (typeof imageId !== 'string') {
+      console.warn(`Invalid imageId type: ${typeof imageId}`);
+      return fallbackImage();
+    }
+    
+    if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
       return imageId;
     }
     
     // Invalid or empty imageId
-    if (!imageId || typeof imageId !== 'string' || imageId.trim() === '') {
-      console.warn(`Invalid image ID: ${imageId}`);
-      return '/placeholder.svg';
+    if (imageId.trim() === '') {
+      console.warn(`Empty imageId string provided`);
+      return fallbackImage();
     }
     
     // Try to retrieve from image store
@@ -97,10 +107,14 @@ export function useImageStorage(options = {}) {
     
     if (!image) {
       console.warn(`Image not found in storage: ${imageId}`);
-      return '/placeholder.svg';
+      return fallbackImage();
     }
     
     return image;
+  };
+  
+  const fallbackImage = (): string => {
+    return '/placeholder.svg';
   };
   
   /**

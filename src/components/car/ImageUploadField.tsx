@@ -93,8 +93,8 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                 onDragLeave={handleDragLeave}
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {previewUrls.map((url: string, index: number) => (
-                    <div key={`preview-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`} className="relative group aspect-video">
+                  {Array.isArray(previewUrls) && previewUrls.map((url: string, index: number) => (
+                    <div key={`preview-${index}-${Date.now().toString().substring(8, 13)}`} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
                         <CarImage 
                           imageId={url}

@@ -41,6 +41,7 @@ export const CarImage = ({
     if (!imageId || imageId.trim() === '') {
       if (isMounted) {
         setImageUrl("");
+        setError(true);
       }
       return;
     }
