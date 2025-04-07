@@ -94,7 +94,7 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {previewUrls.map((url: string, index: number) => (
-                    <div key={`preview-${index}-${url.substring(0, 8)}`} className="relative group aspect-video">
+                    <div key={`preview-${index}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
                         <CarImage 
                           imageId={url}

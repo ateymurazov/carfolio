@@ -38,7 +38,7 @@ export function useImageStorage(options = {}) {
         }
       }
       
-      // Update the image store
+      // Update the image store with a new object to ensure state update
       setImageStore(prev => ({
         ...prev,
         [imageId]: optimizedImage

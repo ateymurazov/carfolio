@@ -95,36 +95,49 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     try {
       // Process the files
-      const validFiles = await processFiles(files);
+      const newImageIds = await processFiles(files);
       
-      // Update the form with all images
-      const allImages = updateFormImages(validFiles);
+      if (newImageIds.length === 0) {
+        throw new Error("No images were processed successfully");
+      }
       
-      // Success toast only if files were processed
-      if (validFiles.length > 0) {
-        toast({
-          title: "Images processed",
-          description: `Successfully added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
-        });
-        
-        // Immediately update preview URLs for better UX
-        const currentPreviews = [...previewUrls];
-        
-        // Add new image previews
-        for (const imageId of validFiles) {
-          if (imageId) {
-            const imageUrl = imageStorage.getImage(imageId);
-            if (imageUrl) {
-              currentPreviews.push(imageUrl);
-            }
+      // Get current form images
+      const currentImages = form.getValues(fieldName) || [];
+      const existingImages = Array.isArray(currentImages) ? [...currentImages] : [];
+      
+      // Combine existing with new images
+      const updatedImages = [...existingImages, ...newImageIds];
+      
+      // Update form
+      form.setValue(fieldName, updatedImages, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      
+      // Immediately update preview URLs for better UX
+      const newPreviews = [...previewUrls];
+      
+      // Add new image previews
+      for (const imageId of newImageIds) {
+        if (imageId) {
+          const imageUrl = imageStorage.getImage(imageId);
+          if (imageUrl) {
+            newPreviews.push(imageUrl);
           }
         }
-        
-        setPreviewUrls(currentPreviews);
-        
-        // Then do a full sync to ensure consistency
-        setTimeout(() => syncImages(), 100);
       }
+      
+      setPreviewUrls(newPreviews);
+      
+      // Success toast
+      toast({
+        title: "Images uploaded",
+        description: `Successfully added ${newImageIds.length} image${newImageIds.length > 1 ? 's' : ''}`,
+      });
+      
+      // Then do a full sync to ensure consistency
+      setTimeout(() => syncImages(), 100);
     } catch (error) {
       console.error("Error processing images:", error);
       toast({

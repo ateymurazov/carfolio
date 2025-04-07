@@ -27,40 +27,52 @@ export const CarImage = ({
 }: CarImageProps) => {
   const [error, setError] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [useFallback, setUseFallback] = useState(false);
   const imageStorage = useImageStorage();
   
   // Update image URL when imageId changes
   useEffect(() => {
     let isMounted = true;
+    
+    // Reset states when imageId changes
     setError(false);
+    setUseFallback(false);
     
     if (!imageId || imageId.trim() === '') {
-      if (isMounted) setImageUrl("");
+      if (isMounted) {
+        setImageUrl("");
+      }
       return;
     }
     
-    // Handle external URLs that may fail
-    if (imageId.startsWith('http')) {
-      console.log(`Loading external image: ${imageId.substring(0, 50)}...`);
-      // For external URLs, we'll set the URL but prepare for fallback
+    // Handle different image source types
+    if (imageId.startsWith('data:') || imageId.startsWith('/')) {
+      // Direct data URLs or local paths
       if (isMounted) setImageUrl(imageId);
-      return;
+    } else if (imageId.startsWith('http')) {
+      // External URLs
+      if (isMounted) {
+        setImageUrl(imageId);
+        console.log(`Loading external image: ${imageId.substring(0, 50)}...`);
+      }
+    } else {
+      // Image IDs from storage
+      try {
+        const resolvedUrl = imageStorage.getImage(imageId);
+        if (isMounted) setImageUrl(resolvedUrl);
+      } catch (err) {
+        console.warn(`Failed to get image from storage: ${imageId}`, err);
+        if (isMounted) {
+          setError(true);
+          setImageUrl(fallbackSrc);
+        }
+      }
     }
-    
-    // Direct URL handling (data URLs or local files)
-    if (imageId.startsWith('/') || imageId.startsWith('data:')) {
-      if (isMounted) setImageUrl(imageId);
-      return;
-    }
-    
-    // Get from storage for image IDs
-    const resolvedUrl = imageStorage.getImage(imageId);
-    if (isMounted) setImageUrl(resolvedUrl);
     
     return () => {
       isMounted = false;
     };
-  }, [imageId, imageStorage]);
+  }, [imageId, imageStorage, fallbackSrc]);
   
   const renderPlaceholder = () => (
     <div className={cn(
@@ -75,31 +87,24 @@ export const CarImage = ({
   
   const handleImageError = () => {
     console.error(`Image failed to load: ${imageUrl.substring(0, 50)}...`);
-    setError(true);
-    if (onError) onError();
+    
+    if (useFallback) {
+      // Already tried fallback, show placeholder
+      setError(true);
+      if (onError) onError();
+    } else if (imageUrl !== fallbackSrc && fallbackSrc) {
+      // Try fallback
+      setUseFallback(true);
+      setImageUrl(fallbackSrc);
+    } else {
+      // No fallback or fallback failed
+      setError(true);
+      if (onError) onError();
+    }
   };
   
   // Handle empty URL or error cases
-  if (!imageUrl || error) {
-    // Try fallback for external URLs
-    if (error && imageUrl.startsWith('http') && fallbackSrc) {
-      return (
-        <img 
-          src={fallbackSrc}
-          alt={alt}
-          className={cn(className)}
-          onLoad={() => {
-            if (onLoad) onLoad();
-          }}
-          onError={() => {
-            // If even the fallback fails, show placeholder
-            setError(true);
-            if (onError) onError();
-          }}
-        />
-      );
-    }
-    
+  if (!imageUrl || (error && !useFallback)) {
     return showPlaceholder ? renderPlaceholder() : null;
   }
   

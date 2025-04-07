@@ -40,7 +40,11 @@ interface DialogEditCarProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) => {
+export const DialogEditCar = ({ 
+  car, 
+  open, 
+  onOpenChange 
+}: DialogEditCarProps) => {
   const { collections, updateCar } = useCarCollections();
   
   const form = useForm<FormValues>({
@@ -75,6 +79,7 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
                doc.url && doc.url.trim() !== ""
       ) as { name: string; url: string }[];
       
+      // Deep copy car to avoid reference issues
       const updatedCar = {
         ...car,
         make: data.make,
@@ -94,20 +99,24 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         numberOfKeys: data.numberOfKeys,
         owner: data.owner,
         value: data.value,
-        images: data.images || [],
+        images: Array.isArray(data.images) ? [...data.images] : [], // Ensure it's a new array
         documents: validDocuments,
       };
       
       console.log("Updating car with data:", updatedCar);
-      updateCar(car.id, updatedCar);
       
-      toast({
-        title: "Car updated",
-        description: `${data.year} ${data.make} ${data.model} has been updated.`,
-        variant: "default",
-      });
-      
-      onOpenChange(false);
+      // Use a timeout to ensure state updates have completed
+      setTimeout(() => {
+        updateCar(car.id, updatedCar);
+        
+        toast({
+          title: "Car updated",
+          description: `${data.year} ${data.make} ${data.model} has been updated.`,
+          variant: "default",
+        });
+        
+        onOpenChange(false);
+      }, 0);
     } catch (error) {
       console.error("Error updating car:", error);
       toast({
