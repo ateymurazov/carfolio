@@ -44,6 +44,9 @@ export function useImageStorage(options = {}) {
         [imageId]: optimizedImage
       }));
       
+      // Verify the image was stored correctly
+      console.log(`Image stored with ID: ${imageId}`);
+      
       return imageId;
     } catch (error) {
       console.error("Failed to store image:", error);
@@ -86,6 +89,7 @@ export function useImageStorage(options = {}) {
     
     // Invalid or empty imageId
     if (!imageId || typeof imageId !== 'string' || imageId.trim() === '') {
+      console.warn(`Invalid image ID: ${imageId}`);
       return '/placeholder.svg';
     }
     
@@ -93,6 +97,7 @@ export function useImageStorage(options = {}) {
     const image = imageStore[imageId];
     
     if (!image) {
+      console.warn(`Image not found in storage: ${imageId}`);
       return '/placeholder.svg';
     }
     
@@ -120,6 +125,8 @@ export function useImageStorage(options = {}) {
       delete updated[imageId];
       return updated;
     });
+    
+    console.log(`Image removed from storage: ${imageId}`);
   };
 
   /**

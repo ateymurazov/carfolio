@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
@@ -88,20 +89,12 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                   isProcessing ? "opacity-70" : ""
                 )}
                 onDrop={handleDrop}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDragActive(true);
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDragActive(false);
-                }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {previewUrls.map((url: string, index: number) => (
-                    <div key={`${index}-${url.substring(0, 20)}`} className="relative group aspect-video">
+                    <div key={`image-${index}-${Date.now()}`} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
                         <CarImage 
                           imageId={url}

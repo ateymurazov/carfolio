@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useImageStorage } from "@/hooks/useImageStorage";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,33 @@ export const CarImage = ({
   fallbackSrc = "/placeholder.svg"
 }: CarImageProps) => {
   const [error, setError] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>("");
   const imageStorage = useImageStorage();
+  
+  // Update image URL when imageId changes
+  useEffect(() => {
+    let isMounted = true;
+    setError(false);
+    
+    if (!imageId || imageId.trim() === '') {
+      if (isMounted) setImageUrl("");
+      return;
+    }
+    
+    // Direct URL handling (http, data URLs, or local files)
+    if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
+      if (isMounted) setImageUrl(imageId);
+      return;
+    }
+    
+    // Get from storage for image IDs
+    const resolvedUrl = imageStorage.getImage(imageId);
+    if (isMounted) setImageUrl(resolvedUrl);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [imageId, imageStorage]);
   
   const renderPlaceholder = () => (
     <div className={cn(
@@ -39,33 +65,8 @@ export const CarImage = ({
     </div>
   );
   
-  // Handle empty or invalid ID
-  if (!imageId || imageId.trim() === '' || error) {
-    return showPlaceholder ? renderPlaceholder() : null;
-  }
-  
-  // Direct URL handling (http, data URLs, or local files)
-  if (imageId.startsWith('http') || imageId.startsWith('/') || imageId.startsWith('data:')) {
-    return (
-      <img 
-        src={imageId}
-        alt={alt}
-        className={cn(className)}
-        onError={() => {
-          setError(true);
-          if (onError) onError();
-        }}
-        onLoad={() => {
-          if (onLoad) onLoad();
-        }}
-      />
-    );
-  }
-  
-  // Image from storage
-  const imageUrl = imageStorage.getImage(imageId);
-  
-  if (!imageUrl || imageUrl === '/placeholder.svg') {
+  // Handle empty URL or error cases
+  if (!imageUrl || error) {
     return showPlaceholder ? renderPlaceholder() : null;
   }
   
@@ -73,8 +74,9 @@ export const CarImage = ({
     <img 
       src={imageUrl}
       alt={alt}
-      className={className}
+      className={cn(className)}
       onError={() => {
+        console.error(`Image failed to load: ${imageUrl.substring(0, 50)}...`);
         setError(true);
         if (onError) onError();
       }}

@@ -32,7 +32,7 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
       
       if (Array.isArray(currentImages) && currentImages.length > 0) {
         // Load images from storage if they're IDs
-        const loadedImages = currentImages.filter(Boolean).map(img => {
+        const loadedImages = await Promise.all(currentImages.filter(Boolean).map(async (img) => {
           // Skip processing if already a data URL
           if (typeof img === 'string') {
             if (img.startsWith('data:')) {
@@ -48,16 +48,9 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
             return imageStorage.getImage(img);
           }
           return '';
-        }).filter(Boolean);
+        }));
         
-        setPreviewUrls(prev => {
-          // Only update if there's a real difference to prevent re-renders
-          if (prev.length !== loadedImages.length || 
-              prev.some((url, idx) => url !== loadedImages[idx])) {
-            return loadedImages;
-          }
-          return prev;
-        });
+        setPreviewUrls(loadedImages.filter(Boolean));
       } else {
         setPreviewUrls([]);
       }
@@ -70,21 +63,18 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
   
   useEffect(() => {
     let isMounted = true;
-    let ignoreNext = false;
     
     syncImages();
     
     // Watch for changes to the images field
     const subscription = form.watch((value, { name }) => {
-      if (name === fieldName && isMounted && !ignoreNext) {
+      if (name === fieldName && isMounted) {
         // Use a small timeout to batch multiple changes
         setTimeout(() => {
           if (isMounted) {
             syncImages();
           }
         }, 50);
-      } else if (ignoreNext) {
-        ignoreNext = false;
       }
     });
     
@@ -117,7 +107,22 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
           description: `Successfully added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
         });
         
-        // Force sync after update
+        // Immediately update preview URLs for better UX
+        const currentPreviews = [...previewUrls];
+        
+        // Add new image previews
+        for (const imageId of validFiles) {
+          if (imageId) {
+            const imageUrl = imageStorage.getImage(imageId);
+            if (imageUrl) {
+              currentPreviews.push(imageUrl);
+            }
+          }
+        }
+        
+        setPreviewUrls(currentPreviews);
+        
+        // Then do a full sync to ensure consistency
         setTimeout(() => syncImages(), 100);
       }
     } catch (error) {
