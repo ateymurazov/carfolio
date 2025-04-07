@@ -1,4 +1,3 @@
-
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { initialCars, initialCollections } from "@/data/initialCarData";
@@ -26,7 +25,6 @@ export function useCarStorage(): CarStorageState & {
   const backupData = () => {
     try {
       createAndDownloadBackup(cars, collections, imageStore, "car-inventory-backup");
-      // Note: createAndDownloadBackup already shows success/failure toast
     } catch (error) {
       console.error("Backup failed:", error);
       toast({

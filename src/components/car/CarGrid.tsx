@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Car } from "@/types/car";
 import { CarCard } from "./CarCard";
@@ -21,7 +20,6 @@ export const CarGrid = ({ cars, className, isLoading = false }: CarGridProps) =>
   const handleBackup = () => {
     try {
       backupData();
-      // No need to check the return value as backupData already handles success/failure notifications
     } catch (error) {
       console.error("Backup failed:", error);
       toast({
