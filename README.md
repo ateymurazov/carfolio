@@ -1,3 +1,6 @@
+
+# Car Folio Curate
+
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
@@ -39,4 +42,3 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-
