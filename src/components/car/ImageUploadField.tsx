@@ -1,25 +1,23 @@
-import React, { useCallback, useState } from "react";
+
+import React, { useCallback } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
 import { ImagePlus, Trash2, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "../ui/use-toast";
-import { CarImage } from "./CarImage";
-import { cn } from "@/lib/utils";
 
 interface ImageUploadFieldProps {
   form: UseFormReturn<any>;
 }
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
-  const { handleImageChange, removeImage, previewUrls, isProcessing } = useImageUpload(form, "images");
-  const [dragActive, setDragActive] = useState(false);
+  const { handleImageChange, removeImage, previewUrls } = useImageUpload(form, "images");
   
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragActive(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const fileInput = document.createElement('input');
@@ -33,13 +31,6 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragActive(true);
-  }, []);
-  
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
   }, []);
   
   const handleBulkUpload = useCallback(() => {
@@ -51,8 +42,8 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
       if (e.target.files && e.target.files.length > 0) {
         handleImageChange(e);
         toast({
-          title: "Images uploading",
-          description: `Processing ${e.target.files.length} image${e.target.files.length > 1 ? 's' : ''}...`,
+          title: "Images uploaded",
+          description: `${e.target.files.length} image${e.target.files.length > 1 ? 's' : ''} added`,
         });
       }
     };
@@ -74,40 +65,29 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                   variant="outline" 
                   size="sm"
                   onClick={handleBulkUpload}
-                  disabled={isProcessing}
                 >
-                  <Upload className="mr-2 h-4 w-4" /> 
-                  {isProcessing ? "Processing..." : "Upload Images"}
+                  <Upload className="mr-2 h-4 w-4" /> Upload Images
                 </Button>
               </div>
               
               <div 
-                className={cn(
-                  "border-2 border-dashed rounded-md p-4 bg-muted/30 transition-colors",
-                  dragActive ? "border-primary bg-primary/10" : "hover:bg-muted/50",
-                  isProcessing ? "opacity-70" : ""
-                )}
+                className="border-2 border-dashed rounded-md p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
                 onDrop={handleDrop}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDragActive(true);
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDragActive(false);
-                }}
+                onDragOver={handleDragOver}
               >
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {previewUrls.map((url: string, index: number) => (
-                    <div key={`${index}-${url.substring(0, 20)}`} className="relative group aspect-video">
+                    <div key={index} className="relative group aspect-video">
                       <div className="w-full h-full bg-secondary rounded-md overflow-hidden">
-                        <CarImage 
-                          imageId={url}
+                        <img 
+                          src={url} 
                           alt={`Car image ${index + 1}`}
                           className="w-full h-full object-cover"
-                          fallbackSrc="/placeholder.svg"
+                          onError={(e) => {
+                            console.log(`Image error for index ${index}, url length: ${url.length}`);
+                            // Fallback to placeholder if image fails to load
+                            e.currentTarget.src = "/placeholder.svg";
+                          }}
                         />
                       </div>
                       <Button
@@ -116,23 +96,15 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                         size="icon"
                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => removeImage(index)}
-                        disabled={isProcessing}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
-                  
-                  {/* Add Image Button */}
-                  <label className={cn(
-                    "flex flex-col items-center justify-center aspect-video bg-muted text-muted-foreground rounded-md border-2 border-dashed cursor-pointer transition-colors",
-                    isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-muted/80"
-                  )}>
+                  <label className="flex flex-col items-center justify-center aspect-video bg-muted text-muted-foreground rounded-md border-2 border-dashed cursor-pointer hover:bg-muted/80 transition-colors">
                     <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
                       <ImagePlus className="h-8 w-8" />
-                      <span className="text-sm font-medium">
-                        {isProcessing ? "Processing..." : "Add image"}
-                      </span>
+                      <span className="text-sm font-medium">Add image</span>
                     </div>
                     <input
                       type="file"
@@ -140,7 +112,6 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
                       multiple
                       className="hidden"
                       onChange={handleImageChange}
-                      disabled={isProcessing}
                     />
                   </label>
                 </div>
@@ -155,4 +126,4 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
       )}
     />
   );
-}
+};

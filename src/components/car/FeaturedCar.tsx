@@ -1,13 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
+import { useImageStorage } from "@/hooks/useImageStorage";
 import { cn } from "@/lib/utils";
-import { CarImage } from "./CarImage";
 
 interface FeaturedCarProps {
   car: Car;
@@ -16,35 +16,40 @@ interface FeaturedCarProps {
 export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   const navigate = useNavigate();
   const { getCollectionById } = useCarCollections();
-  const [hasImageError, setHasImageError] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [loadedImage, setLoadedImage] = useState<string>("");
+  const imageStorage = useImageStorage();
+  
+  // Load image from storage when component mounts
+  useEffect(() => {
+    if (car.images && car.images.length > 0) {
+      const img = imageStorage.getImage(car.images[0]);
+      setLoadedImage(img);
+    }
+  }, [car.images, imageStorage]);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
-  // Get the primary image ID with better error handling
-  const getFirstValidImage = () => {
-    if (!car.images || !Array.isArray(car.images) || car.images.length === 0) return "";
-    return car.images[0] || "";
-  };
-  
-  const imageId = getFirstValidImage();
+  // Placeholder car image if not provided or if there's an error
+  const carImage = imageError || !loadedImage
+    ? "/placeholder.svg"
+    : loadedImage;
   
   const handleImageError = () => {
-    console.log(`Image error for featured car ${car.id}`);
-    setHasImageError(true);
+    console.log(`Image error for featured car: ${car.id}`);
+    setImageError(true);
   };
   
   return (
     <div className="flex flex-col space-y-4">
       <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-200">
-        <CarImage 
-          imageId={imageId}
+        <img 
+          src={carImage} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
-          aspectRatio="video"
           onError={handleImageError}
         />
-        
         <Badge className={cn(
           "absolute top-2 right-2 text-white",
           car.status === "In Service" ? "bg-amber-500" : "bg-emerald-500"

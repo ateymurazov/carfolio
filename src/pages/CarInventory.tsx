@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -7,30 +7,19 @@ import { useCarCollections } from "@/hooks/useCarCollections";
 import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
 
 const CarInventory = () => {
   const { cars, collections } = useCarCollections();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollection, setSelectedCollection] = useState<string>("all");
   const [isAddCarDialogOpen, setIsAddCarDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Use a shorter loading time to improve user experience
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, []);
   
   // Filter cars based on search term and selected collection
   const filteredCars = cars.filter(car => {
     const matchesSearch = 
-      car.make?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      car.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (car.year && car.year.toString().toLowerCase().includes(searchTerm.toLowerCase()));
+      car.make.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      car.year.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesCollection = 
       selectedCollection === "all" || 
@@ -38,9 +27,6 @@ const CarInventory = () => {
     
     return matchesSearch && matchesCollection;
   });
-
-  // Get only the first 12 cars to improve performance
-  const limitedCars = filteredCars.slice(0, 20);
   
   return (
     <div className="space-y-6 p-6 animate-fade-in">
@@ -88,8 +74,8 @@ const CarInventory = () => {
       </div>
       
       {/* Car grid */}
-      {limitedCars.length > 0 ? (
-        <CarGrid cars={limitedCars} isLoading={isLoading} />
+      {filteredCars.length > 0 ? (
+        <CarGrid cars={filteredCars} />
       ) : (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <p>No cars found.</p>

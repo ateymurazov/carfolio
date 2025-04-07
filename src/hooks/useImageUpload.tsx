@@ -1,7 +1,7 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { useImageUploadCore } from "./useImageUploadCore";
+import { useImageStorage } from "./useImageStorage";
 import { toast } from "@/components/ui/use-toast";
 
 /**
@@ -12,77 +12,22 @@ import { toast } from "@/components/ui/use-toast";
  */
 export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "images") {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [syncInProgress, setSyncInProgress] = useState(false);
+  const imageStorage = useImageStorage();
   
-  const { 
-    imageStorage, 
-    isProcessing, 
-    setIsProcessing,
-    processFiles,
-    updateFormImages
-  } = useImageUploadCore(form, fieldName);
-  
-  // Sync previewUrls with form images when component mounts or changes
-  const syncImages = useCallback(async () => {
-    if (syncInProgress) return;
-    
-    try {
-      setSyncInProgress(true);
-      const currentImages = form.getValues(fieldName) || [];
-      
-      if (Array.isArray(currentImages) && currentImages.length > 0) {
-        // Load images from storage if they're IDs
-        const loadedImages = currentImages.filter(Boolean).map(img => {
-          // Skip processing if already a data URL
-          if (typeof img === 'string') {
-            if (img.startsWith('data:')) {
-              return img;
-            }
-            
-            // Handle direct URLs
-            if (img.startsWith('http') || img.startsWith('/')) {
-              return img;
-            }
-            
-            // Load from storage
-            return imageStorage.getImage(img);
-          }
-          return '';
-        }).filter(Boolean);
-        
-        setPreviewUrls(loadedImages);
-      } else {
-        setPreviewUrls([]);
-      }
-    } catch (error) {
-      console.error("Error syncing images:", error);
-    } finally {
-      setSyncInProgress(false);
-    }
-  }, [form, fieldName, imageStorage, syncInProgress]);
-  
+  // Sync previewUrls with form images when component mounts
   useEffect(() => {
-    let isMounted = true;
-    
-    syncImages();
-    
-    // Watch for changes to the images field
-    const subscription = form.watch((value, { name }) => {
-      if (name === fieldName && isMounted) {
-        // Use a small timeout to batch multiple changes
-        setTimeout(() => {
-          if (isMounted) {
-            syncImages();
-          }
-        }, 50);
-      }
-    });
-    
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
-  }, [form, fieldName, syncImages]);
+    const currentImages = form.getValues(fieldName) || [];
+    if (Array.isArray(currentImages) && currentImages.length > 0) {
+      // Load images from storage if they're IDs
+      const loadedImages = currentImages.map(img => 
+        typeof img === 'string' && !img.startsWith('data:') 
+          ? imageStorage.getImage(img) 
+          : img
+      );
+      setPreviewUrls(loadedImages);
+      console.log(`Initialized ${fieldName} with ${loadedImages.length} images`);
+    }
+  }, [form, fieldName, imageStorage]);
   
   /**
    * Handle image file selection
@@ -91,24 +36,71 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    setIsProcessing(true);
+    // Show loading toast for many images
+    let loadingToast;
+    if (files.length > 3) {
+      loadingToast = toast({
+        title: "Processing images",
+        description: `Optimizing ${files.length} images, please wait...`,
+      });
+    }
     
     try {
-      // Process the files
-      const validFiles = await processFiles(files);
+      const currentImages = form.getValues(fieldName) || [];
+      const filePromises: Promise<string>[] = [];
       
-      // Update the form with all images
-      const allImages = updateFormImages(validFiles);
-      
-      // Success toast only if files were processed
-      if (validFiles.length > 0) {
-        toast({
-          title: "Images processed",
-          description: `Successfully added ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
+      // Process each file and create URL
+      Array.from(files).forEach(file => {
+        const promise = new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            if (e.target?.result) {
+              const imageUrl = e.target.result.toString();
+              
+              try {
+                // Store the image persistently and get an ID
+                const storedImageId = await imageStorage.storeImage(imageUrl);
+                resolve(storedImageId);
+              } catch (err) {
+                reject(err);
+              }
+            } else {
+              reject(new Error("Failed to read file"));
+            }
+          };
+          reader.onerror = () => reject(new Error("File read error"));
+          reader.readAsDataURL(file);
         });
         
-        // Force sync after update
-        setTimeout(() => syncImages(), 100);
+        filePromises.push(promise);
+      });
+      
+      // Wait for all images to be processed
+      const processedFiles = await Promise.all(filePromises);
+      
+      // Update the form with all images
+      const allImages = [...currentImages, ...processedFiles];
+      form.setValue(fieldName, allImages, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      
+      // Update preview with actual image data for display
+      const previewImages = allImages.map(img => 
+        typeof img === 'string' && !img.startsWith('data:') 
+          ? imageStorage.getImage(img) 
+          : img
+      );
+      setPreviewUrls(previewImages);
+      
+      console.log(`Updated ${fieldName} with ${allImages.length} images`, allImages);
+      
+      // Dismiss loading toast if it exists
+      if (loadingToast) {
+        toast({
+          title: "Images processed",
+          description: `Successfully added ${files.length} images`,
+        });
       }
     } catch (error) {
       console.error("Error processing images:", error);
@@ -117,8 +109,6 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
         description: "Some images could not be processed. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
   
@@ -134,14 +124,9 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     
     // Get the image ID to remove from storage
     const imageToRemove = currentImages[index];
-    if (imageToRemove && typeof imageToRemove === 'string' && !imageToRemove.startsWith('data:') && 
-        !imageToRemove.startsWith('http') && !imageToRemove.startsWith('/')) {
-      // Only remove from imageStorage if it's an ID (not a data URL or direct URL)
-      try {
-        imageStorage.removeImage(imageToRemove);
-      } catch (error) {
-        console.error("Error removing image from storage:", error);
-      }
+    if (imageToRemove && typeof imageToRemove === 'string' && !imageToRemove.startsWith('data:')) {
+      // Only remove from imageStorage if it's an ID (not a data URL)
+      imageStorage.removeImage(imageToRemove);
     }
     
     const updatedImages = [...currentImages];
@@ -151,23 +136,27 @@ export function useImageUpload(form: UseFormReturn<any>, fieldName: string = "im
     form.setValue(fieldName, updatedImages, {
       shouldValidate: true,
       shouldDirty: true,
-      shouldTouch: true,
     });
     
-    // Force sync after update for immediate feedback
-    setTimeout(() => syncImages(), 50);
+    // Update preview URLs
+    const previewImages = updatedImages.map(img => 
+      typeof img === 'string' && !img.startsWith('data:') 
+        ? imageStorage.getImage(img) 
+        : img
+    );
+    setPreviewUrls(previewImages);
+    
+    console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
     
     toast({
       title: "Image removed",
-      description: `Image was successfully removed.`,
-      duration: 2000,
+      description: `Image removed successfully. ${updatedImages.length} remaining.`,
     });
   };
 
   return {
     previewUrls,
     handleImageChange,
-    removeImage,
-    isProcessing
+    removeImage
   };
 }
