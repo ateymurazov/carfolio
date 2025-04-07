@@ -23,6 +23,7 @@ const attemptDataRecovery = () => {
         // Check if we're missing primary data
         const missingCars = !localStorage.getItem('cars');
         const missingCollections = !localStorage.getItem('collections');
+        const missingImageStore = !localStorage.getItem('carImageStore');
         
         if (missingCars && backupData.cars) {
           console.log("Recovering cars from auto-backup");
@@ -32,6 +33,11 @@ const attemptDataRecovery = () => {
         if (missingCollections && backupData.collections) {
           console.log("Recovering collections from auto-backup");
           localStorage.setItem('collections', JSON.stringify(backupData.collections));
+        }
+        
+        if (missingImageStore && backupData.images) {
+          console.log("Recovering image store from auto-backup");
+          localStorage.setItem('carImageStore', JSON.stringify(backupData.images));
         }
       }
     } catch (e) {

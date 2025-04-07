@@ -27,29 +27,40 @@ const queryClient = new QueryClient({
 
 // Check for data continuity on startup
 const checkDataContinuity = () => {
-  console.log("Checking data continuity on application startup");
-  
-  // Check if we have cars and collections data
-  const hasCarData = localStorage.getItem('cars') !== null;
-  const hasCollectionData = localStorage.getItem('collections') !== null;
-  
-  if (!hasCarData || !hasCollectionData) {
-    console.log("Some data appears to be missing, checking backup options");
+  try {
+    console.log("Checking data continuity on application startup");
     
-    // Check for backups
-    const carsPrevious = localStorage.getItem('cars_previous');
-    const collectionsPrevious = localStorage.getItem('collections_previous');
+    // Check if we have cars and collections data
+    const hasCarData = localStorage.getItem('cars') !== null;
+    const hasCollectionData = localStorage.getItem('collections') !== null;
+    const hasImageData = localStorage.getItem('carImageStore') !== null;
     
-    // Restore from previous if available
-    if (!hasCarData && carsPrevious) {
-      console.log("Restoring cars from previous backup");
-      localStorage.setItem('cars', carsPrevious);
+    if (!hasCarData || !hasCollectionData || !hasImageData) {
+      console.log("Some data appears to be missing, checking backup options");
+      
+      // Check for backups
+      const carsPrevious = localStorage.getItem('cars_previous');
+      const collectionsPrevious = localStorage.getItem('collections_previous');
+      const imageStorePrevious = localStorage.getItem('carImageStore_previous');
+      
+      // Restore from previous if available
+      if (!hasCarData && carsPrevious) {
+        console.log("Restoring cars from previous backup");
+        localStorage.setItem('cars', carsPrevious);
+      }
+      
+      if (!hasCollectionData && collectionsPrevious) {
+        console.log("Restoring collections from previous backup");
+        localStorage.setItem('collections', collectionsPrevious);
+      }
+      
+      if (!hasImageData && imageStorePrevious) {
+        console.log("Restoring image store from previous backup");
+        localStorage.setItem('carImageStore', imageStorePrevious);
+      }
     }
-    
-    if (!hasCollectionData && collectionsPrevious) {
-      console.log("Restoring collections from previous backup");
-      localStorage.setItem('collections', collectionsPrevious);
-    }
+  } catch (error) {
+    console.error("Error during data continuity check:", error);
   }
 };
 

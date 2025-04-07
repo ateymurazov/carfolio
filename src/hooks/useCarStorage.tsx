@@ -3,7 +3,9 @@ import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { initialCars, initialCollections } from "@/data/initialCarData";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "@/components/ui/use-toast";
+import { createAndDownloadBackup, createBackupData } from "@/utils/backupUtils";
 
 export type CarStorageState = {
   cars: Car[];
@@ -18,41 +20,12 @@ export function useCarStorage(): CarStorageState & {
 } {
   const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
   const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
+  const { imageStore } = useImageStorage();
   
   // Helper to create and download data backup file
   const backupData = () => {
     try {
-      // Create backup object with timestamp
-      const backup = {
-        cars,
-        collections,
-        timestamp: new Date().toISOString(),
-        version: "1.0"
-      };
-      
-      // Convert to JSON string with pretty formatting
-      const jsonData = JSON.stringify(backup, null, 2);
-      
-      // Create a blob and download link
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      
-      // Setup the download link
-      const date = new Date().toISOString().split('T')[0];
-      link.href = url;
-      link.download = `car-inventory-backup-${date}.json`;
-      
-      // Trigger download and cleanup
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Backup Created",
-        description: "Your data has been backed up successfully.",
-      });
+      return createAndDownloadBackup(cars, collections, imageStore, "car-inventory-backup");
     } catch (error) {
       console.error("Backup failed:", error);
       toast({
@@ -60,6 +33,7 @@ export function useCarStorage(): CarStorageState & {
         description: "There was an error creating your backup.",
         variant: "destructive"
       });
+      return false;
     }
   };
   
@@ -72,15 +46,14 @@ export function useCarStorage(): CarStorageState & {
       // Create automatic backup before resetting
       try {
         // Store current data with timestamp
-        const backupData = {
-          cars,
-          collections,
-          timestamp: new Date().toISOString(),
+        const backupData = createBackupData(cars, collections, imageStore);
+        const enhancedBackup = {
+          ...backupData,
           _autoBackupBeforeReset: true
         };
         
         // Save to a special localStorage key
-        localStorage.setItem('autoBackup_beforeReset', JSON.stringify(backupData));
+        localStorage.setItem('autoBackup_beforeReset', JSON.stringify(enhancedBackup));
         
         console.log("Auto-backup created before data reset");
       } catch (e) {

@@ -159,6 +159,7 @@ export function useImageStorage(options = {}) {
     removeImage,
     cleanupUnusedImages,
     imageStore,
+    setImageStore,
     storageUsage
   };
 }
