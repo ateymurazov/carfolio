@@ -34,6 +34,24 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
       console.error("Potential data loss detected: cars array is empty but localStorage has data");
       
       try {
+        // First try last known good state
+        const lastGoodCars = localStorage.getItem('cars_last_good');
+        if (lastGoodCars) {
+          console.log("Recovering cars data from last known good state");
+          const parsedCars = JSON.parse(lastGoodCars);
+          if (Array.isArray(parsedCars) && parsedCars.length > 0) {
+            updateCars(parsedCars);
+            
+            toast({
+              title: "Data Recovery",
+              description: "Detected and recovered your car data",
+            });
+            
+            return;
+          }
+        }
+        
+        // If last known good state fails, try direct localStorage
         const storedCars = localStorage.getItem('cars');
         if (storedCars) {
           const parsedCars = JSON.parse(storedCars);
@@ -57,6 +75,18 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
       console.error("Potential data loss detected: collections array is empty but localStorage has data");
       
       try {
+        // First try last known good state
+        const lastGoodCollections = localStorage.getItem('collections_last_good');
+        if (lastGoodCollections) {
+          console.log("Recovering collections data from last known good state");
+          const parsedCollections = JSON.parse(lastGoodCollections);
+          if (Array.isArray(parsedCollections) && parsedCollections.length > 0) {
+            updateCollections(parsedCollections);
+            return;
+          }
+        }
+        
+        // If last known good state fails, try direct localStorage
         const storedCollections = localStorage.getItem('collections');
         if (storedCollections) {
           const parsedCollections = JSON.parse(storedCollections);
@@ -81,25 +111,52 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
   };
   
   const addCar = (car: Car) => {
-    updateCars([...cars, car]);
+    const newCars = [...cars, car];
+    updateCars(newCars);
+    // Update last known good state
+    try {
+      localStorage.setItem('cars_last_good', JSON.stringify(newCars));
+    } catch (e) {
+      console.error("Failed to save last good state for cars:", e);
+    }
   };
   
   const updateCar = (idOrCars: string | Car[], carUpdate?: Car) => {
     // Bulk update case
     if (Array.isArray(idOrCars)) {
       updateCars(idOrCars);
+      // Update last known good state
+      try {
+        localStorage.setItem('cars_last_good', JSON.stringify(idOrCars));
+      } catch (e) {
+        console.error("Failed to save last good state for cars:", e);
+      }
       return;
     }
     
     // Single car update case
     if (idOrCars && carUpdate) {
       console.log("Updating car:", idOrCars, carUpdate);
-      updateCars(cars.map(c => c.id === idOrCars ? carUpdate : c));
+      const newCars = cars.map(c => c.id === idOrCars ? carUpdate : c);
+      updateCars(newCars);
+      // Update last known good state
+      try {
+        localStorage.setItem('cars_last_good', JSON.stringify(newCars));
+      } catch (e) {
+        console.error("Failed to save last good state for cars:", e);
+      }
     }
   };
   
   const deleteCar = (id: string) => {
-    updateCars(cars.filter(car => car.id !== id));
+    const newCars = cars.filter(car => car.id !== id);
+    updateCars(newCars);
+    // Update last known good state
+    try {
+      localStorage.setItem('cars_last_good', JSON.stringify(newCars));
+    } catch (e) {
+      console.error("Failed to save last good state for cars:", e);
+    }
   };
   
   // Collection operations
@@ -108,24 +165,51 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
   };
   
   const addCollection = (collection: Collection) => {
-    updateCollections([...collections, collection]);
+    const newCollections = [...collections, collection];
+    updateCollections(newCollections);
+    // Update last known good state
+    try {
+      localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
+    } catch (e) {
+      console.error("Failed to save last good state for collections:", e);
+    }
   };
   
   const updateCollection = (idOrCollections: string | Collection[], collectionUpdate?: Collection) => {
     // Bulk update case
     if (Array.isArray(idOrCollections)) {
       updateCollections(idOrCollections);
+      // Update last known good state
+      try {
+        localStorage.setItem('collections_last_good', JSON.stringify(idOrCollections));
+      } catch (e) {
+        console.error("Failed to save last good state for collections:", e);
+      }
       return;
     }
     
     // Single collection update case
     if (idOrCollections && collectionUpdate) {
-      updateCollections(collections.map(c => c.id === idOrCollections ? collectionUpdate : c));
+      const newCollections = collections.map(c => c.id === idOrCollections ? collectionUpdate : c);
+      updateCollections(newCollections);
+      // Update last known good state
+      try {
+        localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
+      } catch (e) {
+        console.error("Failed to save last good state for collections:", e);
+      }
     }
   };
   
   const deleteCollection = (id: string) => {
-    updateCollections(collections.filter(collection => collection.id !== id));
+    const newCollections = collections.filter(collection => collection.id !== id);
+    updateCollections(newCollections);
+    // Update last known good state
+    try {
+      localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
+    } catch (e) {
+      console.error("Failed to save last good state for collections:", e);
+    }
   };
   
   // New method to handle merging imported data with existing data
@@ -169,6 +253,14 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     // Update storage with merged data
     updateCollections(mergedCollections);
     updateCars(mergedCars);
+    
+    // Update last known good states
+    try {
+      localStorage.setItem('cars_last_good', JSON.stringify(mergedCars));
+      localStorage.setItem('collections_last_good', JSON.stringify(mergedCollections));
+    } catch (e) {
+      console.error("Failed to save last good state after merging imported data:", e);
+    }
   };
   
   // Context value

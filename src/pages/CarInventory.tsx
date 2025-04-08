@@ -149,7 +149,7 @@ const CarInventory = () => {
         </Select>
       </div>
       
-      {/* Car grid */}
+      {/* Car grid or Empty State */}
       {filteredCars.length > 0 ? (
         <CarGrid cars={filteredCars} />
       ) : (
@@ -172,20 +172,52 @@ const CarInventory = () => {
               <div className="h-px w-16 bg-gray-200"></div>
             </div>
             
-            <Button 
-              variant="outline"
-              onClick={() => {
-                if (window.confirm('Are you sure you want to restore the demo data? This is a manual reset.')) {
-                  restoreInitialData();
-                }
-              }}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> Restore Demo Data
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to restore the demo data? This will not affect any existing data you may have.')) {
+                    restoreInitialData();
+                  }
+                }}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" /> Restore Demo Data
+              </Button>
+              
+              {localStorage.getItem('cars_last_good') && (
+                <Button 
+                  variant="ghost"
+                  onClick={() => {
+                    try {
+                      const lastGoodCars = localStorage.getItem('cars_last_good');
+                      const lastGoodCollections = localStorage.getItem('collections_last_good');
+                      
+                      if (lastGoodCars && lastGoodCollections && contextData) {
+                        contextData.updateCar(JSON.parse(lastGoodCars));
+                        contextData.updateCollection(JSON.parse(lastGoodCollections));
+                        toast({
+                          title: "Data Recovered",
+                          description: "Your last known good data has been restored.",
+                        });
+                      }
+                    } catch (e) {
+                      console.error("Failed to restore from last good state:", e);
+                      toast({
+                        title: "Recovery Failed",
+                        description: "Could not restore from last known good state.",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  Restore Last Good State
+                </Button>
+              )}
+            </div>
             
             <p className="text-xs text-gray-500 max-w-md text-center mt-2">
-              This will add sample cars and collections to help you get started. 
-              Your current data will be backed up.
+              You can restore demo data to help you get started. 
+              Any existing data you have will be preserved.
             </p>
           </div>
         </div>
@@ -200,6 +232,6 @@ const CarInventory = () => {
       )}
     </div>
   );
-};
+}
 
 export default CarInventory;

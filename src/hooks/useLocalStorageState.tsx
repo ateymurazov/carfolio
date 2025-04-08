@@ -23,10 +23,29 @@ export function useLocalStorageState<T>(
         const parsedValue = JSON.parse(storedValue);
         console.log(`Found ${key} in localStorage:`, Array.isArray(parsedValue) ? 
           `${parsedValue.length} items` : 'value');
+        
+        // Save as last known good state if parsed successfully
+        try {
+          localStorage.setItem(`${key}_last_good`, storedValue);
+        } catch (e) {
+          console.error(`Failed to save last good state for ${key}`, e);
+        }
+        
         return parsedValue;
       }
     } catch (e) {
       console.error(`Failed to parse stored ${key}, attempting recovery`, e);
+      
+      // Try to recover from last known good state
+      try {
+        const lastGoodState = localStorage.getItem(`${key}_last_good`);
+        if (lastGoodState) {
+          console.log(`Recovering from last known good state for ${key}`);
+          return JSON.parse(lastGoodState);
+        }
+      } catch (lastGoodError) {
+        console.error(`Failed to recover from last good state for ${key}`, lastGoodError);
+      }
       
       // Create a backup of the corrupted data for potential recovery
       try {
@@ -72,12 +91,18 @@ export function useLocalStorageState<T>(
     
     if (isFirstInstall) {
       console.log(`First-time app use detected. Initializing ${key} with demo data`);
+      
+      // Set as last known good state
+      try {
+        localStorage.setItem(`${key}_last_good`, JSON.stringify(initialValue));
+      } catch (e) {
+        console.error(`Failed to save initial value as last good state for ${key}`, e);
+      }
+      
       return initialValue;
     }
     
-    // For existing users with data problems, default to empty but structured data
-    // instead of potentially destructive demo data
-    console.log(`Using empty fallback for ${key} (NOT using demo data)`);
+    console.log(`No valid data found for ${key}, showing empty state with recovery options`);
     
     // Return empty data of same type instead of initialValue
     if (Array.isArray(initialValue)) {
@@ -95,6 +120,18 @@ export function useLocalStorageState<T>(
     if (state === undefined || state === null) return;
     
     console.log(`Saving ${key} to localStorage`);
+    
+    // First, attempt to validate if state is good
+    const isGoodState = validateState(state);
+    
+    if (isGoodState) {
+      // Store as last known good state
+      try {
+        localStorage.setItem(`${key}_last_good`, JSON.stringify(state));
+      } catch (e) {
+        console.error(`Failed to save last good state for ${key}`, e);
+      }
+    }
     
     // Create a version backup before saving new data
     try {
@@ -143,4 +180,24 @@ export function useLocalStorageState<T>(
   }, [state, key]);
   
   return [state, setState];
+}
+
+/**
+ * Validates if state is in a good condition
+ * Currently just checks that it's not null/undefined and for arrays, that it's actually an array
+ */
+function validateState(state: any): boolean {
+  if (state === null || state === undefined) {
+    return false;
+  }
+  
+  if (Array.isArray(state)) {
+    return true;
+  }
+  
+  if (typeof state === 'object') {
+    return Object.keys(state).length > 0;
+  }
+  
+  return true;
 }

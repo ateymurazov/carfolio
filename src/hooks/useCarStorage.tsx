@@ -19,44 +19,84 @@ export function useCarStorage(): CarStorageState & {
   const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
   const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
   
-  // Safety check - recover from null/undefined but NEVER reset to initial data automatically
+  // Safety check - recover from null/undefined using last known good state
   if (cars === null || cars === undefined) {
-    console.error("Critical error: cars state is null/undefined. Attempting recovery...");
+    console.error("Critical error: cars state is null/undefined. Attempting recovery from last known good state...");
     
-    // Try to recover from previous state or backups
+    // Try to recover from last known good state
     try {
-      const prevCars = localStorage.getItem('cars_prev');
-      if (prevCars) {
-        console.log("Recovering cars from previous state");
-        setCars(JSON.parse(prevCars));
+      const lastGoodState = localStorage.getItem('cars_last_good');
+      if (lastGoodState) {
+        console.log("Recovering cars from last known good state");
+        setCars(JSON.parse(lastGoodState));
       } else {
-        // Use empty array instead of initialCars to avoid auto-reset
-        console.warn("No previous state found, using empty cars array");
-        setCars([]);
+        const prevCars = localStorage.getItem('cars_prev');
+        if (prevCars) {
+          console.log("Recovering cars from previous state");
+          setCars(JSON.parse(prevCars));
+        } else {
+          // Check if it's first run by checking localStorage size
+          const isFirstRun = localStorage.length === 0;
+          // Use initial data for first run only
+          setCars(isFirstRun ? initialCars : []);
+          
+          if (!isFirstRun) {
+            console.warn("No previous or good state found. Will display empty state with recovery option.");
+          }
+        }
       }
     } catch (e) {
       console.error("Recovery failed:", e);
-      setCars([]);
+      // Check if it's first run
+      const isFirstRun = localStorage.length === 0;
+      setCars(isFirstRun ? initialCars : []);
+    }
+  } else {
+    // Store current valid state as last known good state
+    try {
+      localStorage.setItem('cars_last_good', JSON.stringify(cars));
+    } catch (e) {
+      console.error("Failed to save last good state for cars:", e);
     }
   }
   
   // Similarly for collections
   if (collections === null || collections === undefined) {
-    console.error("Critical error: collections state is null/undefined. Attempting recovery...");
+    console.error("Critical error: collections state is null/undefined. Attempting recovery from last known good state...");
     
     try {
-      const prevCollections = localStorage.getItem('collections_prev');
-      if (prevCollections) {
-        console.log("Recovering collections from previous state");
-        setCollections(JSON.parse(prevCollections));
+      const lastGoodState = localStorage.getItem('collections_last_good');
+      if (lastGoodState) {
+        console.log("Recovering collections from last known good state");
+        setCollections(JSON.parse(lastGoodState));
       } else {
-        // Use empty array instead of initialCollections to avoid auto-reset
-        console.warn("No previous state found, using empty collections array");
-        setCollections([]);
+        const prevCollections = localStorage.getItem('collections_prev');
+        if (prevCollections) {
+          console.log("Recovering collections from previous state");
+          setCollections(JSON.parse(prevCollections));
+        } else {
+          // Check if it's first run
+          const isFirstRun = localStorage.length === 0;
+          // Use initial data for first run only
+          setCollections(isFirstRun ? initialCollections : []);
+          
+          if (!isFirstRun) {
+            console.warn("No previous or good state found. Will display empty state with recovery option.");
+          }
+        }
       }
     } catch (e) {
       console.error("Recovery failed:", e);
-      setCollections([]);
+      // Check if it's first run
+      const isFirstRun = localStorage.length === 0;
+      setCollections(isFirstRun ? initialCollections : []);
+    }
+  } else {
+    // Store current valid state as last known good state
+    try {
+      localStorage.setItem('collections_last_good', JSON.stringify(collections));
+    } catch (e) {
+      console.error("Failed to save last good state for collections:", e);
     }
   }
   
@@ -133,8 +173,24 @@ export function useCarStorage(): CarStorageState & {
   return {
     cars,
     collections,
-    updateCars: setCars,
-    updateCollections: setCollections,
+    updateCars: (newCars: Car[]) => {
+      setCars(newCars);
+      // Update last known good state when we explicitly update
+      try {
+        localStorage.setItem('cars_last_good', JSON.stringify(newCars));
+      } catch (e) {
+        console.error("Failed to save last good state for cars:", e);
+      }
+    },
+    updateCollections: (newCollections: Collection[]) => {
+      setCollections(newCollections);
+      // Update last known good state when we explicitly update
+      try {
+        localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
+      } catch (e) {
+        console.error("Failed to save last good state for collections:", e);
+      }
+    },
     backupData,
     restoreInitialData
   };
