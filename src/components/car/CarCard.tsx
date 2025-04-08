@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
@@ -11,17 +11,9 @@ interface CarCardProps {
 
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
-  const [imageError, setImageError] = useState(false);
   
-  // Determine which image to display - use the first image or placeholder
-  const carImage = !car.images?.length || imageError
-    ? "/placeholder.svg"
-    : car.images[0];
-  
-  const handleImageError = () => {
-    console.log(`CarCard: Image error for car: ${car.id}`);
-    setImageError(true);
-  };
+  // Use the first image or placeholder, without complex state handling
+  const carImage = !car.images?.length ? "/placeholder.svg" : car.images[0];
   
   return (
     <div 
@@ -33,7 +25,10 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
-          onError={handleImageError}
+          onError={(e) => {
+            // Simple error handling - fallback to placeholder
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
       </div>
       <div className="p-4">

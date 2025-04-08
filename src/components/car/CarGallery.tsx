@@ -106,15 +106,16 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                     {index + 1} / {displayImages.length}
                   </div>
                   {image !== "/placeholder.svg" && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => handleDeleteImage(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="absolute top-2 right-2">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleDeleteImage(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CarouselItem>
@@ -126,10 +127,10 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
         
         <div className="flex gap-2 overflow-x-auto pb-2">
           {displayImages.map((image, index) => (
-            <button
+            <div
               key={index}
               className={cn(
-                "relative w-20 h-16 flex-shrink-0 rounded border transition-opacity group",
+                "relative w-20 h-16 flex-shrink-0 rounded border transition-opacity group cursor-pointer",
                 currentImageIndex === index 
                   ? "border-primary" 
                   : "hover:opacity-80"
@@ -143,20 +144,22 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                 onError={() => handleImageError(index)}
               />
               {image !== "/placeholder.svg" && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-0 right-0 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteImage(index);
-                  }}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+                <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteImage(index);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
               )}
-            </button>
+            </div>
           ))}
         </div>
       </div>
@@ -174,15 +177,16 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
           onError={() => handleImageError(0)}
         />
         {displayImages[0] !== "/placeholder.svg" && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2"
-            onClick={() => handleDeleteImage(0)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="absolute top-2 right-2">
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={() => handleDeleteImage(0)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
     </div>

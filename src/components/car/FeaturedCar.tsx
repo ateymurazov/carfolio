@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
@@ -15,20 +15,12 @@ interface FeaturedCarProps {
 export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   const navigate = useNavigate();
   const { getCollectionById } = useCarCollections();
-  const [imageError, setImageError] = useState(false);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
   // Simple image handling - use first image or placeholder
-  const carImage = !car.images?.length || imageError
-    ? "/placeholder.svg"
-    : car.images[0];
-  
-  const handleImageError = () => {
-    console.log(`FeaturedCar: Image error for featured car: ${car.id}`);
-    setImageError(true);
-  };
+  const carImage = !car.images?.length ? "/placeholder.svg" : car.images[0];
   
   return (
     <div className="flex flex-col space-y-4">
@@ -37,7 +29,10 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           src={carImage} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
-          onError={handleImageError}
+          onError={(e) => {
+            // Simple fallback
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
         <Badge className={cn(
           "absolute top-2 right-2 text-white",
