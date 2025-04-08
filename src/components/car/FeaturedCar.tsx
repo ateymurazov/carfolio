@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
-import { useImageStorage } from "@/hooks/useImageStorage";
 import { cn } from "@/lib/utils";
 
 interface FeaturedCarProps {
@@ -17,48 +16,14 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   const navigate = useNavigate();
   const { getCollectionById } = useCarCollections();
   const [imageError, setImageError] = useState(false);
-  const [loadedImage, setLoadedImage] = useState<string>("");
-  const imageStorage = useImageStorage();
-  
-  // Load image from storage when component mounts
-  useEffect(() => {
-    try {
-      if (car.images && car.images.length > 0) {
-        const imageId = car.images[0];
-        console.log(`FeaturedCar: Loading image for car ${car.id}, image ID: ${imageId}`);
-        
-        if (!imageId) {
-          console.log(`FeaturedCar: Image ID is empty or invalid for car ${car.id}`);
-          setImageError(true);
-          return;
-        }
-        
-        const img = imageStorage.getImage(imageId);
-        
-        if (!img || img === '/placeholder.svg') {
-          console.log(`FeaturedCar: Using placeholder for featured car ${car.id} - image not found in storage`);
-          setImageError(true);
-        } else {
-          console.log(`FeaturedCar: Successfully loaded image for car ${car.id}`);
-          setLoadedImage(img);
-        }
-      } else {
-        console.log(`FeaturedCar: No images available for car ${car.id}`);
-        setImageError(true);
-      }
-    } catch (error) {
-      console.error(`FeaturedCar: Failed to load image for featured car ${car.id}:`, error);
-      setImageError(true);
-    }
-  }, [car.images, car.id, imageStorage]);
   
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
-  // Placeholder car image if not provided or if there's an error
-  const carImage = imageError || !loadedImage || loadedImage === '/placeholder.svg'
+  // Simple image handling - use first image or placeholder
+  const carImage = !car.images?.length || imageError
     ? "/placeholder.svg"
-    : loadedImage;
+    : car.images[0];
   
   const handleImageError = () => {
     console.log(`FeaturedCar: Image error for featured car: ${car.id}`);

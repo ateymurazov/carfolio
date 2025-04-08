@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Car } from "@/types/car";
 import { CarCard } from "./CarCard";
 import { cn } from "@/lib/utils";
@@ -10,27 +10,19 @@ interface CarGridProps {
 }
 
 export const CarGrid = ({ cars, className }: CarGridProps) => {
-  const [validCars, setValidCars] = useState<Car[]>([]);
-  
-  // Filter out invalid cars
-  useEffect(() => {
-    // Make sure we have valid car data
-    const filtered = cars.filter(car => {
-      const isValid = car && car.id && car.make && car.model;
-      if (!isValid) {
-        console.warn(`CarGrid: Filtered out invalid car`, car);
-      }
-      return isValid;
-    });
-    
-    if (filtered.length !== cars.length) {
-      console.log(`CarGrid: Filtered out ${cars.length - filtered.length} invalid cars`);
+  // Filter out invalid cars inline rather than using state
+  const validCars = cars.filter(car => {
+    const isValid = car && car.id && car.make && car.model;
+    if (!isValid) {
+      console.warn(`CarGrid: Filtered out invalid car`, car);
     }
-    
-    console.log(`CarGrid: Rendering ${filtered.length} valid cars`);
-    setValidCars(filtered);
-  }, [cars]);
-
+    return isValid;
+  });
+  
+  if (validCars.length !== cars.length) {
+    console.log(`CarGrid: Filtered out ${cars.length - validCars.length} invalid cars`);
+  }
+  
   return (
     <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6", className)}>
       {validCars.map(car => (

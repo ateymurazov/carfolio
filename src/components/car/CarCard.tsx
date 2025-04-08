@@ -1,10 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
-import { useImageStorage } from "@/hooks/useImageStorage";
-import { toast } from "@/components/ui/use-toast";
 
 interface CarCardProps {
   car: CarType;
@@ -14,47 +12,11 @@ interface CarCardProps {
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   const [imageError, setImageError] = useState(false);
-  const [loadedImage, setLoadedImage] = useState<string>("");
-  const imageStorage = useImageStorage();
   
-  // Load image from storage when component mounts
-  useEffect(() => {
-    try {
-      if (car.images && car.images.length > 0) {
-        // Try to get the image from storage
-        const imageId = car.images[0];
-        console.log(`CarCard: Loading image for car ${car.id}, image ID: ${imageId}`);
-        
-        if (!imageId) {
-          console.log(`CarCard: Image ID is empty or invalid for car ${car.id}`);
-          setImageError(true);
-          return;
-        }
-        
-        const img = imageStorage.getImage(imageId);
-        
-        // Check if we got a placeholder back (indicating image not found)
-        if (!img || img === '/placeholder.svg') {
-          console.log(`CarCard: Using placeholder for car ${car.id} - image not found in storage`);
-          setImageError(true);
-        } else {
-          console.log(`CarCard: Successfully loaded image for car ${car.id}`);
-          setLoadedImage(img);
-        }
-      } else {
-        console.log(`CarCard: No images available for car ${car.id}`);
-        setImageError(true);
-      }
-    } catch (error) {
-      console.error(`CarCard: Failed to load image for car ${car.id}:`, error);
-      setImageError(true);
-    }
-  }, [car.images, car.id, imageStorage]);
-  
-  // Determine which image to display
-  const carImage = imageError || !loadedImage || loadedImage === '/placeholder.svg'
+  // Determine which image to display - use the first image or placeholder
+  const carImage = !car.images?.length || imageError
     ? "/placeholder.svg"
-    : loadedImage;
+    : car.images[0];
   
   const handleImageError = () => {
     console.log(`CarCard: Image error for car: ${car.id}`);

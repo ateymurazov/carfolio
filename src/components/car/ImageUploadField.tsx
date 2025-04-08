@@ -1,11 +1,9 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Button } from "../ui/button";
 import { ImagePlus, Trash2, Upload } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-import { useImageUpload } from "@/hooks/useImageUpload";
-import { useImageStorage } from "@/hooks/useImageStorage";
 import { toast } from "../ui/use-toast";
 
 interface ImageUploadFieldProps {
@@ -13,8 +11,108 @@ interface ImageUploadFieldProps {
 }
 
 export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
-  const { handleImageChange, removeImage, previewUrls } = useImageUpload(form, "images");
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   
+  // Sync previewUrls with form images on mount and when form changes
+  useEffect(() => {
+    const currentImages = form.getValues("images") || [];
+    setPreviewUrls(currentImages);
+  }, [form]);
+  
+  /**
+   * Handle image file selection
+   */
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Show loading toast for many images
+    let loadingToast;
+    if (files.length > 3) {
+      loadingToast = toast({
+        title: "Processing images",
+        description: `Uploading ${files.length} images, please wait...`,
+      });
+    }
+    
+    try {
+      const currentImages = form.getValues("images") || [];
+      const newImageUrls: string[] = [];
+      
+      // Read each file and create data URLs
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            const imageUrl = event.target.result.toString();
+            newImageUrls.push(imageUrl);
+            
+            // When all images are processed, update form and previews
+            if (newImageUrls.length === files.length) {
+              const allImages = [...currentImages, ...newImageUrls];
+              
+              form.setValue("images", allImages, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+              
+              setPreviewUrls(allImages);
+              
+              console.log(`Updated images with ${allImages.length} images`);
+              
+              // Dismiss loading toast if it exists
+              if (loadingToast) {
+                toast({
+                  title: "Images uploaded",
+                  description: `Successfully added ${files.length} images`,
+                });
+              }
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    } catch (error) {
+      console.error("Error processing images:", error);
+      toast({
+        title: "Error uploading images",
+        description: "Some images could not be processed. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  /**
+   * Remove an image at specified index
+   */
+  const removeImage = (index: number) => {
+    const currentImages = form.getValues("images") || [];
+    if (!Array.isArray(currentImages)) {
+      console.error("images is not an array", currentImages);
+      return;
+    }
+    
+    const updatedImages = [...currentImages];
+    updatedImages.splice(index, 1);
+    
+    // Update form value
+    form.setValue("images", updatedImages, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+    
+    // Update preview URLs
+    setPreviewUrls(updatedImages);
+    
+    console.log(`Removed image at index ${index}, ${updatedImages.length} remaining`);
+    
+    toast({
+      title: "Image removed",
+      description: `Image removed successfully. ${updatedImages.length} remaining.`,
+    });
+  };
+  
+  // Handle drag and drop
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -41,10 +139,6 @@ export const ImageUploadField = ({ form }: ImageUploadFieldProps) => {
     input.onchange = (e: any) => {
       if (e.target.files && e.target.files.length > 0) {
         handleImageChange(e);
-        toast({
-          title: "Images uploaded",
-          description: `${e.target.files.length} image${e.target.files.length > 1 ? 's' : ''} added`,
-        });
       }
     };
     input.click();
