@@ -1,3 +1,4 @@
+
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { initialCars, initialCollections } from "@/data/initialCarData";
@@ -12,7 +13,6 @@ export type CarStorageState = {
 export function useCarStorage(): CarStorageState & {
   updateCars: (cars: Car[]) => void;
   updateCollections: (collections: Collection[]) => void;
-  resetToInitialData: () => void;
   backupData: () => void;
 } {
   const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
@@ -56,53 +56,11 @@ export function useCarStorage(): CarStorageState & {
     }
   };
   
-  const resetToInitialData = () => {
-    console.warn('Resetting data to initial state', { 
-      initialCarsCount: initialCars.length, 
-      initialCollectionsCount: initialCollections.length 
-    });
-    
-    const confirmReset = window.confirm(
-      "Are you sure you want to reset all data to the initial state? This will replace all your current data."
-    );
-    
-    if (confirmReset) {
-      try {
-        const backupData = {
-          cars,
-          collections,
-          timestamp: new Date().toISOString(),
-          _autoBackupBeforeReset: true
-        };
-        
-        localStorage.setItem('autoBackup_beforeReset', JSON.stringify(backupData));
-        console.log("Auto-backup created before data reset");
-        
-        setCars(initialCars);
-        setCollections(initialCollections);
-        
-        toast({
-          title: "Data Reset",
-          description: "All data has been reset to the initial state. A backup was automatically created.",
-          variant: "default"
-        });
-      } catch (e) {
-        console.error("Failed to reset data:", e);
-        toast({
-          title: "Reset Failed",
-          description: "There was an error resetting the data.",
-          variant: "destructive"
-        });
-      }
-    }
-  };
-  
   return {
     cars,
     collections,
     updateCars: setCars,
     updateCollections: setCollections,
-    resetToInitialData,
     backupData
   };
 }
