@@ -1,4 +1,3 @@
-
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 
@@ -204,7 +203,7 @@ export const initialCars: Car[] = [
     collectionId: "c4",
     images: [
       "https://images.unsplash.com/photo-1619220277993-30f5c0913e6f?q=80&w=1000",
-      "/placeholder.svg",
+      "https://images.unsplash.com/photo-1626668038618-69147ac78162?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2023-09-15",
