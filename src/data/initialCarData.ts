@@ -87,8 +87,8 @@ export const initialCars: Car[] = [
     notes: "Hybrid V12 flagship with 1001 horsepower and carbon fiber monocoque chassis. Ad Personam customization package.",
     collectionId: "c2",
     images: [
+      "https://images.unsplash.com/photo-1584345604476-8ec5e12e42dd?q=80&w=1000",
       "https://images.unsplash.com/photo-1519245160502-92425b331e37?q=80&w=1000",
-      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2024-02-28",
@@ -109,8 +109,8 @@ export const initialCars: Car[] = [
     notes: "Limited production track-focused convertible with carbon fiber construction and active aerodynamics.",
     collectionId: "c2",
     images: [
-      "https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?q=80&w=1000",
-      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?q=80&w=1000",
+      "https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?q=80&w=1000",
+      "https://images.unsplash.com/photo-1657114773338-946c6e75be3c?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2023-08-22",
@@ -153,7 +153,7 @@ export const initialCars: Car[] = [
     notes: "Bespoke commission with Starlight Headliner, Gallery art installation, and rear theatre configuration.",
     collectionId: "c3",
     images: [
-      "https://images.unsplash.com/photo-1631295395858-b1c7b9e6a640?q=80&w=1000",
+      "https://images.unsplash.com/photo-1632548260498-3a795fad9067?q=80&w=1000",
       "https://images.unsplash.com/photo-1630777292473-a643d3fc4b5d?q=80&w=1000",
     ],
     status: "Available",
@@ -176,7 +176,7 @@ export const initialCars: Car[] = [
     collectionId: "c3",
     images: [
       "https://images.unsplash.com/photo-1580273916550-e323be2ae537?q=80&w=1000",
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1000",
+      "https://images.unsplash.com/photo-1621929747188-0b4dc28498d2?q=80&w=1000",
     ],
     status: "Available",
     acquisitionDate: "2023-09-18",
@@ -197,8 +197,8 @@ export const initialCars: Car[] = [
     notes: "Limited production hybrid hypercar with Weissach package. Complete service history and original documentation.",
     collectionId: "c2",
     images: [
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1000",
-      "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1000",
+      "https://images.unsplash.com/photo-1611016186353-9af58c69a533?q=80&w=1000",
+      "https://images.unsplash.com/photo-1582639510494-c80b5de9f148?q=80&w=1000",
     ],
     status: "Museum Display",
     acquisitionDate: "2022-11-05",
