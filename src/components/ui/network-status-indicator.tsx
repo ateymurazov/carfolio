@@ -22,7 +22,7 @@ export function NetworkStatusIndicator({
       if (showToast) {
         toast({
           title: "You're back online",
-          description: "Your changes will now sync with the server."
+          description: "Your connection has been restored."
         });
       }
     };
@@ -32,8 +32,7 @@ export function NetworkStatusIndicator({
       if (showToast) {
         toast({
           title: "You're offline",
-          description: "Working with local data. Changes will sync when you're back online.",
-          variant: "destructive"
+          description: "Your changes are saved locally."
         });
       }
     };
