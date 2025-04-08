@@ -29,10 +29,10 @@ export const DialogDeleteCar = ({
   const { getCarById, deleteCar } = useCarCollections();
   const car = getCarById(carId);
   
-  const handleDelete = () => {
+  const handleDelete = async () => {
     try {
       if (car) {
-        deleteCar(carId);
+        await deleteCar(carId);
         
         toast({
           title: "Car deleted",

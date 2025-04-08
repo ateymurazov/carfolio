@@ -1,23 +1,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, RefreshCw } from "lucide-react";
+import { Plus, Search, RefreshCw, Wifi, WifiOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { useCarStorage } from "@/hooks/useCarStorage";
 
 const CarInventory = () => {
-  // Initialize state before using context
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorState, setErrorState] = useState<Error | null>(null);
-  
-  // Get storage directly for restoration capability
-  const { restoreInitialData } = useCarStorage();
-  
   // Use try/catch to handle potential context errors
   let contextData: ReturnType<typeof useCarCollections> | null = null;
   
@@ -25,33 +17,22 @@ const CarInventory = () => {
     contextData = useCarCollections();
   } catch (error) {
     console.error("Error accessing car collections context:", error);
-    if (error instanceof Error) {
-      setErrorState(error);
-    } else {
-      setErrorState(new Error("Unknown error accessing car collections"));
-    }
   }
   
-  // Safely extract cars and collections from context
+  // Safely extract data from context
   const cars = contextData?.cars || [];
   const collections = contextData?.collections || [];
+  const isLoading = contextData?.isLoading || false;
+  const isOnline = contextData?.isOnline || navigator.onLine;
+  const refreshData = contextData?.refreshData;
   
   // Local state
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollection, setSelectedCollection] = useState<string>("all");
   const [isAddCarDialogOpen, setIsAddCarDialogOpen] = useState(false);
   
-  // Settle loading state after initial render
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
   // Show error state if context failed
-  if (errorState && !isLoading) {
+  if (!contextData) {
     return (
       <div className="space-y-6 p-6 animate-fade-in">
         <div>
@@ -97,28 +78,58 @@ const CarInventory = () => {
   return (
     <div className="space-y-6 p-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="flex items-center space-x-2">
           <h1 className="text-3xl font-semibold tracking-tight">Car Inventory</h1>
-          <p className="text-muted-foreground">Manage and view all cars in your collections.</p>
+          <div className={`ml-2 text-sm px-2 py-1 rounded-full flex items-center ${isOnline ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+            {isOnline ? (
+              <>
+                <Wifi className="h-3 w-3 mr-1" />
+                Online
+              </>
+            ) : (
+              <>
+                <WifiOff className="h-3 w-3 mr-1" />
+                Offline
+              </>
+            )}
+          </div>
         </div>
-        <Button 
-          size="sm"
-          className="bg-navy-800 w-full sm:w-auto"
-          onClick={() => {
-            if (!contextData) {
-              toast({
-                title: "Error",
-                description: "Cannot add cars at this time. Please refresh the page.",
-                variant: "destructive"
-              });
-              return;
-            }
-            setIsAddCarDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add Car
-        </Button>
+        <div className="flex space-x-2">
+          {refreshData && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => refreshData()}
+              disabled={!isOnline}
+              title={isOnline ? "Refresh data from server" : "Cannot refresh while offline"}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
+          <Button 
+            size="sm"
+            className="bg-navy-800 w-full sm:w-auto"
+            onClick={() => {
+              if (!contextData) {
+                toast({
+                  title: "Error",
+                  description: "Cannot add cars at this time. Please refresh the page.",
+                  variant: "destructive"
+                });
+                return;
+              }
+              setIsAddCarDialogOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add Car
+          </Button>
+        </div>
       </div>
+      
+      <p className="text-muted-foreground -mt-4">
+        Manage and view all cars in your collections.
+        {!isOnline && " Working in offline mode. Changes will sync when you're back online."}
+      </p>
       
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -173,44 +184,16 @@ const CarInventory = () => {
             </div>
             
             <div className="flex flex-col gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to restore the demo data? This will not affect any existing data you may have.')) {
-                    restoreInitialData();
-                  }
-                }}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" /> Restore Demo Data
-              </Button>
-              
-              {localStorage.getItem('cars_last_good') && (
+              {contextData.restoreInitialData && (
                 <Button 
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
-                    try {
-                      const lastGoodCars = localStorage.getItem('cars_last_good');
-                      const lastGoodCollections = localStorage.getItem('collections_last_good');
-                      
-                      if (lastGoodCars && lastGoodCollections && contextData) {
-                        contextData.updateCar(JSON.parse(lastGoodCars));
-                        contextData.updateCollection(JSON.parse(lastGoodCollections));
-                        toast({
-                          title: "Data Recovered",
-                          description: "Your last known good data has been restored.",
-                        });
-                      }
-                    } catch (e) {
-                      console.error("Failed to restore from last good state:", e);
-                      toast({
-                        title: "Recovery Failed",
-                        description: "Could not restore from last known good state.",
-                        variant: "destructive"
-                      });
+                    if (window.confirm('Are you sure you want to restore the demo data? This will not affect any existing data you may have.')) {
+                      contextData.restoreInitialData();
                     }
                   }}
                 >
-                  Restore Last Good State
+                  <RefreshCw className="mr-2 h-4 w-4" /> Restore Demo Data
                 </Button>
               )}
             </div>

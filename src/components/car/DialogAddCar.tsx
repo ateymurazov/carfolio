@@ -26,7 +26,6 @@ import {
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
 import { ImageUploadField } from "./ImageUploadField";
 import { DocumentUploadField } from "./DocumentUploadField";
-import { saveToStore } from "@/utils/indexedDBUtils";
 
 interface DialogAddCarProps {
   open: boolean;
@@ -39,7 +38,7 @@ export const DialogAddCar = ({
   onOpenChange,
   defaultCollectionId 
 }: DialogAddCarProps) => {
-  const { collections, addCar, cars } = useCarCollections();
+  const { collections, addCar } = useCarCollections();
   
   const form = useForm<CarFormValues>({
     resolver: zodResolver(carFormSchema),
@@ -65,7 +64,7 @@ export const DialogAddCar = ({
     },
   });
   
-  const onSubmit = (data: CarFormValues) => {
+  const onSubmit = async (data: CarFormValues) => {
     try {
       // Ensure documents have both required fields before adding to the car
       const validDocuments = (data.documents || []).filter(
@@ -96,11 +95,7 @@ export const DialogAddCar = ({
         documents: validDocuments,
       };
       
-      addCar(newCar);
-      
-      // Also directly save to IndexedDB as an extra safety measure
-      const newCars = [...cars, newCar];
-      saveToStore("cars", newCars);
+      await addCar(newCar);
       
       toast({
         title: "Car added",
