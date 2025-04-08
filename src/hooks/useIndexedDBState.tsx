@@ -44,14 +44,20 @@ export function useIndexedDBState<T>(
         const items = await getAllFromStore<T>(storeName);
         
         if (isMounted) {
-          if (items && (Array.isArray(items) ? items.length > 0 : !!items)) {
+          if (items && (
+            (Array.isArray(items) && items.length > 0) || 
+            (!Array.isArray(items) && items !== null && items !== undefined)
+          )) {
             console.log(`Found ${storeName} in IndexedDB:`, Array.isArray(items) ? 
               `${items.length} items` : 'value');
             
             if (Array.isArray(items)) {
               setState(items as unknown as T);
-            } else if (items[0]) {
+            } else if (Array.isArray(items[0])) {
+              // Handle nested array case
               setState(items[0] as unknown as T);
+            } else {
+              setState(items as unknown as T);
             }
             
             // Save as last known good state
@@ -59,10 +65,19 @@ export function useIndexedDBState<T>(
               const otherStore = storeName === "cars" ? "collections" : "cars";
               const otherItems = await getAllFromStore(otherStore);
               
+              // Make sure we're passing valid arrays to saveLastKnownGoodState
+              const itemsForBackup = Array.isArray(items) ? 
+                items : 
+                (Array.isArray(items[0]) ? items[0] : []);
+                
+              const otherItemsForBackup = Array.isArray(otherItems) ? 
+                otherItems : 
+                (Array.isArray(otherItems[0]) ? otherItems[0] : []);
+              
               if (storeName === "cars") {
-                saveLastKnownGoodState(items as any[], otherItems);
+                saveLastKnownGoodState(itemsForBackup as any[], otherItemsForBackup as any[]);
               } else {
-                saveLastKnownGoodState(otherItems, items as any[]);
+                saveLastKnownGoodState(otherItemsForBackup as any[], itemsForBackup as any[]);
               }
             }
             
@@ -73,11 +88,12 @@ export function useIndexedDBState<T>(
         // If no data in IndexedDB, try to recover from last known good state
         const lastGoodState = await getLastKnownGoodState();
         if (lastGoodState && isMounted) {
-          if (storeName === "cars" && lastGoodState.cars?.length > 0) {
+          if (storeName === "cars" && lastGoodState.cars && Array.isArray(lastGoodState.cars) && lastGoodState.cars.length > 0) {
             console.log(`Recovering ${storeName} from last known good state`);
             setState(lastGoodState.cars as unknown as T);
             return;
-          } else if (storeName === "collections" && lastGoodState.collections?.length > 0) {
+          } else if (storeName === "collections" && lastGoodState.collections && 
+              Array.isArray(lastGoodState.collections) && lastGoodState.collections.length > 0) {
             console.log(`Recovering ${storeName} from last known good state`);
             setState(lastGoodState.collections as unknown as T);
             return;
@@ -126,10 +142,16 @@ export function useIndexedDBState<T>(
             const otherStore = storeName === "cars" ? "collections" : "cars";
             const otherItems = await getAllFromStore(otherStore);
             
+            // Make sure we're passing valid arrays to saveLastKnownGoodState
+            const stateArray = Array.isArray(state) ? state as any[] : [state];
+            const otherItemsArray = Array.isArray(otherItems) ? 
+              otherItems as any[] : 
+              (Array.isArray(otherItems[0]) ? otherItems[0] as any[] : []);
+            
             if (storeName === "cars") {
-              await saveLastKnownGoodState(state as any[], otherItems);
+              await saveLastKnownGoodState(stateArray, otherItemsArray);
             } else {
-              await saveLastKnownGoodState(otherItems, state as any[]);
+              await saveLastKnownGoodState(otherItemsArray, stateArray);
             }
           }
         } else {

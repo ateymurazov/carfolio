@@ -98,17 +98,18 @@ export const getAllFromStore = async <T>(storeName: string): Promise<T> => {
       const request = store.getAll();
       
       request.onsuccess = () => {
+        // Always return the result directly, let the caller handle type checking
         resolve(request.result as T);
       };
       
       request.onerror = (event) => {
         console.error(`Error getting data from ${storeName}:`, event);
-        reject([]);
+        reject([] as unknown as T);
       };
     });
   } catch (error) {
     console.error(`Failed to get data from ${storeName}:`, error);
-    return [] as T;
+    return [] as unknown as T;
   }
 };
 
@@ -147,10 +148,14 @@ export const getLatestBackup = async (): Promise<{ cars: any[], collections: any
 // Save last known good state
 export const saveLastKnownGoodState = async (cars: any[], collections: any[]): Promise<boolean> => {
   try {
+    // Ensure we're working with arrays
+    const carsArray = Array.isArray(cars) ? cars : [];
+    const collectionsArray = Array.isArray(collections) ? collections : [];
+    
     const lastGoodState = {
       key: "lastGoodState",
-      cars,
-      collections,
+      cars: carsArray,
+      collections: collectionsArray,
       timestamp: Date.now()
     };
     
