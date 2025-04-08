@@ -12,7 +12,7 @@ interface CarCardProps {
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   
-  // Use the first image or placeholder, without complex state handling
+  // Use the first image or placeholder, super simple approach
   const carImage = !car.images?.length ? "/placeholder.svg" : car.images[0];
   
   return (
@@ -26,7 +26,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
           onError={(e) => {
-            // Simple error handling - fallback to placeholder
+            // Simple fallback to placeholder
             e.currentTarget.src = "/placeholder.svg";
           }}
         />

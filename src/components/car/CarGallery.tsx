@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Car } from "@/types/car";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ImageOff, Trash2 } from "lucide-react";
+import { ImageOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Carousel,
@@ -20,28 +20,11 @@ interface CarGalleryProps {
 
 export const CarGallery = ({ car }: CarGalleryProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const { updateCar } = useCarCollections();
   
-  // Filter out images with errors
-  const images = car.images?.filter((_, index) => !imageErrors[index]) || [];
+  // Simple image handling - use images array or placeholder
+  const images = car.images?.length ? car.images : ["/placeholder.svg"];
   
-  // If no valid images, show placeholder
-  const displayImages = images.length > 0 ? images : ["/placeholder.svg"];
-  
-  const handleImageError = (index: number) => {
-    console.log(`Image error in gallery: index ${index}`);
-    setImageErrors(prev => ({
-      ...prev,
-      [index]: true
-    }));
-    
-    // Reset to first image or placeholder if current image fails
-    if (index === currentImageIndex && displayImages.length > 1) {
-      setCurrentImageIndex(0);
-    }
-  };
-
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {
     if (!car.images || index >= car.images.length) {
@@ -73,11 +56,11 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     });
   };
   
-  // If using a placeholder image, show a different UI
-  if (displayImages.length === 1 && displayImages[0] === "/placeholder.svg") {
+  // If no images or using placeholder
+  if (images.length === 1 && images[0] === "/placeholder.svg") {
     return (
       <div className="space-y-4">
-        <div className="relative aspect-[16/9] flex items-center justify-center rounded-lg border bg-muted">
+        <div className="aspect-[16/9] flex items-center justify-center rounded-lg border bg-muted">
           <div className="text-center p-6">
             <ImageOff className="h-16 w-16 mx-auto text-muted-foreground mb-2" />
             <p className="text-muted-foreground">No images available for this car</p>
@@ -88,35 +71,35 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   }
   
   // For multiple images, use the carousel component
-  if (displayImages.length > 1) {
+  if (images.length > 1) {
     return (
       <div className="space-y-4">
         <Carousel className="w-full">
           <CarouselContent>
-            {displayImages.map((image, index) => (
+            {images.map((image, index) => (
               <CarouselItem key={index}>
                 <div className="aspect-[16/9] relative rounded-lg border overflow-hidden bg-secondary">
                   <img 
                     src={image}
                     alt={`${car.make} ${car.model} - Image ${index + 1}`}
                     className="h-full w-full object-contain"
-                    onError={() => handleImageError(index)}
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
                   />
                   <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs">
-                    {index + 1} / {displayImages.length}
+                    {index + 1} / {images.length}
                   </div>
-                  {image !== "/placeholder.svg" && (
-                    <div className="absolute top-2 right-2">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleDeleteImage(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="absolute top-2 right-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleDeleteImage(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CarouselItem>
             ))}
@@ -126,7 +109,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
         </Carousel>
         
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {displayImages.map((image, index) => (
+          {images.map((image, index) => (
             <div
               key={index}
               className={cn(
@@ -141,24 +124,24 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                 src={image} 
                 alt={`Thumbnail ${index + 1}`} 
                 className="h-full w-full object-cover rounded"
-                onError={() => handleImageError(index)}
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder.svg";
+                }}
               />
-              {image !== "/placeholder.svg" && (
-                <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="h-5 w-5"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteImage(index);
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
+              <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="h-5 w-5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteImage(index);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -171,12 +154,14 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     <div className="space-y-4">
       <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-secondary">
         <img 
-          src={displayImages[0]} 
+          src={images[0]} 
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-contain"
-          onError={() => handleImageError(0)}
+          onError={(e) => {
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
-        {displayImages[0] !== "/placeholder.svg" && (
+        {images[0] !== "/placeholder.svg" && (
           <div className="absolute top-2 right-2">
             <Button
               type="button"
