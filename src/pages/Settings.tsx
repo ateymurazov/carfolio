@@ -1,5 +1,5 @@
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, AlertCircle, Download, Upload, Database } from "lucide-react";
+import { InfoIcon, AlertCircle, Download, Upload, Database, HardDrive } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { exportDataToJson, parseImportedJson } from "@/utils/dataExportImport";
 import { clearLocalStorage, inspectLocalStorage } from "@/utils/localStorageUtils";
@@ -27,6 +27,43 @@ const Settings = () => {
   const { backupData } = useCarStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
+  const [storageUsage, setStorageUsage] = useState(0);
+
+  // Estimate storage usage on mount and when cars/collections change
+  useEffect(() => {
+    const checkStorageUsage = () => {
+      try {
+        let totalSize = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) {
+            const value = localStorage.getItem(key) || '';
+            totalSize += key.length + value.length;
+          }
+        }
+        
+        // Average browser localStorage limit is 5-10MB
+        // We'll use a conservative 5MB estimate
+        const estimatedLimit = 5 * 1024 * 1024; // 5MB in bytes
+        const usagePercentage = totalSize / estimatedLimit;
+        setStorageUsage(usagePercentage);
+        
+        // Warn the user if storage is running low
+        if (usagePercentage > 0.8) {
+          toast({
+            title: "Storage Space Low",
+            description: "Your browser storage is almost full. Consider exporting your data as a backup.",
+            variant: "destructive",
+          });
+        }
+      } catch (e) {
+        console.error('Error calculating storage usage:', e);
+        setStorageUsage(0);
+      }
+    };
+    
+    checkStorageUsage();
+  }, [cars, collections]);
 
   // Handle data export
   const handleExportData = () => {
@@ -124,6 +161,18 @@ const Settings = () => {
         </p>
       </div>
       
+      {/* Storage Usage Warning */}
+      {storageUsage > 0.7 && (
+        <Alert variant="destructive" className="mb-4">
+          <HardDrive className="h-4 w-4" />
+          <AlertTitle>Storage Space Low</AlertTitle>
+          <AlertDescription>
+            Your browser storage is {Math.round(storageUsage * 100)}% full. To prevent data loss, please export your data as a backup 
+            and consider clearing old backups.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
@@ -157,6 +206,24 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <h4 className="font-medium">Storage Usage</h4>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className={`h-2.5 rounded-full ${
+                      storageUsage > 0.9 ? 'bg-red-600' : 
+                      storageUsage > 0.7 ? 'bg-yellow-500' : 
+                      'bg-green-600'
+                    }`} 
+                    style={{ width: `${Math.min(100, Math.round(storageUsage * 100))}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Current storage usage: {Math.round(storageUsage * 100)}%
+                  {storageUsage > 0.7 && " (Running low)"}
+                </p>
+              </div>
+              
               <div className="space-y-3">
                 <h4 className="font-medium">Backup & Restore</h4>
                 <p className="text-sm text-muted-foreground">
@@ -267,3 +334,4 @@ const Settings = () => {
 };
 
 export default Settings;
+

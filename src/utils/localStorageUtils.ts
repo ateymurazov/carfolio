@@ -1,4 +1,3 @@
-
 /**
  * Utilities for safely working with localStorage
  */
@@ -85,10 +84,38 @@ export function saveToLocalStorage<T>(key: string, data: T): boolean {
         localStorage.setItem(`${key}_prev`, prevValue);
       }
     } catch (e) {
+      // If we can't create a backup due to storage constraints, just log and continue
       console.error(`Failed to create quick backup for ${key}`, e);
+      
+      // Try to free up space by removing older backups if we hit quota issues
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        console.warn('Storage quota exceeded, attempting to free up space');
+        cleanupOldBackups();
+      }
     }
     
-    localStorage.setItem(key, serialized);
+    // Now try to save the actual data
+    try {
+      localStorage.setItem(key, serialized);
+    } catch (saveError) {
+      // If we hit quota issues when saving the main data, take more drastic measures
+      if (saveError instanceof DOMException && saveError.name === 'QuotaExceededError') {
+        console.warn('Storage quota exceeded when saving main data, attempting emergency cleanup');
+        // Emergency cleanup - remove all version history, keep only essential data
+        cleanupAllVersionHistory();
+        
+        // Try again after cleanup
+        try {
+          localStorage.setItem(key, serialized);
+        } catch (retryError) {
+          console.error(`Failed to save ${key} even after cleanup:`, retryError);
+          return false;
+        }
+      } else {
+        console.error(`Error saving ${key} to localStorage:`, saveError);
+        return false;
+      }
+    }
     
     // Verify the data was stored correctly
     const verification = localStorage.getItem(key);
@@ -114,6 +141,66 @@ export function saveToLocalStorage<T>(key: string, data: T): boolean {
     }
     
     return false;
+  }
+}
+
+/**
+ * Attempts to free up space by removing non-essential backup data
+ */
+function cleanupOldBackups(): void {
+  try {
+    const keys = getLocalStorageKeys();
+    
+    // First remove all version history
+    keys.forEach(key => {
+      if (key.includes('_versions')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Then remove corrupted backups
+    keys.forEach(key => {
+      if (key.includes('_corrupted')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    // Keep only the most recent prev backup for each key
+    const mainKeys = new Set<string>();
+    keys.forEach(key => {
+      if (key.includes('_prev')) {
+        const mainKey = key.replace('_prev', '');
+        mainKeys.add(mainKey);
+      }
+    });
+    
+    console.log('Cleaned up old backups to free space');
+  } catch (e) {
+    console.error('Error during backup cleanup:', e);
+  }
+}
+
+/**
+ * More aggressive cleanup for emergency situations
+ * Removes all version history and keeps only essential data
+ */
+function cleanupAllVersionHistory(): void {
+  try {
+    const keys = getLocalStorageKeys();
+    
+    // Remove all backup and version data
+    keys.forEach(key => {
+      if (key.includes('_versions') || 
+          key.includes('_prev') || 
+          key.includes('_corrupted') ||
+          key.includes('emergency_backup')) {
+        localStorage.removeItem(key);
+      }
+    });
+    
+    console.log('Emergency cleanup: removed all version history and backups');
+  } catch (e) {
+    console.error('Error during emergency cleanup:', e);
   }
 }
 

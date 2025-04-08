@@ -52,11 +52,19 @@ export function useCarStorage(): CarStorageState & {
       setCars(isFirstRun ? initialCars : []);
     }
   } else {
-    // Store current valid state as last known good state
+    // Store current valid state as last known good state, but handle quota errors
     try {
       localStorage.setItem('cars_last_good', JSON.stringify(cars));
     } catch (e) {
+      // Don't let this critical failure affect the app
       console.error("Failed to save last good state for cars:", e);
+      
+      // If it's a quota error, try cleaning up
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        // If we can't save the last good state due to quota, that's a serious issue
+        // Just continue without crashing the app, but log it
+        console.warn("Storage nearly full - backup data being limited to conserve space");
+      }
     }
   }
   
@@ -92,27 +100,47 @@ export function useCarStorage(): CarStorageState & {
       setCollections(isFirstRun ? initialCollections : []);
     }
   } else {
-    // Store current valid state as last known good state
+    // Store current valid state as last known good state, but handle quota errors
     try {
       localStorage.setItem('collections_last_good', JSON.stringify(collections));
     } catch (e) {
       console.error("Failed to save last good state for collections:", e);
+      
+      // If it's a quota error, just log a warning and continue
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        console.warn("Storage nearly full - backup data being limited to conserve space");
+      }
     }
   }
   
   // Manual restore function for initial data - ONLY triggered explicitly by user
   const restoreInitialData = () => {
     try {
-      // Create backup of current data before resetting
-      const currentData = {
-        cars,
-        collections,
-        timestamp: new Date().toISOString(),
-        version: "pre-reset"
-      };
-      
-      localStorage.setItem('cars_pre_reset', JSON.stringify(cars));
-      localStorage.setItem('collections_pre_reset', JSON.stringify(collections));
+      // Create backup of current data before resetting, but handle quota exceeded
+      try {
+        const currentData = {
+          cars,
+          collections,
+          timestamp: new Date().toISOString(),
+          version: "pre-reset"
+        };
+        
+        localStorage.setItem('cars_pre_reset', JSON.stringify(cars));
+        localStorage.setItem('collections_pre_reset', JSON.stringify(collections));
+      } catch (backupError) {
+        console.error("Failed to backup current data before reset:", backupError);
+        // If backup fails, show a warning but continue with reset
+        toast({
+          title: "Backup Warning",
+          description: "Could not backup current data due to storage limits. Continue anyway?",
+          variant: "destructive"
+        });
+        
+        // Give user a chance to abort
+        if (!window.confirm("Storage is nearly full. Proceeding with reset might result in data loss. Continue anyway?")) {
+          return;
+        }
+      }
       
       // Now restore initial data
       setCars(initialCars);
@@ -120,7 +148,7 @@ export function useCarStorage(): CarStorageState & {
       
       toast({
         title: "Data Restored",
-        description: "Initial demo data has been restored. Your previous data was backed up.",
+        description: "Initial demo data has been restored.",
       });
     } catch (error) {
       console.error("Failed to restore initial data:", error);
@@ -179,7 +207,17 @@ export function useCarStorage(): CarStorageState & {
       try {
         localStorage.setItem('cars_last_good', JSON.stringify(newCars));
       } catch (e) {
+        // Don't crash if we can't update good state
         console.error("Failed to save last good state for cars:", e);
+        
+        if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+          // Warn user about storage issues
+          toast({
+            title: "Storage Warning",
+            description: "Your browser storage is nearly full. Consider exporting your data as a backup.",
+            variant: "destructive"
+          });
+        }
       }
     },
     updateCollections: (newCollections: Collection[]) => {
@@ -189,9 +227,19 @@ export function useCarStorage(): CarStorageState & {
         localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
       } catch (e) {
         console.error("Failed to save last good state for collections:", e);
+        
+        if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+          // Warn user about storage issues
+          toast({
+            title: "Storage Warning",
+            description: "Your browser storage is nearly full. Consider exporting your data as a backup.",
+            variant: "destructive"
+          });
+        }
       }
     },
     backupData,
     restoreInitialData
   };
 }
+

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { saveToLocalStorage, getFromLocalStorage } from "@/utils/localStorageUtils";
 
@@ -125,7 +124,7 @@ export function useLocalStorageState<T>(
     const isGoodState = validateState(state);
     
     if (isGoodState) {
-      // Store as last known good state
+      // Store as last known good state - prioritize this over versioning
       try {
         localStorage.setItem(`${key}_last_good`, JSON.stringify(state));
       } catch (e) {
@@ -133,43 +132,67 @@ export function useLocalStorageState<T>(
       }
     }
     
-    // Create a version backup before saving new data
+    // Try to create version backup, but handle quota issues gracefully
     try {
+      // First check if we have enough space for versioning
+      // If we're running out of space, skip version history to ensure data saves
       const existingData = localStorage.getItem(key);
       if (existingData) {
-        // Store the last 3 versions in a rotating buffer
-        const versionsKey = `${key}_versions`;
-        let versions = [];
-        
-        try {
-          const storedVersions = localStorage.getItem(versionsKey);
-          if (storedVersions) {
-            versions = JSON.parse(storedVersions);
+        const storageUsage = getStorageUsage();
+        // If storage is over 80% full, skip versioning to save space
+        if (storageUsage < 0.8) {
+          // Store just the last version to save space
+          const versionsKey = `${key}_versions`;
+          let versions = [];
+          
+          try {
+            const storedVersions = localStorage.getItem(versionsKey);
+            if (storedVersions) {
+              versions = JSON.parse(storedVersions);
+              // Keep only the most recent version to save space
+              if (versions.length > 0) {
+                versions = [versions[versions.length - 1]];
+              }
+            }
+          } catch (e) {
+            console.error(`Failed to parse versions for ${key}`, e);
+            // Reset versions array if we can't parse it
+            versions = [];
           }
-        } catch (e) {
-          console.error(`Failed to parse versions for ${key}`, e);
+          
+          // Add timestamp to this version
+          const versionWithMeta = {
+            data: existingData,
+            timestamp: new Date().toISOString()
+          };
+          
+          // Add to versions array, keep only the most recent version
+          versions = [versionWithMeta];
+          
+          // Try to save versions back to localStorage
+          try {
+            localStorage.setItem(versionsKey, JSON.stringify(versions));
+          } catch (versionSaveError) {
+            // If we can't save versions, log but continue
+            console.warn(`Skipping version history for ${key} due to storage limits`);
+          }
+        } else {
+          console.warn(`Storage usage high (${Math.round(storageUsage * 100)}%), skipping version history`);
+          
+          // Try to save just a quick backup
+          try {
+            localStorage.setItem(`${key}_prev`, existingData);
+          } catch (quickBackupError) {
+            console.warn(`Could not save quick backup for ${key}, storage may be full`);
+          }
         }
-        
-        // Add timestamp to this version
-        const versionWithMeta = {
-          data: existingData,
-          timestamp: new Date().toISOString()
-        };
-        
-        // Add to versions array, keep only last 3 versions
-        versions.push(versionWithMeta);
-        if (versions.length > 3) {
-          versions = versions.slice(-3);
-        }
-        
-        // Save versions back to localStorage
-        localStorage.setItem(versionsKey, JSON.stringify(versions));
       }
     } catch (e) {
       console.error(`Failed to create version backup for ${key}`, e);
+      // Continue with the actual data save even if versioning fails
     }
     
-    // Now save the new state
+    // Now save the new state - this is our top priority
     const success = saveToLocalStorage(key, state);
     if (success) {
       console.log(`Successfully saved ${key} to localStorage:`,
@@ -200,4 +223,29 @@ function validateState(state: any): boolean {
   }
   
   return true;
+}
+
+/**
+ * Estimate the current localStorage usage as a percentage (0-1)
+ */
+function getStorageUsage(): number {
+  try {
+    let totalSize = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const value = localStorage.getItem(key) || '';
+        totalSize += key.length + value.length;
+      }
+    }
+    
+    // Average browser localStorage limit is 5-10MB
+    // We'll use a conservative 5MB estimate
+    const estimatedLimit = 5 * 1024 * 1024; // 5MB in bytes
+    return totalSize / estimatedLimit;
+  } catch (e) {
+    console.error('Error calculating storage usage:', e);
+    // Return a moderate value that won't trigger extreme behavior
+    return 0.5;
+  }
 }
