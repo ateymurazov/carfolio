@@ -41,7 +41,8 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
           
           if (storedCars && storedCars.length > 0) {
             console.log("Found cars in IndexedDB, updating state");
-            updateCars(storedCars);
+            // Fix: Ensure we're passing a flat array of Car objects
+            updateCars(Array.isArray(storedCars[0]) ? storedCars[0] : storedCars);
             
             toast({
               title: "Data Recovery",
@@ -62,7 +63,8 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
           
           if (storedCollections && storedCollections.length > 0) {
             console.log("Found collections in IndexedDB, updating state");
-            updateCollections(storedCollections);
+            // Fix: Ensure we're passing a flat array of Collection objects
+            updateCollections(Array.isArray(storedCollections[0]) ? storedCollections[0] : storedCollections);
           }
         } catch (e) {
           console.error("Recovery attempt failed:", e);

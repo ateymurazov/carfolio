@@ -1,4 +1,3 @@
-
 /**
  * Utilities for working with IndexedDB
  */
@@ -90,7 +89,7 @@ export const saveToStore = async <T>(
 };
 
 // Get all items from a store
-export const getAllFromStore = async <T>(storeName: string): Promise<T[]> => {
+export const getAllFromStore = async <T>(storeName: string): Promise<T> => {
   try {
     const db = await initDB();
     return new Promise((resolve, reject) => {
@@ -99,7 +98,7 @@ export const getAllFromStore = async <T>(storeName: string): Promise<T[]> => {
       const request = store.getAll();
       
       request.onsuccess = () => {
-        resolve(request.result as T[]);
+        resolve(request.result as T);
       };
       
       request.onerror = (event) => {
@@ -109,7 +108,7 @@ export const getAllFromStore = async <T>(storeName: string): Promise<T[]> => {
     });
   } catch (error) {
     console.error(`Failed to get data from ${storeName}:`, error);
-    return [];
+    return [] as T;
   }
 };
 

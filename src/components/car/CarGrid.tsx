@@ -11,8 +11,11 @@ interface CarGridProps {
 }
 
 export const CarGrid = ({ cars, className }: CarGridProps) => {
+  // Ensure we're working with a valid array of cars
+  const carsArray = Array.isArray(cars) ? cars : [];
+  
   // Filter out invalid cars inline rather than using state
-  const validCars = cars.filter(car => {
+  const validCars = carsArray.filter(car => {
     const isValid = car && car.id && car.make && car.model;
     if (!isValid) {
       console.warn(`CarGrid: Filtered out invalid car`, car);
@@ -20,8 +23,8 @@ export const CarGrid = ({ cars, className }: CarGridProps) => {
     return isValid;
   });
   
-  if (validCars.length !== cars.length) {
-    console.log(`CarGrid: Filtered out ${cars.length - validCars.length} invalid cars`);
+  if (validCars.length !== carsArray.length) {
+    console.log(`CarGrid: Filtered out ${carsArray.length - validCars.length} invalid cars`);
   }
   
   return (
