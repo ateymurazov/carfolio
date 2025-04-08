@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { saveToLocalStorage, getFromLocalStorage } from "@/utils/localStorageUtils";
 
@@ -25,7 +26,7 @@ export function useLocalStorageState<T>(
         return parsedValue;
       }
     } catch (e) {
-      console.error(`Failed to parse stored ${key}, using initial data`, e);
+      console.error(`Failed to parse stored ${key}, attempting recovery`, e);
       
       // Create a backup of the corrupted data for potential recovery
       try {
@@ -37,11 +38,49 @@ export function useLocalStorageState<T>(
       } catch (backupErr) {
         console.error(`Failed to backup corrupted data for ${key}`, backupErr);
       }
+      
+      // Try to recover from versions or previous backups
+      try {
+        const versionsKey = `${key}_versions`;
+        const versionsData = localStorage.getItem(versionsKey);
+        
+        if (versionsData) {
+          const versions = JSON.parse(versionsData);
+          if (versions && Array.isArray(versions) && versions.length > 0) {
+            console.log(`Attempting recovery from ${key} version history`);
+            const latestVersion = versions[versions.length - 1];
+            if (latestVersion && latestVersion.data) {
+              const recoveredData = JSON.parse(latestVersion.data);
+              return recoveredData;
+            }
+          }
+        }
+        
+        // Try previous backup
+        const prevData = localStorage.getItem(`${key}_prev`);
+        if (prevData) {
+          console.log(`Recovering from ${key}_prev backup`);
+          return JSON.parse(prevData);
+        }
+      } catch (recoveryErr) {
+        console.error(`Recovery attempts for ${key} failed:`, recoveryErr);
+      }
     }
     
-    // If no existing data or parse failed, use initialValue
-    console.log(`No existing ${key} found, using initial data`);
-    return initialValue;
+    // Only use initialValue for new installations, never for data resets
+    // Check if this is a first-time use by looking for any storage keys
+    const hasExistingData = localStorage.length > 0;
+    
+    if (!hasExistingData) {
+      console.log(`First time use, initializing ${key} with provided initial data`);
+      return initialValue;
+    } else {
+      console.log(`Will NOT use initial data for ${key} even though none was found`);
+      // Return empty data of same type instead of initialValue
+      if (Array.isArray(initialValue)) return [] as unknown as T;
+      if (typeof initialValue === 'object') return {} as T;
+      return initialValue; // For primitives, just use the initialValue
+    }
   });
   
   // Save data to localStorage whenever it changes

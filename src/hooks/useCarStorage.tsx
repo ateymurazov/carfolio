@@ -15,8 +15,8 @@ export function useCarStorage(): CarStorageState & {
   updateCollections: (collections: Collection[]) => void;
   backupData: () => void;
 } {
-  const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
-  const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
+  const [cars, setCars] = useLocalStorageState<Car[]>('cars', []);
+  const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', []);
   
   // Safety check - NEVER reset to initial data automatically
   if (cars === null || cars === undefined) {
@@ -29,12 +29,14 @@ export function useCarStorage(): CarStorageState & {
         console.log("Recovering cars from previous state");
         setCars(JSON.parse(prevCars));
       } else {
-        // Only use initial data if absolutely necessary
-        console.warn("No previous state found, using initial cars data");
-        setCars(initialCars);
+        // Do NOT use initial data even if there's nothing else
+        console.warn("No previous state found, but will NOT use initial data");
+        setCars([]);
       }
     } catch (e) {
       console.error("Recovery failed:", e);
+      // Still don't reset to initial data
+      setCars([]);
     }
   }
   
@@ -48,12 +50,14 @@ export function useCarStorage(): CarStorageState & {
         console.log("Recovering collections from previous state");
         setCollections(JSON.parse(prevCollections));
       } else {
-        // Only use initial data if absolutely necessary
-        console.warn("No previous state found, using initial collections data");
-        setCollections(initialCollections);
+        // Do NOT use initial data even if there's nothing else
+        console.warn("No previous state found, but will NOT use initial data");
+        setCollections([]);
       }
     } catch (e) {
       console.error("Recovery failed:", e);
+      // Still don't reset to initial data
+      setCollections([]);
     }
   }
   
