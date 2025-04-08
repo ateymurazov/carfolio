@@ -26,6 +26,7 @@ import {
 import { AdditionalInfoFields } from "./AdditionalInfoFields";
 import { ImageUploadField } from "./ImageUploadField";
 import { DocumentUploadField } from "./DocumentUploadField";
+import { saveToStore } from "@/utils/indexedDBUtils";
 
 interface DialogAddCarProps {
   open: boolean;
@@ -38,7 +39,7 @@ export const DialogAddCar = ({
   onOpenChange,
   defaultCollectionId 
 }: DialogAddCarProps) => {
-  const { collections, addCar } = useCarCollections();
+  const { collections, addCar, cars } = useCarCollections();
   
   const form = useForm<CarFormValues>({
     resolver: zodResolver(carFormSchema),
@@ -71,7 +72,7 @@ export const DialogAddCar = ({
         doc => doc.name && doc.url
       ) as { name: string; url: string }[];
 
-      addCar({
+      const newCar = {
         id: crypto.randomUUID(),
         make: data.make,
         model: data.model,
@@ -93,7 +94,13 @@ export const DialogAddCar = ({
         owner: data.owner,
         value: data.value,
         documents: validDocuments,
-      });
+      };
+      
+      addCar(newCar);
+      
+      // Also directly save to IndexedDB as an extra safety measure
+      const newCars = [...cars, newCar];
+      saveToStore("cars", newCars);
       
       toast({
         title: "Car added",

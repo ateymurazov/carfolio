@@ -4,6 +4,7 @@ import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { useCarStorage } from "./useCarStorage";
 import { toast } from "@/components/ui/use-toast";
+import { getAllFromStore, saveToStore } from "@/utils/indexedDBUtils";
 
 // Define the context type
 interface CarCollectionsContextType {
@@ -30,75 +31,46 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
   
   // Stability check on mount - make sure we're not getting unexpected resets
   useEffect(() => {
-    if (cars.length === 0 && localStorage.getItem('cars')) {
-      console.error("Potential data loss detected: cars array is empty but localStorage has data");
-      
-      try {
-        // First try last known good state
-        const lastGoodCars = localStorage.getItem('cars_last_good');
-        if (lastGoodCars) {
-          console.log("Recovering cars data from last known good state");
-          const parsedCars = JSON.parse(lastGoodCars);
-          if (Array.isArray(parsedCars) && parsedCars.length > 0) {
-            updateCars(parsedCars);
-            
-            toast({
-              title: "Data Recovery",
-              description: "Detected and recovered your car data",
-            });
-            
-            return;
-          }
-        }
+    const checkDataIntegrity = async () => {
+      if (cars.length === 0) {
+        console.log("Cars array is empty, checking if we have data in IndexedDB");
         
-        // If last known good state fails, try direct localStorage
-        const storedCars = localStorage.getItem('cars');
-        if (storedCars) {
-          const parsedCars = JSON.parse(storedCars);
-          if (Array.isArray(parsedCars) && parsedCars.length > 0) {
-            console.log("Recovering cars data from localStorage directly");
-            updateCars(parsedCars);
+        try {
+          // Check if we have data in IndexedDB directly
+          const storedCars = await getAllFromStore<Car[]>("cars");
+          
+          if (storedCars && storedCars.length > 0) {
+            console.log("Found cars in IndexedDB, updating state");
+            updateCars(storedCars);
             
             toast({
               title: "Data Recovery",
               description: "Detected and recovered your car data",
             });
           }
+        } catch (e) {
+          console.error("Recovery attempt failed:", e);
         }
-      } catch (e) {
-        console.error("Recovery attempt failed:", e);
       }
-    }
+      
+      if (collections.length === 0) {
+        console.log("Collections array is empty, checking if we have data in IndexedDB");
+        
+        try {
+          // Check if we have data in IndexedDB directly
+          const storedCollections = await getAllFromStore<Collection[]>("collections");
+          
+          if (storedCollections && storedCollections.length > 0) {
+            console.log("Found collections in IndexedDB, updating state");
+            updateCollections(storedCollections);
+          }
+        } catch (e) {
+          console.error("Recovery attempt failed:", e);
+        }
+      }
+    };
     
-    // Similar check for collections
-    if (collections.length === 0 && localStorage.getItem('collections')) {
-      console.error("Potential data loss detected: collections array is empty but localStorage has data");
-      
-      try {
-        // First try last known good state
-        const lastGoodCollections = localStorage.getItem('collections_last_good');
-        if (lastGoodCollections) {
-          console.log("Recovering collections data from last known good state");
-          const parsedCollections = JSON.parse(lastGoodCollections);
-          if (Array.isArray(parsedCollections) && parsedCollections.length > 0) {
-            updateCollections(parsedCollections);
-            return;
-          }
-        }
-        
-        // If last known good state fails, try direct localStorage
-        const storedCollections = localStorage.getItem('collections');
-        if (storedCollections) {
-          const parsedCollections = JSON.parse(storedCollections);
-          if (Array.isArray(parsedCollections) && parsedCollections.length > 0) {
-            console.log("Recovering collections data from localStorage directly");
-            updateCollections(parsedCollections);
-          }
-        }
-      } catch (e) {
-        console.error("Recovery attempt failed:", e);
-      }
-    }
+    checkDataIntegrity();
   }, [cars, collections, updateCars, updateCollections]);
   
   // Car operations
@@ -113,24 +85,16 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
   const addCar = (car: Car) => {
     const newCars = [...cars, car];
     updateCars(newCars);
-    // Update last known good state
-    try {
-      localStorage.setItem('cars_last_good', JSON.stringify(newCars));
-    } catch (e) {
-      console.error("Failed to save last good state for cars:", e);
-    }
+    // Update store directly too for extra redundancy
+    saveToStore("cars", newCars);
   };
   
   const updateCar = (idOrCars: string | Car[], carUpdate?: Car) => {
     // Bulk update case
     if (Array.isArray(idOrCars)) {
       updateCars(idOrCars);
-      // Update last known good state
-      try {
-        localStorage.setItem('cars_last_good', JSON.stringify(idOrCars));
-      } catch (e) {
-        console.error("Failed to save last good state for cars:", e);
-      }
+      // Update store directly too
+      saveToStore("cars", idOrCars);
       return;
     }
     
@@ -139,24 +103,16 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
       console.log("Updating car:", idOrCars, carUpdate);
       const newCars = cars.map(c => c.id === idOrCars ? carUpdate : c);
       updateCars(newCars);
-      // Update last known good state
-      try {
-        localStorage.setItem('cars_last_good', JSON.stringify(newCars));
-      } catch (e) {
-        console.error("Failed to save last good state for cars:", e);
-      }
+      // Update store directly too
+      saveToStore("cars", newCars);
     }
   };
   
   const deleteCar = (id: string) => {
     const newCars = cars.filter(car => car.id !== id);
     updateCars(newCars);
-    // Update last known good state
-    try {
-      localStorage.setItem('cars_last_good', JSON.stringify(newCars));
-    } catch (e) {
-      console.error("Failed to save last good state for cars:", e);
-    }
+    // Update store directly too
+    saveToStore("cars", newCars);
   };
   
   // Collection operations
@@ -167,24 +123,16 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
   const addCollection = (collection: Collection) => {
     const newCollections = [...collections, collection];
     updateCollections(newCollections);
-    // Update last known good state
-    try {
-      localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
-    } catch (e) {
-      console.error("Failed to save last good state for collections:", e);
-    }
+    // Update store directly too
+    saveToStore("collections", newCollections);
   };
   
   const updateCollection = (idOrCollections: string | Collection[], collectionUpdate?: Collection) => {
     // Bulk update case
     if (Array.isArray(idOrCollections)) {
       updateCollections(idOrCollections);
-      // Update last known good state
-      try {
-        localStorage.setItem('collections_last_good', JSON.stringify(idOrCollections));
-      } catch (e) {
-        console.error("Failed to save last good state for collections:", e);
-      }
+      // Update store directly too
+      saveToStore("collections", idOrCollections);
       return;
     }
     
@@ -192,24 +140,16 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     if (idOrCollections && collectionUpdate) {
       const newCollections = collections.map(c => c.id === idOrCollections ? collectionUpdate : c);
       updateCollections(newCollections);
-      // Update last known good state
-      try {
-        localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
-      } catch (e) {
-        console.error("Failed to save last good state for collections:", e);
-      }
+      // Update store directly too
+      saveToStore("collections", newCollections);
     }
   };
   
   const deleteCollection = (id: string) => {
     const newCollections = collections.filter(collection => collection.id !== id);
     updateCollections(newCollections);
-    // Update last known good state
-    try {
-      localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
-    } catch (e) {
-      console.error("Failed to save last good state for collections:", e);
-    }
+    // Update store directly too
+    saveToStore("collections", newCollections);
   };
   
   // New method to handle merging imported data with existing data
@@ -254,13 +194,9 @@ export const CarCollectionsProvider = ({ children }: { children: ReactNode }) =>
     updateCollections(mergedCollections);
     updateCars(mergedCars);
     
-    // Update last known good states
-    try {
-      localStorage.setItem('cars_last_good', JSON.stringify(mergedCars));
-      localStorage.setItem('collections_last_good', JSON.stringify(mergedCollections));
-    } catch (e) {
-      console.error("Failed to save last good state after merging imported data:", e);
-    }
+    // Update stores directly too
+    saveToStore("collections", mergedCollections);
+    saveToStore("cars", mergedCars);
   };
   
   // Context value

@@ -2,8 +2,9 @@
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { initialCars, initialCollections } from "@/data/initialCarData";
-import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useIndexedDBState } from "@/hooks/useIndexedDBState";
 import { toast } from "@/components/ui/use-toast";
+import { saveBackup, clearAllData } from "@/utils/indexedDBUtils";
 
 export type CarStorageState = {
   cars: Car[];
@@ -16,131 +17,14 @@ export function useCarStorage(): CarStorageState & {
   backupData: () => void;
   restoreInitialData: () => void;
 } {
-  const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
-  const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
-  
-  // Safety check - recover from null/undefined using last known good state
-  if (cars === null || cars === undefined) {
-    console.error("Critical error: cars state is null/undefined. Attempting recovery from last known good state...");
-    
-    // Try to recover from last known good state
-    try {
-      const lastGoodState = localStorage.getItem('cars_last_good');
-      if (lastGoodState) {
-        console.log("Recovering cars from last known good state");
-        setCars(JSON.parse(lastGoodState));
-      } else {
-        const prevCars = localStorage.getItem('cars_prev');
-        if (prevCars) {
-          console.log("Recovering cars from previous state");
-          setCars(JSON.parse(prevCars));
-        } else {
-          // Check if it's first run by checking localStorage size
-          const isFirstRun = localStorage.length === 0;
-          // Use initial data for first run only
-          setCars(isFirstRun ? initialCars : []);
-          
-          if (!isFirstRun) {
-            console.warn("No previous or good state found. Will display empty state with recovery option.");
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Recovery failed:", e);
-      // Check if it's first run
-      const isFirstRun = localStorage.length === 0;
-      setCars(isFirstRun ? initialCars : []);
-    }
-  } else {
-    // Store current valid state as last known good state, but handle quota errors
-    try {
-      localStorage.setItem('cars_last_good', JSON.stringify(cars));
-    } catch (e) {
-      // Don't let this critical failure affect the app
-      console.error("Failed to save last good state for cars:", e);
-      
-      // If it's a quota error, try cleaning up
-      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-        // If we can't save the last good state due to quota, that's a serious issue
-        // Just continue without crashing the app, but log it
-        console.warn("Storage nearly full - backup data being limited to conserve space");
-      }
-    }
-  }
-  
-  // Similarly for collections
-  if (collections === null || collections === undefined) {
-    console.error("Critical error: collections state is null/undefined. Attempting recovery from last known good state...");
-    
-    try {
-      const lastGoodState = localStorage.getItem('collections_last_good');
-      if (lastGoodState) {
-        console.log("Recovering collections from last known good state");
-        setCollections(JSON.parse(lastGoodState));
-      } else {
-        const prevCollections = localStorage.getItem('collections_prev');
-        if (prevCollections) {
-          console.log("Recovering collections from previous state");
-          setCollections(JSON.parse(prevCollections));
-        } else {
-          // Check if it's first run
-          const isFirstRun = localStorage.length === 0;
-          // Use initial data for first run only
-          setCollections(isFirstRun ? initialCollections : []);
-          
-          if (!isFirstRun) {
-            console.warn("No previous or good state found. Will display empty state with recovery option.");
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Recovery failed:", e);
-      // Check if it's first run
-      const isFirstRun = localStorage.length === 0;
-      setCollections(isFirstRun ? initialCollections : []);
-    }
-  } else {
-    // Store current valid state as last known good state, but handle quota errors
-    try {
-      localStorage.setItem('collections_last_good', JSON.stringify(collections));
-    } catch (e) {
-      console.error("Failed to save last good state for collections:", e);
-      
-      // If it's a quota error, just log a warning and continue
-      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-        console.warn("Storage nearly full - backup data being limited to conserve space");
-      }
-    }
-  }
+  const [cars, setCars] = useIndexedDBState<Car[]>('cars', initialCars);
+  const [collections, setCollections] = useIndexedDBState<Collection[]>('collections', initialCollections);
   
   // Manual restore function for initial data - ONLY triggered explicitly by user
-  const restoreInitialData = () => {
+  const restoreInitialData = async () => {
     try {
-      // Create backup of current data before resetting, but handle quota exceeded
-      try {
-        const currentData = {
-          cars,
-          collections,
-          timestamp: new Date().toISOString(),
-          version: "pre-reset"
-        };
-        
-        localStorage.setItem('cars_pre_reset', JSON.stringify(cars));
-        localStorage.setItem('collections_pre_reset', JSON.stringify(collections));
-      } catch (backupError) {
-        console.error("Failed to backup current data before reset:", backupError);
-        // If backup fails, show a warning but continue with reset
-        toast({
-          title: "Backup Warning",
-          description: "Could not backup current data due to storage limits. Continue anyway?",
-          variant: "destructive"
-        });
-        
-        // Give user a chance to abort
-        if (!window.confirm("Storage is nearly full. Proceeding with reset might result in data loss. Continue anyway?")) {
-          return;
-        }
-      }
+      // Create backup of current data before resetting
+      await saveBackup(cars, collections);
       
       // Now restore initial data
       setCars(initialCars);
@@ -160,8 +44,12 @@ export function useCarStorage(): CarStorageState & {
     }
   };
   
-  const backupData = () => {
+  const backupData = async () => {
     try {
+      // Create a backup in IndexedDB
+      await saveBackup(cars, collections);
+      
+      // Create a downloadable backup file as well
       const backup = {
         cars,
         collections,
@@ -203,43 +91,11 @@ export function useCarStorage(): CarStorageState & {
     collections,
     updateCars: (newCars: Car[]) => {
       setCars(newCars);
-      // Update last known good state when we explicitly update
-      try {
-        localStorage.setItem('cars_last_good', JSON.stringify(newCars));
-      } catch (e) {
-        // Don't crash if we can't update good state
-        console.error("Failed to save last good state for cars:", e);
-        
-        if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-          // Warn user about storage issues
-          toast({
-            title: "Storage Warning",
-            description: "Your browser storage is nearly full. Consider exporting your data as a backup.",
-            variant: "destructive"
-          });
-        }
-      }
     },
     updateCollections: (newCollections: Collection[]) => {
       setCollections(newCollections);
-      // Update last known good state when we explicitly update
-      try {
-        localStorage.setItem('collections_last_good', JSON.stringify(newCollections));
-      } catch (e) {
-        console.error("Failed to save last good state for collections:", e);
-        
-        if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-          // Warn user about storage issues
-          toast({
-            title: "Storage Warning",
-            description: "Your browser storage is nearly full. Consider exporting your data as a backup.",
-            variant: "destructive"
-          });
-        }
-      }
     },
     backupData,
     restoreInitialData
   };
 }
-

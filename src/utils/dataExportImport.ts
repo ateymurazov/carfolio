@@ -1,7 +1,7 @@
 
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
-import { inspectLocalStorage } from "./localStorageUtils";
+import { saveToStore, saveBackup } from "./indexedDBUtils";
 
 export type ExportedData = {
   cars: Car[];
@@ -43,6 +43,9 @@ export function exportDataToJson(cars: Car[], collections: Collection[]): void {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
+    // Also save to IndexedDB as a backup
+    saveBackup(cars, collections);
+    
     console.log("Data exported successfully");
   } catch (error) {
     console.error("Failed to export data:", error);
@@ -70,6 +73,13 @@ export function parseImportedJson(file: File): Promise<ExportedData> {
         if (!isValidExportData(jsonData)) {
           reject(new Error("Invalid data format in the uploaded file"));
           return;
+        }
+        
+        // Save a backup of the imported data to IndexedDB
+        if (jsonData.cars && jsonData.collections) {
+          saveToStore("cars", jsonData.cars);
+          saveToStore("collections", jsonData.collections);
+          saveBackup(jsonData.cars, jsonData.collections);
         }
         
         resolve(jsonData);

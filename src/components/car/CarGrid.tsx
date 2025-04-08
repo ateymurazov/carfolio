@@ -3,6 +3,7 @@ import React from "react";
 import { Car } from "@/types/car";
 import { CarCard } from "./CarCard";
 import { cn } from "@/lib/utils";
+import { StorageUsageIndicator } from "@/components/ui/storage-indicator";
 
 interface CarGridProps {
   cars: Car[];
@@ -24,10 +25,13 @@ export const CarGrid = ({ cars, className }: CarGridProps) => {
   }
   
   return (
-    <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6", className)}>
-      {validCars.map(car => (
-        <CarCard key={car.id} car={car} />
-      ))}
-    </div>
+    <>
+      <StorageUsageIndicator />
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6", className)}>
+        {validCars.map(car => (
+          <CarCard key={car.id} car={car} />
+        ))}
+      </div>
+    </>
   );
 };
