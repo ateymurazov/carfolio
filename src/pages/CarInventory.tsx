@@ -1,18 +1,22 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { useCarStorage } from "@/hooks/useCarStorage";
 
 const CarInventory = () => {
   // Initialize state before using context
   const [isLoading, setIsLoading] = useState(true);
   const [errorState, setErrorState] = useState<Error | null>(null);
+  
+  // Get storage directly for restoration capability
+  const { restoreInitialData } = useCarStorage();
   
   // Use try/catch to handle potential context errors
   let contextData: ReturnType<typeof useCarCollections> | null = null;
@@ -149,13 +153,41 @@ const CarInventory = () => {
       {filteredCars.length > 0 ? (
         <CarGrid cars={filteredCars} />
       ) : (
-        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-          <p>No cars found.</p>
-          {contextData && (
-            <Button variant="link" onClick={() => setIsAddCarDialogOpen(true)}>
-              Add your first car
+        <div className="flex flex-col items-center justify-center h-64 bg-white p-6 rounded-lg shadow-sm border">
+          <p className="text-lg font-medium text-center mb-2">No cars found in your inventory</p>
+          
+          <div className="flex flex-col gap-4 mt-4 items-center">
+            {contextData && (
+              <Button 
+                onClick={() => setIsAddCarDialogOpen(true)} 
+                className="bg-navy-800"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Your First Car
+              </Button>
+            )}
+            
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-px w-16 bg-gray-200"></div>
+              <span className="text-sm text-gray-500">or</span>
+              <div className="h-px w-16 bg-gray-200"></div>
+            </div>
+            
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to restore the demo data? This is a manual reset.')) {
+                  restoreInitialData();
+                }
+              }}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Restore Demo Data
             </Button>
-          )}
+            
+            <p className="text-xs text-gray-500 max-w-md text-center mt-2">
+              This will add sample cars and collections to help you get started. 
+              Your current data will be backed up.
+            </p>
+          </div>
         </div>
       )}
       

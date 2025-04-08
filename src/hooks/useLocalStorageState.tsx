@@ -67,20 +67,27 @@ export function useLocalStorageState<T>(
       }
     }
     
-    // Only use initialValue for new installations, never for data resets
-    // Check if this is a first-time use by looking for any storage keys
-    const hasExistingData = localStorage.length > 0;
+    // First installation check - use initial data ONLY on fresh install
+    const isFirstInstall = localStorage.length === 0;
     
-    if (!hasExistingData) {
-      console.log(`First time use, initializing ${key} with provided initial data`);
+    if (isFirstInstall) {
+      console.log(`First-time app use detected. Initializing ${key} with demo data`);
       return initialValue;
-    } else {
-      console.log(`Will NOT use initial data for ${key} even though none was found`);
-      // Return empty data of same type instead of initialValue
-      if (Array.isArray(initialValue)) return [] as unknown as T;
-      if (typeof initialValue === 'object') return {} as T;
-      return initialValue; // For primitives, just use the initialValue
     }
+    
+    // For existing users with data problems, default to empty but structured data
+    // instead of potentially destructive demo data
+    console.log(`Using empty fallback for ${key} (NOT using demo data)`);
+    
+    // Return empty data of same type instead of initialValue
+    if (Array.isArray(initialValue)) {
+      return [] as unknown as T;
+    } else if (typeof initialValue === 'object' && initialValue !== null) {
+      return {} as T;
+    }
+    
+    // For primitives, return initialValue as safe fallback
+    return initialValue;
   });
   
   // Save data to localStorage whenever it changes

@@ -14,11 +14,12 @@ export function useCarStorage(): CarStorageState & {
   updateCars: (cars: Car[]) => void;
   updateCollections: (collections: Collection[]) => void;
   backupData: () => void;
+  restoreInitialData: () => void;
 } {
-  const [cars, setCars] = useLocalStorageState<Car[]>('cars', []);
-  const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', []);
+  const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
+  const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
   
-  // Safety check - NEVER reset to initial data automatically
+  // Safety check - recover from null/undefined but NEVER reset to initial data automatically
   if (cars === null || cars === undefined) {
     console.error("Critical error: cars state is null/undefined. Attempting recovery...");
     
@@ -29,13 +30,12 @@ export function useCarStorage(): CarStorageState & {
         console.log("Recovering cars from previous state");
         setCars(JSON.parse(prevCars));
       } else {
-        // Do NOT use initial data even if there's nothing else
-        console.warn("No previous state found, but will NOT use initial data");
+        // Use empty array instead of initialCars to avoid auto-reset
+        console.warn("No previous state found, using empty cars array");
         setCars([]);
       }
     } catch (e) {
       console.error("Recovery failed:", e);
-      // Still don't reset to initial data
       setCars([]);
     }
   }
@@ -50,16 +50,47 @@ export function useCarStorage(): CarStorageState & {
         console.log("Recovering collections from previous state");
         setCollections(JSON.parse(prevCollections));
       } else {
-        // Do NOT use initial data even if there's nothing else
-        console.warn("No previous state found, but will NOT use initial data");
+        // Use empty array instead of initialCollections to avoid auto-reset
+        console.warn("No previous state found, using empty collections array");
         setCollections([]);
       }
     } catch (e) {
       console.error("Recovery failed:", e);
-      // Still don't reset to initial data
       setCollections([]);
     }
   }
+  
+  // Manual restore function for initial data - ONLY triggered explicitly by user
+  const restoreInitialData = () => {
+    try {
+      // Create backup of current data before resetting
+      const currentData = {
+        cars,
+        collections,
+        timestamp: new Date().toISOString(),
+        version: "pre-reset"
+      };
+      
+      localStorage.setItem('cars_pre_reset', JSON.stringify(cars));
+      localStorage.setItem('collections_pre_reset', JSON.stringify(collections));
+      
+      // Now restore initial data
+      setCars(initialCars);
+      setCollections(initialCollections);
+      
+      toast({
+        title: "Data Restored",
+        description: "Initial demo data has been restored. Your previous data was backed up.",
+      });
+    } catch (error) {
+      console.error("Failed to restore initial data:", error);
+      toast({
+        title: "Restore Failed",
+        description: "There was an error restoring the initial data.",
+        variant: "destructive"
+      });
+    }
+  };
   
   const backupData = () => {
     try {
@@ -104,6 +135,7 @@ export function useCarStorage(): CarStorageState & {
     collections,
     updateCars: setCars,
     updateCollections: setCollections,
-    backupData
+    backupData,
+    restoreInitialData
   };
 }
