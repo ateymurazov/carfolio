@@ -1,4 +1,3 @@
-
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 
@@ -29,28 +28,6 @@ export const initialCollections: Collection[] = [
 
 // Initial mock cars data
 export const initialCars: Car[] = [
-  {
-    id: "car1",
-    make: "Porsche",
-    model: "911 GT3 RS",
-    year: "2023",
-    vin: "WP0AF2A97NS278031",
-    exteriorColor: "Racing Yellow",
-    interiorColor: "Black Leather/Alcantara",
-    transmission: "PDK",
-    condition: "Excellent",
-    mileage: 2850,
-    notes: "Track-focused variant with aerodynamic package and lightweight construction. Includes Weissach package and magnesium wheels.",
-    collectionId: "c1",
-    images: [
-      "https://images.unsplash.com/photo-1614162692292-7ac56d7f371e?q=80&w=1000",
-      "https://images.unsplash.com/photo-1580274437636-1c384e617897?q=80&w=1000",
-    ],
-    status: "Available",
-    acquisitionDate: "2023-08-15",
-    lastServiceDate: "2024-02-10",
-    value: 275000,
-  },
   {
     id: "car2",
     make: "Ferrari",
@@ -138,28 +115,6 @@ export const initialCars: Car[] = [
     acquisitionDate: "2023-11-10",
     lastServiceDate: "2024-03-05",
     value: 520000,
-  },
-  {
-    id: "car6",
-    make: "Rolls-Royce",
-    model: "Phantom VIII",
-    year: "2023",
-    vin: "SCA7M3ZA4PU123456",
-    exteriorColor: "Darkest Tungsten",
-    interiorColor: "Seashell/Navy",
-    transmission: "8-Speed Automatic",
-    condition: "New",
-    mileage: 380,
-    notes: "Bespoke commission with Starlight Headliner, Gallery art installation, and rear theatre configuration.",
-    collectionId: "c3",
-    images: [
-      "https://images.unsplash.com/photo-1632548260498-3a795fad9067?q=80&w=1000",
-      "https://images.unsplash.com/photo-1630777292473-a643d3fc4b5d?q=80&w=1000",
-    ],
-    status: "Available",
-    acquisitionDate: "2024-01-15",
-    lastServiceDate: "2024-02-28",
-    value: 580000,
   },
   {
     id: "car7",
