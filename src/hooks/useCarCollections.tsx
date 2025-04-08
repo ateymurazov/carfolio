@@ -1,8 +1,9 @@
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { useCarStorage } from "./useCarStorage";
+import { toast } from "@/components/ui/use-toast";
 
 // Define the context type
 interface CarCollectionsContextType {
@@ -26,6 +27,49 @@ const CarCollectionsContext = createContext<CarCollectionsContextType | undefine
 // Provider component
 export const CarCollectionsProvider = ({ children }: { children: ReactNode }) => {
   const { cars, collections, updateCars, updateCollections } = useCarStorage();
+  
+  // Stability check on mount - make sure we're not getting unexpected resets
+  useEffect(() => {
+    if (cars.length === 0 && localStorage.getItem('cars')) {
+      console.error("Potential data loss detected: cars array is empty but localStorage has data");
+      
+      try {
+        const storedCars = localStorage.getItem('cars');
+        if (storedCars) {
+          const parsedCars = JSON.parse(storedCars);
+          if (Array.isArray(parsedCars) && parsedCars.length > 0) {
+            console.log("Recovering cars data from localStorage directly");
+            updateCars(parsedCars);
+            
+            toast({
+              title: "Data Recovery",
+              description: "Detected and recovered your car data",
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Recovery attempt failed:", e);
+      }
+    }
+    
+    // Similar check for collections
+    if (collections.length === 0 && localStorage.getItem('collections')) {
+      console.error("Potential data loss detected: collections array is empty but localStorage has data");
+      
+      try {
+        const storedCollections = localStorage.getItem('collections');
+        if (storedCollections) {
+          const parsedCollections = JSON.parse(storedCollections);
+          if (Array.isArray(parsedCollections) && parsedCollections.length > 0) {
+            console.log("Recovering collections data from localStorage directly");
+            updateCollections(parsedCollections);
+          }
+        }
+      } catch (e) {
+        console.error("Recovery attempt failed:", e);
+      }
+    }
+  }, [cars, collections, updateCars, updateCollections]);
   
   // Car operations
   const getCarById = (id: string) => {

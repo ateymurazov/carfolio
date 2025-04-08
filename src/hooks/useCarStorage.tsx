@@ -18,6 +18,45 @@ export function useCarStorage(): CarStorageState & {
   const [cars, setCars] = useLocalStorageState<Car[]>('cars', initialCars);
   const [collections, setCollections] = useLocalStorageState<Collection[]>('collections', initialCollections);
   
+  // Safety check - NEVER reset to initial data automatically
+  if (cars === null || cars === undefined) {
+    console.error("Critical error: cars state is null/undefined. Attempting recovery...");
+    
+    // Try to recover from previous state or backups
+    try {
+      const prevCars = localStorage.getItem('cars_prev');
+      if (prevCars) {
+        console.log("Recovering cars from previous state");
+        setCars(JSON.parse(prevCars));
+      } else {
+        // Only use initial data if absolutely necessary
+        console.warn("No previous state found, using initial cars data");
+        setCars(initialCars);
+      }
+    } catch (e) {
+      console.error("Recovery failed:", e);
+    }
+  }
+  
+  // Similarly for collections
+  if (collections === null || collections === undefined) {
+    console.error("Critical error: collections state is null/undefined. Attempting recovery...");
+    
+    try {
+      const prevCollections = localStorage.getItem('collections_prev');
+      if (prevCollections) {
+        console.log("Recovering collections from previous state");
+        setCollections(JSON.parse(prevCollections));
+      } else {
+        // Only use initial data if absolutely necessary
+        console.warn("No previous state found, using initial collections data");
+        setCollections(initialCollections);
+      }
+    } catch (e) {
+      console.error("Recovery failed:", e);
+    }
+  }
+  
   const backupData = () => {
     try {
       const backup = {
