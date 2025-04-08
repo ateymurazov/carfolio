@@ -3,7 +3,7 @@ import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 import { useIndexedDBState } from "@/hooks/useIndexedDBState";
 import { initialCars, initialCollections } from "@/data/initialCarData";
-import { saveBackup } from "@/utils/indexedDBUtils";
+import { saveBackup, clearAllData } from "@/utils/indexedDBUtils";
 
 export type CarStorageState = {
   cars: Car[];
@@ -15,6 +15,7 @@ export function useCarStorage(): CarStorageState & {
   updateCollections: (collections: Collection[]) => Promise<void>;
   backupData: () => Promise<void>;
   restoreInitialData: () => Promise<void>;
+  syncWithInitialData: () => Promise<void>;
 } {
   const [cars, setCars] = useIndexedDBState<Car[]>('cars', initialCars);
   const [collections, setCollections] = useIndexedDBState<Collection[]>('collections', initialCollections);
@@ -46,12 +47,24 @@ export function useCarStorage(): CarStorageState & {
     return Promise.resolve();
   };
   
+  // New function to force synchronization with initial data
+  const syncWithInitialData = async () => {
+    // Clear IndexedDB to start fresh
+    await clearAllData();
+    // Set with initial data
+    setCars(initialCars);
+    setCollections(initialCollections);
+    console.log("Synchronized with initial data: ", initialCars.length, "cars and", initialCollections.length, "collections");
+    return Promise.resolve();
+  };
+  
   return {
     cars,
     collections,
     updateCars,
     updateCollections,
     backupData,
-    restoreInitialData
+    restoreInitialData,
+    syncWithInitialData
   };
 }

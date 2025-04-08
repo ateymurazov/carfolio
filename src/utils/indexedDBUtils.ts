@@ -233,10 +233,12 @@ export const clearAllData = async (): Promise<boolean> => {
       );
       
       transaction.oncomplete = () => {
+        console.log("Successfully cleared all data from IndexedDB");
         resolve(true);
       };
       
-      transaction.onerror = () => {
+      transaction.onerror = (error) => {
+        console.error("Failed to clear data:", error);
         resolve(false);
       };
       

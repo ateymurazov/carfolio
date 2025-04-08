@@ -8,6 +8,8 @@ import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { useCarStorage } from "@/hooks/useCarStorage";
+import { initialCars, initialCollections } from "@/data/initialCarData";
 
 const CarInventory = () => {
   // Use try/catch to handle potential context errors
@@ -18,6 +20,9 @@ const CarInventory = () => {
   } catch (error) {
     console.error("Error accessing car collections context:", error);
   }
+  
+  // Get direct access to storage for syncing
+  const carStorage = useCarStorage();
   
   // Safely extract data from context
   const cars = contextData?.cars || [];
@@ -30,6 +35,7 @@ const CarInventory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCollection, setSelectedCollection] = useState<string>("all");
   const [isAddCarDialogOpen, setIsAddCarDialogOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Show error state if context failed
   if (!contextData) {
@@ -49,6 +55,11 @@ const CarInventory = () => {
     );
   }
   
+  // Check if there's a discrepancy between loaded data and initial data
+  const hasDataDiscrepancy = 
+    cars.length !== initialCars.length || 
+    collections.length !== initialCollections.length;
+  
   // Filter cars based on search term and selected collection
   const filteredCars = cars.filter(car => {
     const matchesSearch = 
@@ -62,6 +73,29 @@ const CarInventory = () => {
     
     return matchesSearch && matchesCollection;
   });
+  
+  // Sync data function
+  const handleSyncData = async () => {
+    try {
+      setIsSyncing(true);
+      await carStorage.syncWithInitialData();
+      // Refresh the view by reloading the page
+      window.location.reload();
+      toast({
+        title: "Data Synchronized",
+        description: "The inventory has been synchronized with the initial data.",
+      });
+    } catch (error) {
+      console.error("Error syncing data:", error);
+      toast({
+        title: "Sync Failed",
+        description: "Failed to synchronize data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   
   // Show loading state
   if (isLoading) {
@@ -130,6 +164,25 @@ const CarInventory = () => {
         Manage and view all cars in your collections.
         {!isOnline && " Working in offline mode. Changes will sync when you're back online."}
       </p>
+      
+      {/* Data discrepancy notice */}
+      {hasDataDiscrepancy && (
+        <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center justify-between">
+          <p className="text-amber-800 text-sm">
+            There's a difference between displayed data ({cars.length} cars, {collections.length} collections) 
+            and expected data ({initialCars.length} cars, {initialCollections.length} collections).
+          </p>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-amber-800 border-amber-300 hover:bg-amber-100"
+            onClick={handleSyncData}
+            disabled={isSyncing}
+          >
+            {isSyncing ? "Syncing..." : "Sync Data"}
+          </Button>
+        </div>
+      )}
       
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row items-center gap-4">
