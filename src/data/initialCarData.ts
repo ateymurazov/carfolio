@@ -1,3 +1,4 @@
+
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 
@@ -42,7 +43,9 @@ export const initialCars: Car[] = [
     notes: "Pristine E34 M5, fully restored, custom wheels, sport suspension.",
     collectionId: "c1",
     images: [
-      "/lovable-uploads/d1f4df94-c3f5-4de4-918e-dbbe70a793a5.png"
+      "/lovable-uploads/d1f4df94-c3f5-4de4-918e-dbbe70a793a5.png",
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
+      "/lovable-uploads/de086db3-13d1-4f38-9f25-2a608cf98928.png"
     ],
     status: "Available",
     acquisitionDate: "2024-03-15",
@@ -63,7 +66,8 @@ export const initialCars: Car[] = [
     notes: "Speed model with all options, Naim audio, carbon ceramics.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/92cfa8a7-69b5-4107-928b-1bed42174b83.png"
+      "/lovable-uploads/92cfa8a7-69b5-4107-928b-1bed42174b83.png",
+      "/lovable-uploads/1a104497-ec7a-4891-8625-0dc41bad6a27.png"
     ],
     status: "Available",
     acquisitionDate: "2023-12-15",
@@ -85,7 +89,8 @@ export const initialCars: Car[] = [
     collectionId: "c3",
     images: [
       "/lovable-uploads/73730fa0-9001-4286-82e9-b2d5d966bf53.png",
-      "/lovable-uploads/31d4a65b-9d62-4562-b575-3182b0a90204.png"
+      "/lovable-uploads/31d4a65b-9d62-4562-b575-3182b0a90204.png",
+      "/lovable-uploads/80178203-11b3-472e-bff9-b0fad0f7924f.png" 
     ],
     status: "Available",
     acquisitionDate: "2024-02-28",
@@ -106,7 +111,9 @@ export const initialCars: Car[] = [
     notes: "Mulliner package, 22-inch wheels, diamond quilting, contrast stitching.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/314c55e5-5620-4244-abdc-db39bf433ccd.png"
+      "/lovable-uploads/314c55e5-5620-4244-abdc-db39bf433ccd.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
     ],
     status: "Available",
     acquisitionDate: "2024-01-15",
