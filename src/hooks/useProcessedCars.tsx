@@ -30,7 +30,7 @@ export function useProcessedCars(cars: Car[]) {
           if (imgId.includes('lovable-uploads')) {
             // Make sure it has the leading slash if needed
             const formattedPath = imgId.startsWith('/') ? imgId : `/${imgId}`;
-            console.log(`Formatted lovable-uploads path: ${formattedPath}`);
+            console.log(`Using lovable-uploads path: ${formattedPath}`);
             return formattedPath;
           }
           

@@ -32,7 +32,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     ? processedCar.resolvedImages 
     : ["/placeholder.svg"];
     
-  console.log(`CarGallery for ${car.id}: received ${images.length} images`);
+  console.log(`CarGallery for ${car.id}: received ${images.length} images`, images);
   
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {
