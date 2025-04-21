@@ -71,8 +71,8 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       canvas.width = 1280;
       canvas.height = 720;
 
-      // Create media stream from canvas
-      const stream = canvas.captureStream(30); // 30 FPS
+      // Create media stream from canvas - reduce FPS to 15 for slower video
+      const stream = canvas.captureStream(15); // Reduced from 30 to 15 FPS
       videoStreamRef.current = stream;
 
       // Check media recorder support
@@ -124,7 +124,9 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
       // Draw frames with car images
       let currentCarIndex = 0;
-      const totalFrames = cars.length * 60; // 2 seconds per car at 30fps
+      // Increase frames per car for slower transitions (4 seconds per car at 15fps = 60 frames)
+      const framesPerCar = 60;
+      const totalFrames = cars.length * framesPerCar;
       let frameCount = 0;
 
       const drawFrame = async () => {
@@ -208,7 +210,10 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
         // Check if we should continue or stop recording
         if (frameCount < totalFrames) {
-          requestAnimationFrame(drawFrame);
+          // Use setTimeout to slow down frame rate even more
+          setTimeout(() => {
+            requestAnimationFrame(drawFrame);
+          }, 100); // Add a 100ms delay between frames for smoother playback
         } else {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();

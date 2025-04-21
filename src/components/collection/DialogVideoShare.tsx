@@ -28,6 +28,7 @@ export const DialogVideoShare = ({
 }: DialogVideoShareProps) => {
   const [copying, setCopying] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
   
   // Reset video loaded state when dialog opens/closes or videoUrl changes
   useEffect(() => {
@@ -35,6 +36,13 @@ export const DialogVideoShare = ({
       setVideoLoaded(false);
     }
   }, [open, videoUrl]);
+  
+  // Set playback rate when video loads
+  useEffect(() => {
+    if (videoRef && videoUrl) {
+      videoRef.playbackRate = 0.7; // Slowing down the playback rate
+    }
+  }, [videoRef, videoUrl]);
   
   // Handle download of video
   const handleDownload = () => {
@@ -151,7 +159,7 @@ export const DialogVideoShare = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="my-4 flex flex-col items-center">
+        <div className="my-6 flex flex-col items-center">
           {videoUrl ? (
             <div className="w-full relative">
               {!videoLoaded && (
@@ -163,15 +171,21 @@ export const DialogVideoShare = ({
                 </div>
               )}
               <video
+                ref={setVideoRef}
                 src={videoUrl}
                 controls
-                className="w-full max-h-[400px] rounded-md"
+                className="w-full h-auto max-h-[500px] rounded-md object-contain border border-border"
                 onLoadedData={handleVideoLoad}
                 onCanPlay={() => setVideoLoaded(true)}
+                autoPlay
+                loop
               />
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Tip: The video will automatically loop. Use the video controls to pause or adjust playback.
+              </p>
             </div>
           ) : (
-            <div className="w-full h-[300px] bg-secondary flex items-center justify-center rounded-md">
+            <div className="w-full h-[300px] bg-secondary flex flex-col items-center justify-center rounded-md">
               <p className="text-muted-foreground">No video available</p>
               <p className="text-sm text-muted-foreground mt-2">Click the "Video Showcase" button to generate a video</p>
             </div>
@@ -251,7 +265,7 @@ export const DialogVideoShare = ({
           </div>
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="mt-6">
           <Button 
             variant="secondary" 
             onClick={() => onOpenChange(false)}
