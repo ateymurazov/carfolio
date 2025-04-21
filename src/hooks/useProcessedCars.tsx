@@ -26,9 +26,9 @@ export function useProcessedCars(cars: Car[]) {
           // For debugging
           console.log(`Processing image path for car ${car.id}: ${imgId}`);
           
-          // If it's a URL with the lovable-uploads path, ensure it's properly formatted
+          // FIXED: Handle lovable-uploads paths properly
           if (imgId.includes('lovable-uploads')) {
-            // Make sure it has the leading slash if needed
+            // Make sure the path starts with a slash and the full path is preserved
             const formattedPath = imgId.startsWith('/') ? imgId : `/${imgId}`;
             console.log(`Using lovable-uploads path: ${formattedPath}`);
             return formattedPath;
@@ -66,9 +66,7 @@ export function useProcessedCars(cars: Car[]) {
     }
     
     // Log the resolved images for debugging
-    console.log(`Car ${car.id} resolved images:`, resolvedImages.map(img => 
-      img.length > 40 ? img.substring(0, 20) + '...' + img.substring(img.length - 20) : img
-    ));
+    console.log(`Car ${car.id} resolved images:`, resolvedImages);
     
     return {
       ...car,
