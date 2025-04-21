@@ -166,12 +166,38 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
       // Pre-process the car data to resolve image references
       const processedCars = cars.map(car => {
-        // Get the actual image URLs if they're stored as IDs in imageStorage
-        const resolvedImages = car.images ? car.images.map(imgId => {
-          return typeof imgId === 'string' && !imgId.startsWith('data:') 
-            ? imageStorage.getImage(imgId) 
-            : imgId;
-        }) : [];
+        // Handle image loading more safely
+        let resolvedImages: string[] = [];
+        
+        if (car.images && car.images.length > 0) {
+          // Try to get images from storage
+          resolvedImages = car.images.map(imgId => {
+            if (typeof imgId === 'string') {
+              if (imgId.startsWith('data:')) {
+                return imgId;
+              } else {
+                try {
+                  // Use placeholder if image not found
+                  const img = imageStorage.getImage(imgId);
+                  if (img === '/placeholder.svg') {
+                    // Fallback to a sample image
+                    return `/placeholder.svg`;
+                  }
+                  return img;
+                } catch (e) {
+                  console.error(`Error loading image ${imgId}:`, e);
+                  return `/placeholder.svg`;
+                }
+              }
+            }
+            return '/placeholder.svg';
+          });
+        }
+        
+        // If no valid images, use a placeholder
+        if (resolvedImages.length === 0 || !resolvedImages.some(img => img !== '/placeholder.svg')) {
+          resolvedImages = ['/placeholder.svg'];
+        }
         
         return {
           ...car,
@@ -233,11 +259,9 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
         // Determine which image to show
         const hasImages = car.resolvedImages && car.resolvedImages.length > 0;
-        let imageSrc = null;
-        
-        if (hasImages) {
-          imageSrc = car.resolvedImages[currentImageIndex % car.resolvedImages.length];
-        }
+        const imageSrc = hasImages 
+          ? car.resolvedImages[currentImageIndex % car.resolvedImages.length] 
+          : '/placeholder.svg';
         
         // Draw car image
         return new Promise<void>((resolve) => {
