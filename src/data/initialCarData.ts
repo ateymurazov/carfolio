@@ -187,4 +187,3 @@ export const initialCars: Car[] = [
     value: 1850000,
   },
 ];
-
