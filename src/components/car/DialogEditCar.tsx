@@ -38,9 +38,10 @@ interface DialogEditCarProps {
   car: Car;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSaved?: () => void; // Add the optional onSaved callback prop
 }
 
-export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) => {
+export const DialogEditCar = ({ car, open, onOpenChange, onSaved }: DialogEditCarProps) => {
   const { collections, updateCar } = useCarCollections();
   
   const form = useForm<FormValues>({
@@ -103,6 +104,11 @@ export const DialogEditCar = ({ car, open, onOpenChange }: DialogEditCarProps) =
         description: `${data.year} ${data.make} ${data.model} has been updated.`,
         variant: "default",
       });
+      
+      // Call the onSaved callback if provided
+      if (onSaved) {
+        onSaved();
+      }
       
       onOpenChange(false);
     } catch (error) {
