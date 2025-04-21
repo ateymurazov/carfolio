@@ -22,6 +22,8 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     ? "/placeholder.svg" 
     : processedCar.resolvedImages[0];
   
+  console.log(`CarCard for ${car.id}: using image ${carImage.substring(0, 30)}...`);
+  
   return (
     <div 
       className={cn("bg-white border rounded-lg overflow-hidden shadow hover:shadow-md transition-all cursor-pointer", className)}
