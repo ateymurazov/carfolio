@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -36,11 +37,11 @@ export const DialogVideoShare = ({
     }
   }, [open, videoUrl]);
   
-  // Set extremely slow playback rate when video loads
+  // Set playback rate when video loads
   useEffect(() => {
     if (videoRef && videoUrl) {
-      // Using an extremely slow playback rate
-      videoRef.playbackRate = 0.3; // Much slower than previous 0.7
+      // Using a moderate playback rate - faster than before but still good for viewing
+      videoRef.playbackRate = 0.8; // Adjusted from 0.3 to 0.8 for better pacing
     }
   }, [videoRef, videoUrl]);
   
@@ -185,7 +186,7 @@ export const DialogVideoShare = ({
               />
               <div className="bg-muted/30 rounded p-2 mt-2">
                 <p className="text-sm text-foreground font-medium text-center">
-                  Video playback is intentionally slowed down for better viewing
+                  Video shows all available images for each car
                 </p>
                 <p className="text-xs text-muted-foreground text-center mt-1">
                   Use the video controls to adjust speed, pause, or replay sections

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
@@ -70,8 +71,8 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       canvas.width = 1280;
       canvas.height = 720;
 
-      // Create media stream from canvas with much lower FPS
-      const stream = canvas.captureStream(8); // Significantly reduced from 15 to 8 FPS
+      // Create media stream from canvas with balanced FPS
+      const stream = canvas.captureStream(12); // Adjusted from 8 to 12 FPS for better flow
       videoStreamRef.current = stream;
 
       // Check media recorder support
@@ -124,12 +125,19 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       // Start recording
       mediaRecorder.start();
 
-      // Draw frames with car images
-      let currentCarIndex = 0;
-      // Drastically increase frames per car for much slower transitions (8 seconds per car at 8fps = 64 frames)
-      const framesPerCar = 64;
-      const totalFrames = cars.length * framesPerCar;
+      // Calculate total frames needed
+      let totalImages = 0;
+      for (const car of cars) {
+        totalImages += Math.max(1, car.images?.length || 1); // At least one frame per car
+      }
+      
+      // Set frames per image for balanced speed
+      const framesPerImage = 30; // 30 frames at 12fps = 2.5 seconds per image
+      const totalFrames = totalImages * framesPerImage;
+      
       let frameCount = 0;
+      let currentCarIndex = 0;
+      let currentImageIndex = 0;
 
       const drawFrame = async () => {
         if (!ctx || !canvas) return;
@@ -141,17 +149,14 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         ctx.fillStyle = "#f8fafc";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        // Get current car
+        const car = cars[currentCarIndex];
+        
         // Draw collection title
         ctx.fillStyle = "#0f172a";
         ctx.font = "bold 48px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(collectionName, canvas.width / 2, 80);
-
-        // Calculate which car to show
-        currentCarIndex = Math.floor((frameCount / totalFrames) * cars.length);
-        if (currentCarIndex >= cars.length) currentCarIndex = cars.length - 1;
-
-        const car = cars[currentCarIndex];
 
         // Show progress
         setProgress(Math.floor((frameCount / totalFrames) * 100));
@@ -162,11 +167,17 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         ctx.textAlign = "center";
         ctx.fillText(`${car.make} ${car.model} (${car.year})`, canvas.width / 2, 150);
 
-        // Draw car image if available
+        // Determine which image to show for this car
+        let imageSrc = null;
         if (car.images && car.images.length > 0) {
+          imageSrc = car.images[currentImageIndex % car.images.length];
+        }
+
+        // Draw car image if available
+        if (imageSrc) {
           const img = new Image();
           img.crossOrigin = "anonymous";
-          img.src = car.images[0];
+          img.src = imageSrc;
           
           await new Promise((resolve) => {
             img.onload = () => {
@@ -210,12 +221,40 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
         frameCount++;
 
+        // Check if we need to move to the next image or car
+        if (frameCount % framesPerImage === 0) {
+          // Time to change image or car
+          if (car.images && car.images.length > 0) {
+            currentImageIndex++;
+            
+            // If we've shown all images for this car, move to next car
+            if (currentImageIndex >= car.images.length) {
+              currentImageIndex = 0;
+              currentCarIndex++;
+              
+              // If we've shown all cars, finish the video
+              if (currentCarIndex >= cars.length) {
+                currentCarIndex = 0;
+              }
+            }
+          } else {
+            // No images for this car, move to next car
+            currentCarIndex++;
+            currentImageIndex = 0;
+            
+            // If we've shown all cars, finish the video
+            if (currentCarIndex >= cars.length) {
+              currentCarIndex = 0;
+            }
+          }
+        }
+
         // Check if we should continue or stop recording
         if (frameCount < totalFrames) {
-          // Use setTimeout with much longer delay to dramatically slow down frame rate
+          // Use setTimeout with a balanced delay for smooth playback
           setTimeout(() => {
             requestAnimationFrame(drawFrame);
-          }, 250); // Increased from 100ms to 250ms for a much slower playback
+          }, 150); // Adjusted delay for smoother playback
         } else {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();
