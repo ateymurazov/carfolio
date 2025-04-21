@@ -29,6 +29,28 @@ export const initialCollections: Collection[] = [
 // Initial mock cars data
 export const initialCars: Car[] = [
   {
+    id: "car1",
+    make: "Porsche",
+    model: "911 GT3 RS",
+    year: "2023",
+    vin: "WP0AF2A97PS218402",
+    exteriorColor: "GT Silver Metallic",
+    interiorColor: "Black/Weissach Red",
+    transmission: "7-Speed PDK",
+    condition: "New",
+    mileage: 248,
+    notes: "Weissach Package, lightweight carbon fiber components, Michelin Pilot Sport Cup 2 R tires, 518 horsepower naturally aspirated engine.",
+    collectionId: "c2",
+    images: [
+      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=1000",
+      "https://images.unsplash.com/photo-1493397212122-2b85dda8106b?q=80&w=1000",
+    ],
+    status: "Available",
+    acquisitionDate: "2024-03-15",
+    lastServiceDate: "2024-04-01",
+    value: 368000,
+  },
+  {
     id: "car2",
     make: "Ferrari",
     model: "SF90 Stradale",
