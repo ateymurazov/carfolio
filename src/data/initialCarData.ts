@@ -42,8 +42,11 @@ export const initialCars: Car[] = [
     notes: "Weissach Package, lightweight carbon fiber components, Michelin Pilot Sport Cup 2 R tires, 518 horsepower naturally aspirated engine.",
     collectionId: "c2",
     images: [
-      "https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=1000",
-      "https://images.unsplash.com/photo-1493397212122-2b85dda8106b?q=80&w=1000",
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
+      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
     ],
     status: "Available",
     acquisitionDate: "2024-03-15",
