@@ -64,8 +64,10 @@ export const initialCars: Car[] = [
     notes: "Plug-in hybrid powertrain with 986 combined horsepower. Assetto Fiorano package and carbon fiber wheels.",
     collectionId: "c1",
     images: [
-      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
-      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png"
+      "/lovable-uploads/8515a281-9252-461a-b976-ec5b06a81ccf.png",
+      "/lovable-uploads/e7f2b02c-7103-4199-9b4f-027a73a68b43.png",
+      "/lovable-uploads/01029e1f-4e5b-498a-8161-81ee3b5cf67c.png",
+      "/lovable-uploads/27289c5d-f3f8-4c98-89de-dad53906db66.png"
     ],
     status: "Available",
     acquisitionDate: "2023-05-20",
