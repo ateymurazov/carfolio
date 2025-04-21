@@ -1,3 +1,4 @@
+
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 
@@ -42,9 +43,11 @@ export const initialCars: Car[] = [
     notes: "Weissach Package, lightweight carbon fiber components, Michelin Pilot Sport Cup 2 R tires, 518 horsepower naturally aspirated engine.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/9f0752ca-2169-4395-8c20-3c8141a873a0.png",
-      "/lovable-uploads/80178203-11b3-472e-bff9-b0fad0f7924f.png",
-      "/lovable-uploads/baeb68de-6685-4ba5-aafb-a30c7d7b2368.png"
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
+      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
     ],
     status: "Available",
     acquisitionDate: "2024-03-15",
@@ -65,7 +68,8 @@ export const initialCars: Car[] = [
     notes: "Rare E34 M5, full service history, completely original, BBS wheels.",
     collectionId: "c1",
     images: [
-      "/lovable-uploads/af02a3a8-4826-479d-9f17-b19a0f5cd73b.png"
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png"
     ],
     status: "Available",
     acquisitionDate: "2023-12-15",
@@ -86,9 +90,9 @@ export const initialCars: Car[] = [
     notes: "First Edition, Naim audio, rotating display, carbon ceramic brakes.",
     collectionId: "c3",
     images: [
-      "/lovable-uploads/9c9541e8-52dc-43e3-939c-3777f8b695df.png",
-      "/lovable-uploads/0109b8d7-f001-419d-8b87-45a9bf0fc11f.png",
-      "/lovable-uploads/1fc6d13b-5d6d-430c-bc60-2ab4f41bccf4.png"
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png"
     ],
     status: "Available",
     acquisitionDate: "2024-02-28",
@@ -109,8 +113,8 @@ export const initialCars: Car[] = [
     notes: "Authentic BMW Motorsport GTR, full racing history, extremely rare.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/1a104497-ec7a-4891-8625-0dc41bad6a27.png",
-      "/lovable-uploads/de086db3-13d1-4f38-9f25-2a608cf98928.png"
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png",
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png"
     ],
     status: "Museum Display",
     acquisitionDate: "2023-08-22",
@@ -131,11 +135,56 @@ export const initialCars: Car[] = [
     notes: "Rare color combination, all original, comprehensive service history.",
     collectionId: "c1",
     images: [
-      "/lovable-uploads/74081f62-bbdc-4e4f-825a-ac4169ae640f.png"
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png"
     ],
     status: "Available",
     acquisitionDate: "2023-11-10",
     lastServiceDate: "2024-03-05",
     value: 95000,
+  },
+  {
+    id: "car7",
+    make: "Aston Martin",
+    model: "DB11",
+    year: "2022",
+    vin: "SCFRMHAV6NGJ02548",
+    exteriorColor: "Magnetic Silver",
+    interiorColor: "Obsidian Black",
+    transmission: "8-Speed Automatic",
+    condition: "Excellent",
+    mileage: 8750,
+    notes: "Limited edition, twin-turbo V12, sport exhaust, carbon fiber package.",
+    collectionId: "c3",
+    images: [
+      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
+    ],
+    status: "Available",
+    acquisitionDate: "2023-10-18",
+    lastServiceDate: "2024-02-12",
+    value: 235000,
+  },
+  {
+    id: "car8",
+    make: "Lamborghini",
+    model: "Huracan STO",
+    year: "2023",
+    vin: "ZHWUJ5ZD7NLA16325",
+    exteriorColor: "Blue Laufey/California Orange",
+    interiorColor: "Nero Cosmus/Blu Delphinus",
+    transmission: "7-Speed LDF",
+    condition: "New",
+    mileage: 320,
+    notes: "Track-focused supercar, carbon fiber construction, aerodynamic enhancements, rear-wheel steering.",
+    collectionId: "c2",
+    images: [
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png"
+    ],
+    status: "Available",
+    acquisitionDate: "2024-01-05",
+    lastServiceDate: "2024-03-18",
+    value: 395000,
   }
 ];
