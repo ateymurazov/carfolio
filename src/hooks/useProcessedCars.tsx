@@ -27,6 +27,7 @@ export function useProcessedCars(cars: Car[]) {
           
           // Handle other URL types - only local paths or data URLs
           if (imgId.startsWith('data:') || imgId.startsWith('/')) {
+            console.log(`Using direct path: ${imgId}`);
             return imgId;
           }
           
