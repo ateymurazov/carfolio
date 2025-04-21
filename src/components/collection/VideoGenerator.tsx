@@ -12,12 +12,32 @@ interface VideoGeneratorProps {
 }
 
 export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGeneratorProps) => {
-  const [generating, setGenerating] = useState(false);
+  const [generating, setGenerating] = useState(true);
   const [progress, setProgress] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  // Start generating the video immediately when component mounts
+  useEffect(() => {
+    if (cars.length > 0) {
+      generateVideo();
+    } else {
+      toast({
+        title: "Cannot generate video",
+        description: "No cars available in this collection.",
+        variant: "destructive",
+      });
+      setGenerating(false);
+    }
+    // Clean up function
+    return () => {
+      if (videoStreamRef.current) {
+        videoStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   const generateVideo = async () => {
     if (!canvasRef.current || cars.length === 0) {
@@ -26,6 +46,7 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         description: "No cars available in this collection.",
         variant: "destructive",
       });
+      setGenerating(false);
       return;
     }
 
@@ -36,7 +57,15 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) {
+        toast({
+          title: "Video Generation Failed",
+          description: "Could not get canvas context.",
+          variant: "destructive",
+        });
+        setGenerating(false);
+        return;
+      }
 
       // Set canvas size
       canvas.width = 1280;
@@ -46,8 +75,35 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       const stream = canvas.captureStream(30); // 30 FPS
       videoStreamRef.current = stream;
 
+      // Check media recorder support
+      if (!window.MediaRecorder) {
+        toast({
+          title: "Browser Not Supported",
+          description: "Your browser doesn't support MediaRecorder API.",
+          variant: "destructive",
+        });
+        setGenerating(false);
+        return;
+      }
+
+      // Check if webm is supported
+      let mimeType = 'video/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        // Fallback to video/mp4 if webm is not supported
+        mimeType = 'video/mp4';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          toast({
+            title: "Format Not Supported",
+            description: "Your browser doesn't support video recording formats.",
+            variant: "destructive",
+          });
+          setGenerating(false);
+          return;
+        }
+      }
+
       // Create media recorder
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -57,7 +113,7 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         const videoUrl = URL.createObjectURL(blob);
         onVideoCreated(videoUrl);
         setGenerating(false);
@@ -147,12 +203,6 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         ctx.font = "24px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(`Condition: ${car.condition} | Mileage: ${car.mileage} miles`, canvas.width / 2, canvas.height - 80);
-        
-        // Draw frame counter for debug purposes
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "12px sans-serif";
-        ctx.textAlign = "right";
-        ctx.fillText(`Frame: ${frameCount}/${totalFrames}`, canvas.width - 20, canvas.height - 20);
 
         frameCount++;
 
@@ -160,7 +210,9 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         if (frameCount < totalFrames) {
           requestAnimationFrame(drawFrame);
         } else {
-          mediaRecorder.stop();
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            mediaRecorderRef.current.stop();
+          }
           if (videoStreamRef.current) {
             videoStreamRef.current.getTracks().forEach(track => track.stop());
           }
@@ -175,7 +227,7 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       setGenerating(false);
       toast({
         title: "Video Generation Failed",
-        description: "There was an error creating the video.",
+        description: "There was an error creating the video: " + (error instanceof Error ? error.message : String(error)),
         variant: "destructive",
       });
     }
@@ -186,26 +238,16 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       <div className="flex flex-col items-center">
         <canvas ref={canvasRef} className="hidden" />
         
-        {generating ? (
-          <div className="flex flex-col items-center gap-2 my-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p>Generating video: {progress}%</p>
-            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary rounded-full" 
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+        <div className="flex flex-col items-center gap-2 my-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p>Generating video: {progress}%</p>
+          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary rounded-full" 
+              style={{ width: `${progress}%` }}
+            />
           </div>
-        ) : (
-          <Button 
-            className="flex gap-2 items-center" 
-            onClick={generateVideo}
-          >
-            <Share2 className="h-4 w-4" />
-            Create Video Showcase
-          </Button>
-        )}
+        </div>
       </div>
     </div>
   );

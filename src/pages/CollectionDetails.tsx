@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { DialogVideoShare } from "@/components/collection/DialogVideoShare";
 import { VideoGenerator } from "@/components/collection/VideoGenerator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/use-toast";
 
 const CollectionDetails = () => {
   const { collectionId } = useParams<{collectionId: string}>();
@@ -27,18 +27,32 @@ const CollectionDetails = () => {
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
   const [isDeleteCollectionDialogOpen, setIsDeleteCollectionDialogOpen] = useState(false);
   const [isVideoShareDialogOpen, setIsVideoShareDialogOpen] = useState(false);
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   
-  // Filter cars based on search term
   const filteredCars = cars.filter(car => 
     car.make.toLowerCase().includes(searchTerm.toLowerCase()) || 
     car.model.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  // Handle video creation
   const handleVideoCreated = (url: string) => {
     setVideoUrl(url);
+    setIsGeneratingVideo(false);
     setIsVideoShareDialogOpen(true);
+  };
+  
+  const handleVideoShowcase = () => {
+    setVideoUrl(null);
+    
+    if (cars.length > 0) {
+      setIsGeneratingVideo(true);
+    } else {
+      toast({
+        title: "No Cars Available",
+        description: "Add cars to your collection before creating a video showcase.",
+        variant: "destructive"
+      });
+    }
   };
   
   if (!collection) {
@@ -101,11 +115,7 @@ const CollectionDetails = () => {
             <Button 
               variant="outline"
               className="w-full sm:w-auto"
-              onClick={() => {
-                // Reset video URL when creating a new video
-                setVideoUrl(null);
-                setIsVideoShareDialogOpen(true);
-              }}
+              onClick={handleVideoShowcase}
             >
               <Video className="mr-2 h-4 w-4" /> Video Showcase
             </Button>
@@ -113,7 +123,6 @@ const CollectionDetails = () => {
         </div>
       </div>
       
-      {/* Collection Stats */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
         <Card className="stats-card">
           <CardContent className="pt-6">
@@ -137,18 +146,18 @@ const CollectionDetails = () => {
         </Card>
       </div>
       
-      {/* Video Generator (Hidden) */}
-      <div className="hidden">
-        <VideoGenerator 
-          cars={cars}
-          collectionName={collection.name}
-          onVideoCreated={handleVideoCreated}
-        />
-      </div>
+      {isGeneratingVideo && (
+        <div className="mt-4">
+          <VideoGenerator 
+            cars={cars}
+            collectionName={collection.name}
+            onVideoCreated={handleVideoCreated}
+          />
+        </div>
+      )}
       
       <Separator />
       
-      {/* Search */}
       <div className="relative w-full sm:w-96">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
@@ -159,7 +168,6 @@ const CollectionDetails = () => {
         />
       </div>
       
-      {/* Car grid */}
       {filteredCars.length > 0 ? (
         <CarGrid cars={filteredCars} />
       ) : (
@@ -171,7 +179,6 @@ const CollectionDetails = () => {
         </div>
       )}
       
-      {/* Dialogs */}
       <DialogAddCar 
         open={isAddCarDialogOpen} 
         onOpenChange={setIsAddCarDialogOpen} 

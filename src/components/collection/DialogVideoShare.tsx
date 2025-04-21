@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import { Copy, Facebook, Twitter, Instagram, Youtube, Download } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface DialogVideoShareProps {
@@ -27,10 +27,25 @@ export const DialogVideoShare = ({
   collectionName 
 }: DialogVideoShareProps) => {
   const [copying, setCopying] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  
+  // Reset video loaded state when dialog opens/closes or videoUrl changes
+  useEffect(() => {
+    if (open && videoUrl) {
+      setVideoLoaded(false);
+    }
+  }, [open, videoUrl]);
   
   // Handle download of video
   const handleDownload = () => {
-    if (!videoUrl) return;
+    if (!videoUrl) {
+      toast({
+        title: "No Video Available",
+        description: "Generate a video first before downloading.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const link = document.createElement('a');
     link.href = videoUrl;
@@ -47,7 +62,14 @@ export const DialogVideoShare = ({
   
   // Handle copy of link
   const handleCopyLink = async () => {
-    if (!videoUrl) return;
+    if (!videoUrl) {
+      toast({
+        title: "No Video Available",
+        description: "Generate a video first before copying its link.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setCopying(true);
     try {
@@ -70,18 +92,16 @@ export const DialogVideoShare = ({
   
   // Handle social media shares
   const handleShare = (platform: string) => {
-    if (!videoUrl) return;
-    
-    // In a real app, you would implement proper sharing functionality
-    // For now, we'll simulate it with a toast
-    toast({
-      title: `Share to ${platform}`,
-      description: `In a production app, this would share to ${platform}.`,
-      variant: "default"
-    });
+    if (!videoUrl) {
+      toast({
+        title: "No Video Available",
+        description: "Generate a video first before sharing.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // For demonstration purposes, we'll open a new window simulating the share
-    // In a real implementation, you would use proper sharing APIs
     const text = encodeURIComponent(`Check out my ${collectionName} car collection showcase!`);
     let shareUrl = '';
     
@@ -116,6 +136,11 @@ export const DialogVideoShare = ({
     }
   };
   
+  // Handle video load event
+  const handleVideoLoad = () => {
+    setVideoLoaded(true);
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
@@ -128,14 +153,27 @@ export const DialogVideoShare = ({
         
         <div className="my-4 flex flex-col items-center">
           {videoUrl ? (
-            <video
-              src={videoUrl}
-              controls
-              className="w-full max-h-[400px] rounded-md"
-            />
+            <div className="w-full relative">
+              {!videoLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 z-10 rounded-md">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                    <p className="text-sm">Loading video...</p>
+                  </div>
+                </div>
+              )}
+              <video
+                src={videoUrl}
+                controls
+                className="w-full max-h-[400px] rounded-md"
+                onLoadedData={handleVideoLoad}
+                onCanPlay={() => setVideoLoaded(true)}
+              />
+            </div>
           ) : (
             <div className="w-full h-[300px] bg-secondary flex items-center justify-center rounded-md">
-              No video available
+              <p className="text-muted-foreground">No video available</p>
+              <p className="text-sm text-muted-foreground mt-2">Click the "Video Showcase" button to generate a video</p>
             </div>
           )}
         </div>
@@ -151,6 +189,7 @@ export const DialogVideoShare = ({
                 value={videoUrl || ''}
                 readOnly
                 className="flex-1"
+                placeholder="Video URL will appear here after generation"
               />
               <Button 
                 variant="outline" 
@@ -222,7 +261,9 @@ export const DialogVideoShare = ({
           <Button 
             onClick={handleDownload}
             disabled={!videoUrl}
+            className="gap-2"
           >
+            <Download className="h-4 w-4" />
             Download Video
           </Button>
         </DialogFooter>
