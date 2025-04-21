@@ -1,3 +1,4 @@
+
 import { Car } from "@/types/car";
 import { Collection } from "@/types/collection";
 
@@ -68,10 +69,7 @@ export const initialCars: Car[] = [
     collectionId: "c1",
     images: [
       "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
-      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
-      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
-      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
-      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png"
     ],
     status: "Available",
     acquisitionDate: "2023-05-20",
