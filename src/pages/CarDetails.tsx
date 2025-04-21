@@ -18,6 +18,7 @@ const CarDetails = () => {
   
   const [isEditCarDialogOpen, setIsEditCarDialogOpen] = useState(false);
   const [isDeleteCarDialogOpen, setIsDeleteCarDialogOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
   
   useEffect(() => {
     // Validate that carId is provided
@@ -42,7 +43,11 @@ const CarDetails = () => {
         variant: "destructive"
       });
       navigate("/inventory");
+      return;
     }
+    
+    // Force a refresh whenever we visit the page to ensure latest data
+    setRefreshKey(prev => prev + 1);
   }, [carId, getCarById, navigate]);
   
   // Get car from context
@@ -69,7 +74,7 @@ const CarDetails = () => {
   }
   
   return (
-    <div className="space-y-6 p-6 animate-fade-in">
+    <div className="space-y-6 p-6 animate-fade-in" key={refreshKey}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <Button 
           variant="outline" 
@@ -149,6 +154,7 @@ const CarDetails = () => {
         open={isEditCarDialogOpen} 
         onOpenChange={setIsEditCarDialogOpen} 
         car={car}
+        onSaved={() => setRefreshKey(prev => prev + 1)} // Refresh on save
       />
       
       <DialogDeleteCar 

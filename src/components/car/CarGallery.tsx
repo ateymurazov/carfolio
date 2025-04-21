@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Car } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { ImageOff, Trash2 } from "lucide-react";
@@ -22,6 +22,7 @@ interface CarGalleryProps {
 export const CarGallery = ({ car }: CarGalleryProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { updateCar } = useCarCollections();
+  const [galleryKey, setGalleryKey] = useState(0); // Add key for forced re-rendering
   
   // Process car to resolve images properly
   const processedCars = useProcessedCars([car]);
@@ -33,6 +34,12 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     : ["/placeholder.svg"];
     
   console.log(`CarGallery for ${car.id}: received ${images.length} images`, images);
+  
+  // Force re-render when car images change
+  useEffect(() => {
+    setGalleryKey(prev => prev + 1);
+    console.log(`CarGallery: Car ${car.id} images changed, refreshing gallery`);
+  }, [car.id, car.images]);
   
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {
@@ -82,7 +89,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   // For multiple images, use the carousel component
   if (images.length > 1) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" key={galleryKey}>
         <Carousel className="w-full">
           <CarouselContent>
             {images.map((image, index) => (
@@ -162,7 +169,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   
   // Single image display
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" key={galleryKey}>
       <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-secondary">
         <img 
           src={images[0]} 

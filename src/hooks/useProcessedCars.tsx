@@ -49,12 +49,16 @@ export function useProcessedCars(cars: Car[]) {
       resolvedImages = ['/placeholder.svg'];
     }
     
+    // Force refresh of the resolved images by creating a new array
+    // This ensures React detects the change and re-renders
+    const freshResolvedImages = [...resolvedImages];
+    
     // Log the resolved images for debugging
-    console.log(`Car ${car.id} resolved images:`, resolvedImages);
+    console.log(`Car ${car.id} resolved images:`, freshResolvedImages);
     
     return {
       ...car,
-      resolvedImages,
+      resolvedImages: freshResolvedImages,
     };
   });
 }

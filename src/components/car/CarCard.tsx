@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ interface CarCardProps {
 
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
+  const [cardKey, setCardKey] = useState(0);
   
   // Process car to get resolved images
   const processedCars = useProcessedCars([car]);
@@ -22,12 +23,18 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     ? "/placeholder.svg" 
     : processedCar.resolvedImages[0];
   
+  // Force re-render when car images change
+  useEffect(() => {
+    setCardKey(prev => prev + 1);
+  }, [car.id, car.images]);
+  
   console.log(`CarCard for ${car.id}: using image ${typeof carImage === 'string' ? carImage : 'undefined'}`);
   
   return (
     <div 
       className={cn("bg-white border rounded-lg overflow-hidden shadow hover:shadow-md transition-all cursor-pointer", className)}
       onClick={() => navigate(`/cars/${car.id}`)}
+      key={cardKey}
     >
       <div className="aspect-[16/9] bg-gray-200 relative">
         <img 
