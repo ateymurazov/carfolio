@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
@@ -71,8 +70,8 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       canvas.width = 1280;
       canvas.height = 720;
 
-      // Create media stream from canvas - reduce FPS to 15 for slower video
-      const stream = canvas.captureStream(15); // Reduced from 30 to 15 FPS
+      // Create media stream from canvas with much lower FPS
+      const stream = canvas.captureStream(8); // Significantly reduced from 15 to 8 FPS
       videoStreamRef.current = stream;
 
       // Check media recorder support
@@ -102,8 +101,11 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         }
       }
 
-      // Create media recorder
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      // Create media recorder with higher bitrate for quality
+      const mediaRecorder = new MediaRecorder(stream, { 
+        mimeType,
+        videoBitsPerSecond: 2500000 // Higher bitrate for better quality
+      });
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -124,8 +126,8 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
       // Draw frames with car images
       let currentCarIndex = 0;
-      // Increase frames per car for slower transitions (4 seconds per car at 15fps = 60 frames)
-      const framesPerCar = 60;
+      // Drastically increase frames per car for much slower transitions (8 seconds per car at 8fps = 64 frames)
+      const framesPerCar = 64;
       const totalFrames = cars.length * framesPerCar;
       let frameCount = 0;
 
@@ -210,10 +212,10 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
 
         // Check if we should continue or stop recording
         if (frameCount < totalFrames) {
-          // Use setTimeout to slow down frame rate even more
+          // Use setTimeout with much longer delay to dramatically slow down frame rate
           setTimeout(() => {
             requestAnimationFrame(drawFrame);
-          }, 100); // Add a 100ms delay between frames for smoother playback
+          }, 250); // Increased from 100ms to 250ms for a much slower playback
         } else {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             mediaRecorderRef.current.stop();

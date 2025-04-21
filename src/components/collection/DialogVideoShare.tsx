@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -37,10 +36,11 @@ export const DialogVideoShare = ({
     }
   }, [open, videoUrl]);
   
-  // Set playback rate when video loads
+  // Set extremely slow playback rate when video loads
   useEffect(() => {
     if (videoRef && videoUrl) {
-      videoRef.playbackRate = 0.7; // Slowing down the playback rate
+      // Using an extremely slow playback rate
+      videoRef.playbackRate = 0.3; // Much slower than previous 0.7
     }
   }, [videoRef, videoUrl]);
   
@@ -151,7 +151,7 @@ export const DialogVideoShare = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Video Showcase: {collectionName}</DialogTitle>
           <DialogDescription>
@@ -174,15 +174,23 @@ export const DialogVideoShare = ({
                 ref={setVideoRef}
                 src={videoUrl}
                 controls
-                className="w-full h-auto max-h-[500px] rounded-md object-contain border border-border"
+                className="w-full h-auto max-h-[500px] rounded-md object-contain border border-border bg-black"
                 onLoadedData={handleVideoLoad}
                 onCanPlay={() => setVideoLoaded(true)}
                 autoPlay
                 loop
+                muted={false}
+                playsInline
+                preload="auto"
               />
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Tip: The video will automatically loop. Use the video controls to pause or adjust playback.
-              </p>
+              <div className="bg-muted/30 rounded p-2 mt-2">
+                <p className="text-sm text-foreground font-medium text-center">
+                  Video playback is intentionally slowed down for better viewing
+                </p>
+                <p className="text-xs text-muted-foreground text-center mt-1">
+                  Use the video controls to adjust speed, pause, or replay sections
+                </p>
+              </div>
             </div>
           ) : (
             <div className="w-full h-[300px] bg-secondary flex flex-col items-center justify-center rounded-md">
