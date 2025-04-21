@@ -31,6 +31,8 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   const images = processedCar.resolvedImages?.length 
     ? processedCar.resolvedImages 
     : ["/placeholder.svg"];
+    
+  console.log(`CarGallery for ${car.id}: received ${images.length} images`);
   
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {
@@ -91,7 +93,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                     alt={`${car.make} ${car.model} - Image ${index + 1}`}
                     className="h-full w-full object-contain"
                     onError={(e) => {
-                      console.error(`Failed to load image: ${image}`);
+                      console.error(`Failed to load image in carousel: ${image}`);
                       e.currentTarget.src = "/placeholder.svg";
                     }}
                   />

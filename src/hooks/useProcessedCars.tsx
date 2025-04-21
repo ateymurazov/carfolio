@@ -15,15 +15,26 @@ export function useProcessedCars(cars: Car[]) {
   ];
 
   return cars.map((car, index) => {
+    // Debug the original images array
+    console.log(`Processing images for car ${car.id}:`, car.images);
+    
     // Use car images if they exist and are retrievable, fall back to sample images
     let resolvedImages: string[] = [];
     if (car.images && car.images.length > 0) {
       resolvedImages = car.images.map(imgId => {
         if (typeof imgId === 'string') {
-          // Debug the image paths
-          console.log(`Processing image for car ${car.id}: ${imgId}`);
+          // For debugging
+          console.log(`Processing image path for car ${car.id}: ${imgId}`);
           
-          // If it's a public URL or path to an asset in the public folder
+          // If it's a URL with the lovable-uploads path, ensure it's properly formatted
+          if (imgId.includes('lovable-uploads')) {
+            // Make sure it has the leading slash if needed
+            const formattedPath = imgId.startsWith('/') ? imgId : `/${imgId}`;
+            console.log(`Formatted lovable-uploads path: ${formattedPath}`);
+            return formattedPath;
+          }
+          
+          // Handle other URL types
           if (imgId.startsWith('data:') || 
               imgId.startsWith('http') || 
               imgId.startsWith('/') ||
@@ -31,6 +42,7 @@ export function useProcessedCars(cars: Car[]) {
             return imgId;
           }
           
+          // Try to get from image storage
           try {
             const img = imageStorage.getImage(imgId);
             console.log(`Retrieved image ${imgId} from storage: ${img.substring(0, 30)}...`);
@@ -47,6 +59,8 @@ export function useProcessedCars(cars: Car[]) {
         return sampleImageUrls[index % sampleImageUrls.length];
       });
     }
+    
+    // If no images were resolved, use sample images
     if (resolvedImages.length === 0) {
       resolvedImages = [sampleImageUrls[index % sampleImageUrls.length]];
     }
