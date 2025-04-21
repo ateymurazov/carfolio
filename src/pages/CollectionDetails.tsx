@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,12 +37,14 @@ const CollectionDetails = () => {
   );
   
   const handleVideoCreated = (url: string) => {
+    console.log("Video created, URL:", url);
     setVideoUrl(url);
     setIsGeneratingVideo(false);
     setIsVideoShareDialogOpen(true);
   };
   
   const handleVideoShowcase = () => {
+    console.log("Starting video showcase generation for", cars.length, "cars");
     setVideoUrl(null);
     
     if (cars.length > 0) {
@@ -147,7 +150,8 @@ const CollectionDetails = () => {
       </div>
       
       {isGeneratingVideo && (
-        <div className="mt-4">
+        <div className="mt-4 p-4 border rounded-lg bg-background shadow-sm">
+          <h3 className="text-lg font-semibold mb-2">Generating Video Showcase</h3>
           <VideoGenerator 
             cars={cars}
             collectionName={collection.name}

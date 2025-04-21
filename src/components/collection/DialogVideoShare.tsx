@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -28,22 +27,16 @@ export const DialogVideoShare = ({
 }: DialogVideoShareProps) => {
   const [copying, setCopying] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const [videoRef, setVideoRef] = useState<HTMLVideoElement | null>(null);
+  const [videoError, setVideoError] = useState<string | null>(null);
   
   // Reset video loaded state when dialog opens/closes or videoUrl changes
   useEffect(() => {
     if (open && videoUrl) {
       setVideoLoaded(false);
+      setVideoError(null);
+      console.log("Video URL received:", videoUrl);
     }
   }, [open, videoUrl]);
-  
-  // Set playback rate when video loads
-  useEffect(() => {
-    if (videoRef && videoUrl) {
-      // Using a moderate playback rate - faster than before but still good for viewing
-      videoRef.playbackRate = 0.8; // Adjusted from 0.3 to 0.8 for better pacing
-    }
-  }, [videoRef, videoUrl]);
   
   // Handle download of video
   const handleDownload = () => {
@@ -147,7 +140,15 @@ export const DialogVideoShare = ({
   
   // Handle video load event
   const handleVideoLoad = () => {
+    console.log("Video loaded successfully");
     setVideoLoaded(true);
+  };
+  
+  // Handle video error
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    console.error("Video failed to load:", e);
+    setVideoError("Failed to load video. Please try regenerating it.");
+    setVideoLoaded(false);
   };
   
   return (
@@ -163,7 +164,7 @@ export const DialogVideoShare = ({
         <div className="my-6 flex flex-col items-center">
           {videoUrl ? (
             <div className="w-full relative">
-              {!videoLoaded && (
+              {!videoLoaded && !videoError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 z-10 rounded-md">
                   <div className="flex flex-col items-center gap-2">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -171,27 +172,50 @@ export const DialogVideoShare = ({
                   </div>
                 </div>
               )}
+              
+              {videoError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-destructive/10 z-10 rounded-md">
+                  <div className="text-center p-6">
+                    <p className="text-destructive font-medium">{videoError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => {
+                        console.log("Retrying video with URL:", videoUrl);
+                        setVideoError(null);
+                        setVideoLoaded(false);
+                      }}
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               <video
-                ref={setVideoRef}
                 src={videoUrl}
                 controls
                 className="w-full h-auto max-h-[500px] rounded-md object-contain border border-border bg-black"
                 onLoadedData={handleVideoLoad}
-                onCanPlay={() => setVideoLoaded(true)}
+                onError={handleVideoError}
                 autoPlay
                 loop
-                muted={false}
                 playsInline
                 preload="auto"
+                style={{ display: videoError ? 'none' : 'block' }}
               />
-              <div className="bg-muted/30 rounded p-2 mt-2">
-                <p className="text-sm text-foreground font-medium text-center">
-                  Video shows all available images for each car
-                </p>
-                <p className="text-xs text-muted-foreground text-center mt-1">
-                  Use the video controls to adjust speed, pause, or replay sections
-                </p>
-              </div>
+              
+              {videoLoaded && (
+                <div className="bg-muted/30 rounded p-2 mt-2">
+                  <p className="text-sm text-foreground font-medium text-center">
+                    Video shows all available images for each car
+                  </p>
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    Use the video controls to adjust speed, pause, or replay sections
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="w-full h-[300px] bg-secondary flex flex-col items-center justify-center rounded-md">
