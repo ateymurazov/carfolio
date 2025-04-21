@@ -33,6 +33,17 @@ export const CanvasVideoRenderer = ({
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error("Failed to get canvas context");
+      toast({
+        title: "Video Generation Failed",
+        description: "Could not initialize canvas for video rendering.",
+        variant: "destructive"
+      });
+      setGenerating(false);
+      return;
+    }
+    
     canvas.width = 1280;
     canvas.height = 720;
 
@@ -46,47 +57,124 @@ export const CanvasVideoRenderer = ({
     let currentCarIndex = 0;
     let currentImageIndex = 0;
 
-    // Setup media recording
-    const stream = canvas.captureStream(framesPerSecond);
-    videoStreamRef.current = stream;
-    let mimeType = 'video/webm;codecs=vp8,opus';
-    if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
-
-    const mr = new MediaRecorder(stream, {
-      mimeType,
-      videoBitsPerSecond: 5000000
-    });
-    mediaRecorderRef.current = mr;
-
-    mr.ondataavailable = (event) => {
-      if (event.data && event.data.size > 0) {
-        chunksRef.current.push(event.data);
-      }
-    };
-    mr.onstop = () => {
-      if (chunksRef.current.length === 0) {
-        toast({
-          title: "Video Generation Failed",
-          description: "No video data was recorded.",
-          variant: "destructive"
-        });
-        setGenerating(false);
-        return;
-      }
-      const blob = new Blob(chunksRef.current, { type: mimeType });
-      if (blob.size === 0) {
-        toast({
-          title: "Video Generation Failed",
-          description: "The generated video is empty. Please try again.",
-          variant: "destructive"
-        });
-        setGenerating(false);
-        return;
-      }
-      onVideoComplete(URL.createObjectURL(blob));
+    // Setup media recording with better error handling
+    let stream: MediaStream;
+    try {
+      stream = canvas.captureStream(framesPerSecond);
+      videoStreamRef.current = stream;
+    } catch (err) {
+      console.error("Failed to capture canvas stream:", err);
+      toast({
+        title: "Video Generation Failed",
+        description: "Your browser doesn't support canvas video capture. Try a different browser.",
+        variant: "destructive"
+      });
       setGenerating(false);
-    };
-    mr.start(1000);
+      return;
+    }
+
+    // Find supported MIME type
+    let mimeType = 'video/webm;codecs=vp8,opus';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+      mimeType = 'video/webm';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        // Fall back to basic type if needed
+        mimeType = '';
+      }
+    }
+
+    try {
+      const mr = new MediaRecorder(stream, {
+        mimeType: mimeType || undefined,
+        videoBitsPerSecond: 5000000
+      });
+      mediaRecorderRef.current = mr;
+
+      mr.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+      
+      mr.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        toast({
+          title: "Video Recording Error",
+          description: "An error occurred while recording the video.",
+          variant: "destructive"
+        });
+        setGenerating(false);
+      };
+      
+      mr.onstop = () => {
+        if (chunksRef.current.length === 0) {
+          toast({
+            title: "Video Generation Failed",
+            description: "No video data was recorded.",
+            variant: "destructive"
+          });
+          setGenerating(false);
+          return;
+        }
+        
+        try {
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          if (blob.size === 0) {
+            toast({
+              title: "Video Generation Failed",
+              description: "The generated video is empty. Please try again.",
+              variant: "destructive"
+            });
+            setGenerating(false);
+            return;
+          }
+          
+          // Create a persistent URL that won't expire immediately
+          const url = URL.createObjectURL(blob);
+          console.log("Video blob created:", blob.size, "bytes, URL:", url);
+          
+          // Ensure the blob URL is cached
+          const tempVideo = document.createElement('video');
+          tempVideo.src = url;
+          tempVideo.preload = "auto";
+          
+          // Wait for video to be preloaded before passing URL to parent
+          tempVideo.onloadeddata = () => {
+            onVideoComplete(url);
+            setGenerating(false);
+          };
+          
+          tempVideo.onerror = () => {
+            console.error("Error preloading video");
+            // Still try to use the URL even if preloading fails
+            onVideoComplete(url);
+            setGenerating(false);
+          };
+          
+          // Trigger load
+          tempVideo.load();
+        } catch (err) {
+          console.error("Failed to create video blob:", err);
+          toast({
+            title: "Video Creation Failed",
+            description: "Failed to create the video file.",
+            variant: "destructive"
+          });
+          setGenerating(false);
+        }
+      };
+      
+      mr.start(1000);
+    } catch (err) {
+      console.error("Failed to initialize MediaRecorder:", err);
+      toast({
+        title: "Video Recording Failed",
+        description: "Your browser doesn't support video recording. Try a different browser.",
+        variant: "destructive"
+      });
+      setGenerating(false);
+      return;
+    }
 
     // helpers
     function drawPlaceholder(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, car: Car, message: string) {
@@ -163,13 +251,15 @@ export const CanvasVideoRenderer = ({
 
               frameCount++;
               resolve();
-            } catch {
+            } catch (err) {
+              console.error("Error drawing image to canvas:", err);
               drawPlaceholder(ctx, canvas, car, "Error loading image");
               frameCount++;
               resolve();
             }
           };
           img.onerror = () => {
+            console.error("Failed to load image:", imageSrc);
             drawPlaceholder(ctx, canvas, car, "Failed to load image");
             frameCount++;
             resolve();
@@ -188,10 +278,19 @@ export const CanvasVideoRenderer = ({
         if (frameCount >= totalFrames) {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             if (mediaRecorderRef.current.state === "recording") {
-              mediaRecorderRef.current.requestData();
+              try {
+                mediaRecorderRef.current.requestData();
+              } catch (err) {
+                console.error("Error requesting data from MediaRecorder:", err);
+              }
             }
             await new Promise(res => setTimeout(res, 1000));
-            mediaRecorderRef.current.stop();
+            try {
+              mediaRecorderRef.current.stop();
+            } catch (err) {
+              console.error("Error stopping MediaRecorder:", err);
+              setGenerating(false);
+            }
           }
           if (videoStreamRef.current) {
             videoStreamRef.current.getTracks().forEach(track => track.stop());
@@ -230,6 +329,13 @@ export const CanvasVideoRenderer = ({
     return () => {
       if (videoStreamRef.current) {
         videoStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (err) {
+          console.error("Error stopping MediaRecorder on cleanup:", err);
+        }
       }
     };
     // purposely only run on mount

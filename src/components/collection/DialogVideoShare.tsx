@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Dialog, 
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Facebook, Twitter, Instagram, Youtube, Download, Play, Pause } from "lucide-react";
+import { Copy, Facebook, Twitter, Instagram, Youtube, Download } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -44,16 +43,34 @@ export const DialogVideoShare = ({
   const [errorDetails, setErrorDetails] = useState("");
   const videoRef = useRef<HTMLVideoElement>(null);
   
-  // Reset video loaded state when dialog opens/closes or videoUrl changes
   useEffect(() => {
     if (open && videoUrl) {
       setVideoLoaded(false);
       setVideoError(null);
       console.log("Video URL received:", videoUrl);
+      
+      if (videoUrl.startsWith('blob:')) {
+        try {
+          fetch(videoUrl, { method: 'HEAD' })
+            .then(response => {
+              if (!response.ok) {
+                setErrorDetails(`Blob URL returned status ${response.status}`);
+                setVideoError("Video URL is no longer accessible. Please regenerate the video.");
+                setShowErrorDialog(true);
+              }
+            })
+            .catch(err => {
+              setErrorDetails(`Error accessing blob URL: ${err.message}`);
+              setVideoError("Video URL is no longer accessible. Please regenerate the video.");
+              setShowErrorDialog(true);
+            });
+        } catch (err) {
+          console.error("Error checking blob URL:", err);
+        }
+      }
     }
   }, [open, videoUrl]);
   
-  // Handle download of video
   const handleDownload = () => {
     if (!videoUrl) {
       toast({
@@ -64,20 +81,28 @@ export const DialogVideoShare = ({
       return;
     }
     
-    const link = document.createElement('a');
-    link.href = videoUrl;
-    link.download = `${collectionName.replace(/\s+/g, '-').toLowerCase()}-showcase.webm`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast({
-      title: "Video Downloaded",
-      description: "The video showcase has been downloaded to your device."
-    });
+    try {
+      const link = document.createElement('a');
+      link.href = videoUrl;
+      link.download = `${collectionName.replace(/\s+/g, '-').toLowerCase()}-showcase.webm`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Video Downloaded",
+        description: "The video showcase has been downloaded to your device."
+      });
+    } catch (err) {
+      console.error("Download error:", err);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the video. Try regenerating it.",
+        variant: "destructive"
+      });
+    }
   };
   
-  // Handle copy of link
   const handleCopyLink = async () => {
     if (!videoUrl) {
       toast({
@@ -107,7 +132,6 @@ export const DialogVideoShare = ({
     }
   };
   
-  // Handle social media shares
   const handleShare = (platform: string) => {
     if (!videoUrl) {
       toast({
@@ -118,7 +142,6 @@ export const DialogVideoShare = ({
       return;
     }
     
-    // For demonstration purposes, we'll open a new window simulating the share
     const text = encodeURIComponent(`Check out my ${collectionName} car collection showcase!`);
     let shareUrl = '';
     
@@ -130,7 +153,6 @@ export const DialogVideoShare = ({
         shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(window.location.href)}`;
         break;
       case 'instagram':
-        // Instagram doesn't have a web sharing API, this is just for demo
         toast({
           title: "Instagram Sharing",
           description: "Instagram requires a mobile app for sharing videos.",
@@ -153,35 +175,36 @@ export const DialogVideoShare = ({
     }
   };
   
-  // Handle video load event
   const handleVideoLoad = () => {
     console.log("Video loaded successfully");
     setVideoLoaded(true);
     setVideoError(null);
   };
   
-  // Handle video error
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     console.error("Video failed to load:", e);
     
     const videoElement = e.currentTarget;
-    const errorMessage = videoElement.error 
-      ? `Error: ${videoElement.error.code} - ${videoElement.error.message}` 
-      : "Failed to load video";
-      
+    let errorMessage = "Unknown error loading video";
+    
+    if (videoElement.error) {
+      errorMessage = `Error: ${videoElement.error.code} - ${videoElement.error.message}`;
+      if (videoElement.error.code === 4) {
+        errorMessage = "The video format is not supported or the URL is invalid (possibly expired)";
+      }
+    }
+    
     setErrorDetails(errorMessage);
     setVideoError("Failed to load video. Please try regenerating it.");
     setVideoLoaded(false);
     setShowErrorDialog(true);
   };
   
-  // Handle retrying video load
   const handleRetry = () => {
     if (videoRef.current && videoUrl) {
       setIsRetrying(true);
       setVideoError(null);
       
-      // Force reload the video element
       const video = videoRef.current;
       video.pause();
       video.removeAttribute('src');
@@ -381,10 +404,13 @@ export const DialogVideoShare = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Video Playback Error</AlertDialogTitle>
             <AlertDialogDescription>
-              There was a problem playing the video. This could be due to browser compatibility issues or the video format.
+              There was a problem playing the video. This could be due to browser compatibility issues, the video format, or the blob URL has expired.
               <div className="mt-2 p-2 bg-muted rounded text-xs font-mono overflow-auto max-h-[100px]">
                 {errorDetails}
               </div>
+              <p className="mt-2">
+                Try generating a new video and immediately downloading it to avoid URL expiration issues.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
