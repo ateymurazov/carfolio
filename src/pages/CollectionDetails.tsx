@@ -3,12 +3,14 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { Search, Plus, ArrowLeft, Edit, Trash2, Video } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { CarGrid } from "@/components/car/CarGrid";
 import { DialogAddCar } from "@/components/car/DialogAddCar";
 import { DialogEditCollection } from "@/components/collection/DialogEditCollection";
 import { DialogDeleteCollection } from "@/components/collection/DialogDeleteCollection";
+import { DialogVideoShare } from "@/components/collection/DialogVideoShare";
+import { VideoGenerator } from "@/components/collection/VideoGenerator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -24,12 +26,20 @@ const CollectionDetails = () => {
   const [isAddCarDialogOpen, setIsAddCarDialogOpen] = useState(false);
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
   const [isDeleteCollectionDialogOpen, setIsDeleteCollectionDialogOpen] = useState(false);
+  const [isVideoShareDialogOpen, setIsVideoShareDialogOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   
   // Filter cars based on search term
   const filteredCars = cars.filter(car => 
     car.make.toLowerCase().includes(searchTerm.toLowerCase()) || 
     car.model.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  // Handle video creation
+  const handleVideoCreated = (url: string) => {
+    setVideoUrl(url);
+    setIsVideoShareDialogOpen(true);
+  };
   
   if (!collection) {
     return (
@@ -80,12 +90,27 @@ const CollectionDetails = () => {
           <h1 className="text-3xl font-bold tracking-tight">{collection.name}</h1>
           <p className="text-muted-foreground">{collection.description || "No description."}</p>
         </div>
-        <Button 
-          className="w-full sm:w-auto"
-          onClick={() => setIsAddCarDialogOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add Car to Collection
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button 
+            className="w-full sm:w-auto"
+            onClick={() => setIsAddCarDialogOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add Car to Collection
+          </Button>
+          {cars.length > 0 && (
+            <Button 
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                // Reset video URL when creating a new video
+                setVideoUrl(null);
+                setIsVideoShareDialogOpen(true);
+              }}
+            >
+              <Video className="mr-2 h-4 w-4" /> Video Showcase
+            </Button>
+          )}
+        </div>
       </div>
       
       {/* Collection Stats */}
@@ -110,6 +135,15 @@ const CollectionDetails = () => {
             <p className="text-sm text-muted-foreground">Created date</p>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Video Generator (Hidden) */}
+      <div className="hidden">
+        <VideoGenerator 
+          cars={cars}
+          collectionName={collection.name}
+          onVideoCreated={handleVideoCreated}
+        />
       </div>
       
       <Separator />
@@ -155,6 +189,13 @@ const CollectionDetails = () => {
         onOpenChange={setIsDeleteCollectionDialogOpen} 
         collectionId={collection.id}
         onDeleted={() => navigate("/collections")}
+      />
+      
+      <DialogVideoShare
+        open={isVideoShareDialogOpen}
+        onOpenChange={setIsVideoShareDialogOpen}
+        videoUrl={videoUrl}
+        collectionName={collection.name}
       />
     </div>
   );
