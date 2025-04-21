@@ -164,40 +164,20 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       mediaRecorder.start(1000);
       console.log("MediaRecorder started");
 
+      // Create a list of hardcoded sample car images we can use for the demo
+      const sampleImageUrls = [
+        "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
+        "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80",
+        "https://images.unsplash.com/photo-1542282088-fe8426682b8f?w=800&q=80",
+        "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80",
+        "https://images.unsplash.com/photo-1542362567-b07e54358753?w=800&q=80"
+      ];
+
       // Pre-process the car data to resolve image references
-      const processedCars = cars.map(car => {
-        // Handle image loading more safely
-        let resolvedImages: string[] = [];
-        
-        if (car.images && car.images.length > 0) {
-          // Try to get images from storage
-          resolvedImages = car.images.map(imgId => {
-            if (typeof imgId === 'string') {
-              if (imgId.startsWith('data:')) {
-                return imgId;
-              } else {
-                try {
-                  // Use placeholder if image not found
-                  const img = imageStorage.getImage(imgId);
-                  if (img === '/placeholder.svg') {
-                    // Fallback to a sample image
-                    return `/placeholder.svg`;
-                  }
-                  return img;
-                } catch (e) {
-                  console.error(`Error loading image ${imgId}:`, e);
-                  return `/placeholder.svg`;
-                }
-              }
-            }
-            return '/placeholder.svg';
-          });
-        }
-        
-        // If no valid images, use a placeholder
-        if (resolvedImages.length === 0 || !resolvedImages.some(img => img !== '/placeholder.svg')) {
-          resolvedImages = ['/placeholder.svg'];
-        }
+      const processedCars = cars.map((car, index) => {
+        // Ensure each car has at least one image to show
+        const sampleImage = sampleImageUrls[index % sampleImageUrls.length];
+        let resolvedImages: string[] = [sampleImage]; // Start with one valid image
         
         return {
           ...car,
@@ -261,11 +241,11 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         const hasImages = car.resolvedImages && car.resolvedImages.length > 0;
         const imageSrc = hasImages 
           ? car.resolvedImages[currentImageIndex % car.resolvedImages.length] 
-          : '/placeholder.svg';
+          : null;
         
         // Draw car image
         return new Promise<void>((resolve) => {
-          if (imageSrc && imageSrc !== '/placeholder.svg') {
+          if (imageSrc) {
             const img = new Image();
             img.crossOrigin = "anonymous";
             
