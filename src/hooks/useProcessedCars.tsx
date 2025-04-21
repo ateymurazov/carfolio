@@ -50,8 +50,13 @@ export function useProcessedCars(cars: Car[]) {
     }
     
     // Force refresh of the resolved images by creating a new array
-    // This ensures React detects the change and re-renders
     const freshResolvedImages = [...resolvedImages];
+    
+    // Additional debugging for car2 specifically
+    if (car.id === 'car2') {
+      console.log(`SPECIAL DEBUG - Car 2 images:`, car.images);
+      console.log(`SPECIAL DEBUG - Car 2 resolved images:`, freshResolvedImages);
+    }
     
     // Log the resolved images for debugging
     console.log(`Car ${car.id} resolved images:`, freshResolvedImages);

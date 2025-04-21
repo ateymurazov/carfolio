@@ -35,11 +35,20 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     
   console.log(`CarGallery for ${car.id}: received ${images.length} images`, images);
   
-  // Force re-render when car images change
+  // Special debug for car2
+  if (car.id === 'car2') {
+    console.log(`GALLERY DEBUG - Car2 original images:`, car.images);
+    console.log(`GALLERY DEBUG - Car2 processed images:`, images);
+  }
+  
+  // Force re-render when car images change or car id changes
   useEffect(() => {
     setGalleryKey(prev => prev + 1);
     console.log(`CarGallery: Car ${car.id} images changed, refreshing gallery`);
-  }, [car.id, car.images]);
+    
+    // Reset current image index to avoid out-of-bounds
+    setCurrentImageIndex(0);
+  }, [car.id, JSON.stringify(car.images)]); // Use JSON.stringify to properly detect changes in the images array
   
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {
@@ -93,7 +102,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
         <Carousel className="w-full">
           <CarouselContent>
             {images.map((image, index) => (
-              <CarouselItem key={index}>
+              <CarouselItem key={`${car.id}-image-${index}-${galleryKey}`}>
                 <div className="aspect-[16/9] relative rounded-lg border overflow-hidden bg-secondary">
                   <img 
                     src={image}
@@ -128,7 +137,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
         <div className="flex gap-2 overflow-x-auto pb-2">
           {images.map((image, index) => (
             <div
-              key={index}
+              key={`thumbnail-${index}-${galleryKey}`}
               className={cn(
                 "relative w-20 h-16 flex-shrink-0 rounded border transition-opacity group cursor-pointer",
                 currentImageIndex === index 

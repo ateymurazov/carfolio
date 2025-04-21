@@ -20,6 +20,7 @@ const CarDetails = () => {
   const [isDeleteCarDialogOpen, setIsDeleteCarDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
   
+  // Force a refresh on initial load and when car ID changes
   useEffect(() => {
     // Validate that carId is provided
     if (!carId) {
@@ -48,6 +49,11 @@ const CarDetails = () => {
     
     // Force a refresh whenever we visit the page to ensure latest data
     setRefreshKey(prev => prev + 1);
+    
+    // Additional debugging for car2
+    if (carId === 'car2') {
+      console.log("CAR 2 DETAILS PAGE LOADED, REFRESHING VIEW", car);
+    }
   }, [carId, getCarById, navigate]);
   
   // Get car from context
@@ -55,6 +61,12 @@ const CarDetails = () => {
   
   // Get collection if car exists
   const collection = car ? getCollectionById(car.collectionId) : null;
+  
+  // Added manual refresh function
+  const handleManualRefresh = () => {
+    console.log("Manual refresh requested");
+    setRefreshKey(prev => prev + 1);
+  };
   
   // If car is not found, show a message and a button to return to inventory
   if (!car) {
@@ -99,6 +111,15 @@ const CarDetails = () => {
             onClick={() => setIsDeleteCarDialogOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </Button>
+          
+          {/* Added manual refresh button */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleManualRefresh}
+          >
+            Refresh
           </Button>
         </div>
       </div>
