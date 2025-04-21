@@ -22,7 +22,7 @@ export const CarCard = ({ car, className }: CarCardProps) => {
     ? "/placeholder.svg" 
     : processedCar.resolvedImages[0];
   
-  console.log(`CarCard for ${car.id}: using image ${typeof carImage === 'string' ? carImage : 'undefined'}`);
+  console.log(`CarCard for ${car.id}: using image ${carImage}`);
   
   return (
     <div 

@@ -17,25 +17,26 @@ export function useProcessedCars(cars: Car[]) {
           // For debugging
           console.log(`Processing image path for car ${car.id}: ${imgId}`);
           
-          // Handle lovable-uploads paths properly
+          // Handle lovable-uploads paths directly
           if (imgId.includes('lovable-uploads')) {
-            // Make sure the path starts with a slash and the full path is preserved
-            const formattedPath = imgId.startsWith('/') ? imgId : `/${imgId}`;
-            console.log(`Using lovable-uploads path: ${formattedPath}`);
-            return formattedPath;
+            return imgId.startsWith('/') ? imgId : `/${imgId}`;
           }
           
-          // Handle other URL types - only local paths or data URLs
-          if (imgId.startsWith('data:') || imgId.startsWith('/')) {
-            console.log(`Using direct path: ${imgId}`);
+          // Handle absolute URLs (including external URLs) directly
+          if (imgId.startsWith('http') || imgId.startsWith('https') || 
+              imgId.startsWith('data:') || imgId.startsWith('/')) {
             return imgId;
           }
           
-          // Try to get from image storage if it's not a URL
+          // Try to get from image storage if it's a storage ID
           try {
             const img = imageStorage.getImage(imgId);
-            console.log(`Retrieved image ${imgId} from storage: ${img.substring(0, 30)}...`);
-            return img;
+            if (img && img !== '/placeholder.svg') {
+              return img;
+            } else {
+              console.warn(`Image ${imgId} not found in storage or returned placeholder`);
+              return '/placeholder.svg';
+            }
           } catch (error) {
             console.error(`Error retrieving image ${imgId}:`, error);
             return '/placeholder.svg';

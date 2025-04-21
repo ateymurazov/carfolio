@@ -29,7 +29,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
     ? "/placeholder.svg" 
     : processedCar.resolvedImages[0];
   
-  console.log(`FeaturedCar for ${car.id}: using image ${typeof carImage === 'string' ? carImage : 'undefined'}`);
+  console.log(`FeaturedCar for ${car.id}: using image ${carImage}`);
   
   return (
     <div className="flex flex-col space-y-4">

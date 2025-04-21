@@ -144,6 +144,28 @@ export const initialCars: Car[] = [
     value: 95000,
   },
   {
+    id: "car6",
+    make: "Mercedes-Benz",
+    model: "SL 63 AMG",
+    year: "2023",
+    vin: "WDBSK79F56F191631",
+    exteriorColor: "Obsidian Black",
+    interiorColor: "Red/Black Nappa",
+    transmission: "9-Speed Automatic",
+    condition: "New",
+    mileage: 125,
+    notes: "AMG Performance Package, carbon ceramic brakes, active suspension, Burmester sound system.",
+    collectionId: "c1",
+    images: [
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png", 
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png"
+    ],
+    status: "Available",
+    acquisitionDate: "2024-01-10",
+    lastServiceDate: "2024-02-15",
+    value: 178000,
+  },
+  {
     id: "car7",
     make: "Aston Martin",
     model: "DB11",
