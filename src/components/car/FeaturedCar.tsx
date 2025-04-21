@@ -30,7 +30,7 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-cover"
           onError={(e) => {
-            // Simple fallback
+            console.error(`Failed to load image in FeaturedCar: ${carImage}`);
             e.currentTarget.src = "/placeholder.svg";
           }}
         />

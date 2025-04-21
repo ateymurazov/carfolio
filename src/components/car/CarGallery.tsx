@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { toast } from "@/components/ui/use-toast";
+import { useProcessedCars } from "@/hooks/useProcessedCars";
 
 interface CarGalleryProps {
   car: Car;
@@ -21,6 +22,10 @@ interface CarGalleryProps {
 export const CarGallery = ({ car }: CarGalleryProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { updateCar } = useCarCollections();
+  
+  // Process car to resolve images properly
+  const processedCars = useProcessedCars([car]);
+  const processedCar = processedCars[0];
   
   // Simple image handling - use images array or placeholder
   const images = car.images?.length ? car.images : ["/placeholder.svg"];
@@ -84,6 +89,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                     alt={`${car.make} ${car.model} - Image ${index + 1}`}
                     className="h-full w-full object-contain"
                     onError={(e) => {
+                      console.error(`Failed to load image: ${image}`);
                       e.currentTarget.src = "/placeholder.svg";
                     }}
                   />
@@ -125,6 +131,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
                 alt={`Thumbnail ${index + 1}`} 
                 className="h-full w-full object-cover rounded"
                 onError={(e) => {
+                  console.error(`Failed to load thumbnail: ${image}`);
                   e.currentTarget.src = "/placeholder.svg";
                 }}
               />
@@ -158,6 +165,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
           alt={`${car.make} ${car.model}`} 
           className="h-full w-full object-contain"
           onError={(e) => {
+            console.error(`Failed to load image: ${images[0]}`);
             e.currentTarget.src = "/placeholder.svg";
           }}
         />

@@ -20,7 +20,11 @@ export function useProcessedCars(cars: Car[]) {
     if (car.images && car.images.length > 0) {
       resolvedImages = car.images.map(imgId => {
         if (typeof imgId === 'string') {
-          if (imgId.startsWith('data:')) return imgId;
+          // If it's a public URL or path to an asset in the public folder
+          if (imgId.startsWith('data:') || imgId.startsWith('http') || imgId.startsWith('/lovable-uploads/')) {
+            return imgId;
+          }
+          
           try {
             const img = imageStorage.getImage(imgId);
             if (img === '/placeholder.svg') {
