@@ -4,6 +4,7 @@ import { Car } from "@/types/car";
 import { Button } from "@/components/ui/button";
 import { Loader2, Share2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { useImageStorage } from "@/hooks/useImageStorage";
 
 interface VideoGeneratorProps {
   cars: Car[];
@@ -18,6 +19,7 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
   const videoStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const imageStorage = useImageStorage();
 
   // Start generating the video immediately when component mounts
   useEffect(() => {
@@ -72,7 +74,7 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       canvas.height = 720;
 
       // Create media stream from canvas with optimized FPS
-      const stream = canvas.captureStream(30); // Increased to 30 FPS for smoother video
+      const stream = canvas.captureStream(30); // 30 FPS for smoother video
       videoStreamRef.current = stream;
 
       // Check media recorder support
@@ -158,20 +160,35 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         setGenerating(false);
       };
 
-      // Request data at regular intervals to ensure we get chunks
+      // Start recording - request data at regular intervals
       mediaRecorder.start(1000);
       console.log("MediaRecorder started");
 
+      // Pre-process the car data to resolve image references
+      const processedCars = cars.map(car => {
+        // Get the actual image URLs if they're stored as IDs in imageStorage
+        const resolvedImages = car.images ? car.images.map(imgId => {
+          return typeof imgId === 'string' && !imgId.startsWith('data:') 
+            ? imageStorage.getImage(imgId) 
+            : imgId;
+        }) : [];
+        
+        return {
+          ...car,
+          resolvedImages
+        };
+      });
+      
       // Calculate total frames needed
       let totalImages = 0;
-      cars.forEach(car => {
+      processedCars.forEach(car => {
         // Count images for each car (at least 1)
-        const imageCount = car.images?.length || 1;
+        const imageCount = car.resolvedImages?.length || 1;
         totalImages += imageCount;
         console.log(`Car ${car.id} has ${imageCount} images`);
       });
       
-      // Set frames per image for balanced speed (3 seconds per image)
+      // Set frames for balanced speed (each image shown for 3 seconds)
       const framesPerSecond = 30;
       const secondsPerImage = 3;
       const framesPerImage = framesPerSecond * secondsPerImage;
@@ -183,11 +200,11 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
       let currentCarIndex = 0;
       let currentImageIndex = 0;
 
-      const renderNextFrame = () => {
+      const renderNextFrame = async () => {
         if (!ctx || !canvas) return;
         
         // Get current car
-        const car = cars[currentCarIndex];
+        const car = processedCars[currentCarIndex];
         if (!car) {
           console.error("Car not found at index", currentCarIndex);
           return;
@@ -215,20 +232,20 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
         ctx.fillText(`${car.make} ${car.model} (${car.year})`, canvas.width / 2, 150);
 
         // Determine which image to show
+        const hasImages = car.resolvedImages && car.resolvedImages.length > 0;
         let imageSrc = null;
-        const hasImages = car.images && car.images.length > 0;
         
         if (hasImages) {
-          imageSrc = car.images[currentImageIndex % car.images.length];
+          imageSrc = car.resolvedImages[currentImageIndex % car.resolvedImages.length];
         }
         
         // Draw car image
         return new Promise<void>((resolve) => {
-          if (imageSrc) {
+          if (imageSrc && imageSrc !== '/placeholder.svg') {
             const img = new Image();
             img.crossOrigin = "anonymous";
-            img.src = imageSrc;
             
+            // Handle image loading
             img.onload = () => {
               try {
                 // Calculate dimensions to maintain aspect ratio and center the image
@@ -253,7 +270,8 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
                 resolve();
               } catch (err) {
                 console.error("Error drawing image:", err);
-                // Still increment frame and resolve to avoid getting stuck
+                // Draw placeholder for error
+                drawPlaceholder(ctx, canvas, car, "Error loading image");
                 frameCount++;
                 resolve();
               }
@@ -261,62 +279,77 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
             
             img.onerror = () => {
               console.error("Failed to load image:", imageSrc);
-              
-              // Draw placeholder for missing image
-              ctx.fillStyle = "#e2e8f0";
-              ctx.fillRect((canvas.width - 400) / 2, (canvas.height - 300) / 2 + 50, 400, 300);
-              ctx.fillStyle = "#94a3b8";
-              ctx.font = "24px sans-serif";
-              ctx.fillText("No image available", canvas.width / 2, canvas.height / 2 + 50);
-              
-              // Draw car details
-              ctx.fillStyle = "#334155";
-              ctx.font = "24px sans-serif";
-              ctx.textAlign = "center";
-              ctx.fillText(`Condition: ${car.condition} | Mileage: ${car.mileage} miles`, canvas.width / 2, canvas.height - 80);
-              
+              drawPlaceholder(ctx, canvas, car, "Failed to load image");
               frameCount++;
               resolve();
             };
+            
+            img.src = imageSrc;
           } else {
-            // Draw placeholder for missing image
-            ctx.fillStyle = "#e2e8f0";
-            ctx.fillRect((canvas.width - 400) / 2, (canvas.height - 300) / 2 + 50, 400, 300);
-            ctx.fillStyle = "#94a3b8";
-            ctx.font = "24px sans-serif";
-            ctx.fillText("No image available", canvas.width / 2, canvas.height / 2 + 50);
-            
-            // Draw car details
-            ctx.fillStyle = "#334155";
-            ctx.font = "24px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(`Condition: ${car.condition} | Mileage: ${car.mileage} miles`, canvas.width / 2, canvas.height - 80);
-            
+            drawPlaceholder(ctx, canvas, car, "No image available");
             frameCount++;
             resolve();
           }
         });
       };
+      
+      // Helper function to draw placeholder
+      const drawPlaceholder = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, car: any, message: string) => {
+        // Draw placeholder for missing image
+        ctx.fillStyle = "#e2e8f0";
+        ctx.fillRect((canvas.width - 400) / 2, (canvas.height - 300) / 2 + 50, 400, 300);
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "24px sans-serif";
+        ctx.fillText(message, canvas.width / 2, canvas.height / 2 + 50);
+        
+        // Draw car details
+        ctx.fillStyle = "#334155";
+        ctx.font = "24px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`Condition: ${car.condition} | Mileage: ${car.mileage} miles`, canvas.width / 2, canvas.height - 80);
+      };
 
       const processFrames = async () => {
         try {
-          while (frameCount < totalFrames) {
+          // Slow down frame processing for better browser performance
+          const processFrame = async () => {
+            if (frameCount >= totalFrames) {
+              // Finalize the video
+              console.log("All frames processed, stopping recording");
+              
+              if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+                if (mediaRecorderRef.current.state === "recording") {
+                  mediaRecorderRef.current.requestData();
+                }
+                
+                // Give a delay to ensure the last data is processed
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                mediaRecorderRef.current.stop();
+              }
+              
+              // Clean up stream tracks
+              if (videoStreamRef.current) {
+                videoStreamRef.current.getTracks().forEach(track => track.stop());
+              }
+              return;
+            }
+            
             // Check if we need to move to the next image or car
             if (frameCount > 0 && frameCount % framesPerImage === 0) {
               // Time to move to the next image or car
-              const car = cars[currentCarIndex];
+              const car = processedCars[currentCarIndex];
               
-              if (car.images && car.images.length > 0) {
+              if (car.resolvedImages && car.resolvedImages.length > 0) {
                 currentImageIndex++;
                 
                 // If we've shown all images for this car, move to the next car
-                if (currentImageIndex >= car.images.length) {
+                if (currentImageIndex >= car.resolvedImages.length) {
                   currentImageIndex = 0;
                   currentCarIndex++;
                   
                   // If we've shown all cars, finish the video
-                  if (currentCarIndex >= cars.length) {
-                    break;
+                  if (currentCarIndex >= processedCars.length) {
+                    currentCarIndex = 0; // Loop back to first car
                   }
                 }
               } else {
@@ -324,37 +357,22 @@ export const VideoGenerator = ({ cars, collectionName, onVideoCreated }: VideoGe
                 currentCarIndex++;
                 currentImageIndex = 0;
                 
-                // If we've shown all cars, finish the video
-                if (currentCarIndex >= cars.length) {
-                  break;
+                // If we've shown all cars, loop back
+                if (currentCarIndex >= processedCars.length) {
+                  currentCarIndex = 0;
                 }
               }
             }
             
             await renderNextFrame();
             
-            // Small delay between frames to give browser time to process
-            await new Promise(resolve => setTimeout(resolve, 10));
-          }
+            // Schedule the next frame with small delay to prevent browser from freezing
+            setTimeout(processFrame, 10);
+          };
           
-          // Finalize the video
-          console.log("All frames processed, stopping recording");
-          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-            // Request one final data chunk before stopping
-            if (mediaRecorderRef.current.state === "recording") {
-              mediaRecorderRef.current.requestData();
-            }
-            
-            // Give a small delay to ensure the last data is processed
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            mediaRecorderRef.current.stop();
-          }
+          // Start processing frames
+          processFrame();
           
-          // Clean up stream tracks
-          if (videoStreamRef.current) {
-            videoStreamRef.current.getTracks().forEach(track => track.stop());
-          }
         } catch (error) {
           console.error("Error in frame processing:", error);
           setGenerating(false);

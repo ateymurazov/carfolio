@@ -38,16 +38,36 @@ const CollectionDetails = () => {
   
   const handleVideoCreated = (url: string) => {
     console.log("Video created, URL:", url);
+    
+    if (!url || url === 'blob:') {
+      toast({
+        title: "Video Generation Failed",
+        description: "Failed to create a valid video. Please try again.",
+        variant: "destructive"
+      });
+      setIsGeneratingVideo(false);
+      return;
+    }
+    
     setVideoUrl(url);
     setIsGeneratingVideo(false);
-    setIsVideoShareDialogOpen(true);
+    
+    // Small delay before opening dialog to ensure UI is updated
+    setTimeout(() => {
+      setIsVideoShareDialogOpen(true);
+    }, 300);
   };
   
   const handleVideoShowcase = () => {
     console.log("Starting video showcase generation for", cars.length, "cars");
+    // Clear previous video URL first
     setVideoUrl(null);
     
     if (cars.length > 0) {
+      toast({
+        title: "Generating Video",
+        description: "Please wait while we create your video showcase...",
+      });
       setIsGeneratingVideo(true);
     } else {
       toast({
@@ -119,6 +139,7 @@ const CollectionDetails = () => {
               variant="outline"
               className="w-full sm:w-auto"
               onClick={handleVideoShowcase}
+              disabled={isGeneratingVideo}
             >
               <Video className="mr-2 h-4 w-4" /> Video Showcase
             </Button>
