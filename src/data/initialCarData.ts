@@ -43,10 +43,7 @@ export const initialCars: Car[] = [
     collectionId: "c2",
     images: [
       "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
-      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
-      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
-      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
-      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png"
     ],
     status: "Available",
     acquisitionDate: "2024-03-15",
@@ -67,11 +64,8 @@ export const initialCars: Car[] = [
     notes: "Plug-in hybrid powertrain with 986 combined horsepower. Assetto Fiorano package and carbon fiber wheels.",
     collectionId: "c1",
     images: [
-      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
-      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
       "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
-      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
-      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
+      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png"
     ],
     status: "Available",
     acquisitionDate: "2023-05-20",
@@ -92,9 +86,8 @@ export const initialCars: Car[] = [
     notes: "Hybrid V12 flagship with 1001 horsepower and carbon fiber monocoque chassis. Ad Personam customization package.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
-      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
-      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png"
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png",
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png"
     ],
     status: "Available",
     acquisitionDate: "2024-02-28",
@@ -115,8 +108,8 @@ export const initialCars: Car[] = [
     notes: "Limited production track-focused convertible with carbon fiber construction and active aerodynamics.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png",
-      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png"
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png"
     ],
     status: "Available",
     acquisitionDate: "2023-08-22",
@@ -137,8 +130,8 @@ export const initialCars: Car[] = [
     notes: "Homologated racing version with naturally-aspirated 6.3L V8 and advanced aerodynamics. Full competition package.",
     collectionId: "c1",
     images: [
-      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png",
-      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png"
+      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
+      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
     ],
     status: "Available",
     acquisitionDate: "2023-11-10",
@@ -159,8 +152,8 @@ export const initialCars: Car[] = [
     notes: "Mulliner Driving Specification with carbon ceramic brakes and Naim audio system. Rotating dashboard display.",
     collectionId: "c3",
     images: [
-      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png",
-      "/lovable-uploads/42f5f5ce-117e-4a6f-a8fc-775710a0200d.png"
+      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
+      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png"
     ],
     status: "Available",
     acquisitionDate: "2023-09-18",
@@ -181,8 +174,8 @@ export const initialCars: Car[] = [
     notes: "Limited production hybrid hypercar with Weissach package. Complete service history and original documentation.",
     collectionId: "c2",
     images: [
-      "/lovable-uploads/dc272208-5c51-454d-bdbf-b3ff182e961e.png",
-      "/lovable-uploads/1aca1821-85cb-4cfb-8f4d-a33a8d5ab303.png"
+      "/lovable-uploads/32a84c80-01b7-4afa-a060-e2cba55b7d2c.png",
+      "/lovable-uploads/d04a02f9-20a1-4f0b-8862-88743766d1f4.png"
     ],
     status: "Museum Display",
     acquisitionDate: "2022-11-05",
