@@ -27,8 +27,10 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   const processedCars = useProcessedCars([car]);
   const processedCar = processedCars[0];
   
-  // Simple image handling - use images array or placeholder
-  const images = car.images?.length ? car.images : ["/placeholder.svg"];
+  // Use resolved images from processedCar
+  const images = processedCar.resolvedImages?.length 
+    ? processedCar.resolvedImages 
+    : ["/placeholder.svg"];
   
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {

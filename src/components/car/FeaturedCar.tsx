@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { useCarCollections } from "@/hooks/useCarCollections";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useProcessedCars } from "@/hooks/useProcessedCars";
 
 interface FeaturedCarProps {
   car: Car;
@@ -19,8 +20,14 @@ export const FeaturedCar = ({ car }: FeaturedCarProps) => {
   // Get the collection for this car
   const collection = car.collectionId ? getCollectionById(car.collectionId) : null;
   
-  // Simple image handling - use first image or placeholder
-  const carImage = !car.images?.length ? "/placeholder.svg" : car.images[0];
+  // Process car to get resolved images
+  const processedCars = useProcessedCars([car]);
+  const processedCar = processedCars[0];
+  
+  // Use the first resolved image or placeholder
+  const carImage = !processedCar.resolvedImages?.length 
+    ? "/placeholder.svg" 
+    : processedCar.resolvedImages[0];
   
   return (
     <div className="flex flex-col space-y-4">

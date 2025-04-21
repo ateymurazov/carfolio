@@ -13,6 +13,7 @@ export interface Car {
   notes: string;
   collectionId: string;
   images?: string[];
+  resolvedImages?: string[]; // Added to store processed images
   status: string;
   acquisitionDate: string;
   lastServiceDate?: string;

@@ -3,6 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Car as CarType } from "@/types/car";
 import { cn } from "@/lib/utils";
+import { useProcessedCars } from "@/hooks/useProcessedCars";
 
 interface CarCardProps {
   car: CarType;
@@ -12,8 +13,14 @@ interface CarCardProps {
 export const CarCard = ({ car, className }: CarCardProps) => {
   const navigate = useNavigate();
   
-  // Use the first image or placeholder
-  const carImage = !car.images?.length ? "/placeholder.svg" : car.images[0];
+  // Process car to get resolved images
+  const processedCars = useProcessedCars([car]);
+  const processedCar = processedCars[0];
+  
+  // Use the first resolved image or placeholder
+  const carImage = !processedCar.resolvedImages?.length 
+    ? "/placeholder.svg" 
+    : processedCar.resolvedImages[0];
   
   return (
     <div 
