@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Car } from "@/types/car";
 import { cn } from "@/lib/utils";
 import { ImageOff, Trash2 } from "lucide-react";
@@ -22,7 +22,6 @@ interface CarGalleryProps {
 export const CarGallery = ({ car }: CarGalleryProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { updateCar } = useCarCollections();
-  const [galleryKey, setGalleryKey] = useState(0); // Add key for forced re-rendering
   
   // Process car to resolve images properly
   const processedCars = useProcessedCars([car]);
@@ -34,21 +33,6 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
     : ["/placeholder.svg"];
     
   console.log(`CarGallery for ${car.id}: received ${images.length} images`, images);
-  
-  // Special debug for car2
-  if (car.id === 'car2') {
-    console.log(`GALLERY DEBUG - Car2 original images:`, car.images);
-    console.log(`GALLERY DEBUG - Car2 processed images:`, images);
-  }
-  
-  // Force re-render when car images change or car id changes
-  useEffect(() => {
-    setGalleryKey(prev => prev + 1);
-    console.log(`CarGallery: Car ${car.id} images changed, refreshing gallery`);
-    
-    // Reset current image index to avoid out-of-bounds
-    setCurrentImageIndex(0);
-  }, [car.id, JSON.stringify(car.images)]); // Use JSON.stringify to properly detect changes in the images array
   
   // Handle deleting an image
   const handleDeleteImage = (index: number) => {
@@ -98,11 +82,11 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   // For multiple images, use the carousel component
   if (images.length > 1) {
     return (
-      <div className="space-y-4" key={galleryKey}>
+      <div className="space-y-4">
         <Carousel className="w-full">
           <CarouselContent>
             {images.map((image, index) => (
-              <CarouselItem key={`${car.id}-image-${index}-${galleryKey}`}>
+              <CarouselItem key={index}>
                 <div className="aspect-[16/9] relative rounded-lg border overflow-hidden bg-secondary">
                   <img 
                     src={image}
@@ -137,7 +121,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
         <div className="flex gap-2 overflow-x-auto pb-2">
           {images.map((image, index) => (
             <div
-              key={`thumbnail-${index}-${galleryKey}`}
+              key={index}
               className={cn(
                 "relative w-20 h-16 flex-shrink-0 rounded border transition-opacity group cursor-pointer",
                 currentImageIndex === index 
@@ -178,7 +162,7 @@ export const CarGallery = ({ car }: CarGalleryProps) => {
   
   // Single image display
   return (
-    <div className="space-y-4" key={galleryKey}>
+    <div className="space-y-4">
       <div className="relative aspect-[16/9] overflow-hidden rounded-lg border bg-secondary">
         <img 
           src={images[0]} 

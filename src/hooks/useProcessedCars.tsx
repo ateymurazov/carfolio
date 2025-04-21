@@ -49,21 +49,12 @@ export function useProcessedCars(cars: Car[]) {
       resolvedImages = ['/placeholder.svg'];
     }
     
-    // Force refresh of the resolved images by creating a new array
-    const freshResolvedImages = [...resolvedImages];
-    
-    // Additional debugging for car2 specifically
-    if (car.id === 'car2') {
-      console.log(`SPECIAL DEBUG - Car 2 images:`, car.images);
-      console.log(`SPECIAL DEBUG - Car 2 resolved images:`, freshResolvedImages);
-    }
-    
     // Log the resolved images for debugging
-    console.log(`Car ${car.id} resolved images:`, freshResolvedImages);
+    console.log(`Car ${car.id} resolved images:`, resolvedImages);
     
     return {
       ...car,
-      resolvedImages: freshResolvedImages,
+      resolvedImages,
     };
   });
 }
