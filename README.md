@@ -1,42 +1,51 @@
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Carfolio
 
-Follow these steps:
+**A digital garage for managing the ownership, maintenance, history, and documentation of collectible cars.**
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Carfolio is a product concept built around a simple problem: important information about enthusiast and collectible vehicles is often scattered across service records, receipts, spreadsheets, photos, emails, and memory.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The goal is to create a single place to maintain the complete history of a vehicle throughout its ownership.
 
-# Step 3: Install the necessary dependencies.
-npm i
+## What It Does
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Carfolio provides a structured way to manage:
 
-**Edit a file directly in GitHub**
+- Vehicle profiles and collection information
+- Maintenance and service history
+- Repairs, upgrades, and modifications
+- Mileage and ownership records
+- Documents, receipts, and supporting records
+- Vehicle photos and history
+- Upcoming maintenance and service needs
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Why I Built It
 
-**Use GitHub Codespaces**
+Collectible vehicles are more than transportation. Their condition, provenance, maintenance history, and documentation can directly affect ownership experience and long-term value.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Carfolio explores what a modern digital ownership record could look like, replacing fragmented records with a persistent history for each vehicle.
 
-## What technologies are used for this project?
+## Product Status
 
-This project is built with:
+Carfolio is currently a **proof of concept** and is not deployed as a production service.
 
-- Vite
-- TypeScript
+The project is being used to explore the product experience, information architecture, and potential future capabilities.
+
+## Technology
+
+Built with:
+
 - React
-- shadcn-ui
+- TypeScript
+- Vite
 - Tailwind CSS
+- shadcn/ui
 
+## Running Locally
+
+Requires Node.js and npm.
+
+```bash
+git clone <repository-url>
+cd carfolio
+npm install
+npm run dev
