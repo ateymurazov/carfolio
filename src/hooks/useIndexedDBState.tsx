@@ -120,6 +120,11 @@ export function useIndexedDBState<T>(
           console.log(`Error recovery: using initial data for ${storeName}`);
           setState(initialValue);
         }
+      } finally {
+        if (isMounted) {
+          hasLoadedRef.current = true;
+          setHasLoaded(true);
+        }
       }
     };
     
