@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   saveToStore,
   getAllFromStore,
@@ -26,9 +26,16 @@ export function useIndexedDBState<T>(
     return Array.isArray(initialValue) ? [] as unknown as T : initialValue;
   });
   
+  // Tracks whether the initial load from IndexedDB has finished.
+  // Until then we must NOT persist state, otherwise the placeholder
+  // empty array would clear the store and wipe the user's data.
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const hasLoadedRef = useRef(false);
+
   // Effect to load data from IndexedDB on mount
   useEffect(() => {
     let isMounted = true;
+    
     
     const loadData = async () => {
       try {
