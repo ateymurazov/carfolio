@@ -138,6 +138,14 @@ export function useIndexedDBState<T>(
   // Save data to IndexedDB whenever it changes
   useEffect(() => {
     if (state === undefined || state === null) return;
+    // Don't persist anything before the initial load resolved, and never
+    // persist an empty array over existing data.
+    if (!hasLoaded || !hasLoadedRef.current) return;
+    if (Array.isArray(state) && (state as any[]).length === 0) {
+      console.log(`Skipping save of empty ${storeName} array`);
+      return;
+    }
+    
     
     console.log(`Saving ${storeName} to IndexedDB`);
     
