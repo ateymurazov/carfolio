@@ -183,7 +183,7 @@ export function useIndexedDBState<T>(
     };
     
     saveData();
-  }, [state, storeName]);
+  }, [state, storeName, hasLoaded]);
   
   return [state, setState];
 }
