@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   saveToStore,
   getAllFromStore,
@@ -26,9 +26,16 @@ export function useIndexedDBState<T>(
     return Array.isArray(initialValue) ? [] as unknown as T : initialValue;
   });
   
+  // Tracks whether the initial load from IndexedDB has finished.
+  // Until then we must NOT persist state, otherwise the placeholder
+  // empty array would clear the store and wipe the user's data.
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const hasLoadedRef = useRef(false);
+
   // Effect to load data from IndexedDB on mount
   useEffect(() => {
     let isMounted = true;
+    
     
     const loadData = async () => {
       try {
@@ -113,6 +120,11 @@ export function useIndexedDBState<T>(
           console.log(`Error recovery: using initial data for ${storeName}`);
           setState(initialValue);
         }
+      } finally {
+        if (isMounted) {
+          hasLoadedRef.current = true;
+          setHasLoaded(true);
+        }
       }
     };
     
@@ -126,6 +138,14 @@ export function useIndexedDBState<T>(
   // Save data to IndexedDB whenever it changes
   useEffect(() => {
     if (state === undefined || state === null) return;
+    // Don't persist anything before the initial load resolved, and never
+    // persist an empty array over existing data.
+    if (!hasLoaded || !hasLoadedRef.current) return;
+    if (Array.isArray(state) && (state as any[]).length === 0) {
+      console.log(`Skipping save of empty ${storeName} array`);
+      return;
+    }
+    
     
     console.log(`Saving ${storeName} to IndexedDB`);
     
@@ -163,7 +183,7 @@ export function useIndexedDBState<T>(
     };
     
     saveData();
-  }, [state, storeName]);
+  }, [state, storeName, hasLoaded]);
   
   return [state, setState];
 }
